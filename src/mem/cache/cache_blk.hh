@@ -186,12 +186,21 @@ class CacheBlk : public TaggedEntry
         setWhenReady(curTick());
         setRefCount(other.getRefCount());
         setSrcRequestorId(other.getSrcRequestorId());
+        //other.setLock();
+        /*if(getLock())
+        {
+            other.setLock();
+        }*/
+
         std::swap(lockList, other.lockList);
 
         other.invalidate();
 
         return *this;
     }
+    
+
+
     virtual ~CacheBlk() {};
 
     /**
@@ -230,6 +239,9 @@ class CacheBlk : public TaggedEntry
      */
     void clearCoherenceBits(unsigned bits) { coherence &= ~bits; }
 
+    void setLock() { _locked = true; }
+
+    void freeLock() {_locked = false; }
     /**
      * Checks the given coherence bits are set.
      *
@@ -240,7 +252,7 @@ class CacheBlk : public TaggedEntry
     {
         return isValid() && (coherence & bits);
     }
-
+    
     /**
      * Check if this block was the result of a hardware prefetch, yet to
      * be touched.
@@ -292,6 +304,8 @@ class CacheBlk : public TaggedEntry
 
     /** Get the number of references to this block since insertion. */
     void increaseRefCount() { _refCount++; }
+
+    bool getLock() { return _locked; }
 
     /**
      * Get the block's age, that is, the number of ticks since its insertion.
@@ -472,6 +486,8 @@ class CacheBlk : public TaggedEntry
     /** Set the current tick as this block's insertion tick. */
     void setTickInserted() { _tickInserted = curTick(); }
 
+
+
   private:
     /** Task Id associated with this block */
     uint32_t _taskId = 0;
@@ -490,6 +506,9 @@ class CacheBlk : public TaggedEntry
 
     /** Whether this block is an unaccessed hardware prefetch. */
     bool _prefetched = 0;
+
+    /* Whether cache block is locked by OS*/
+    bool _locked = 0;
 };
 
 /**

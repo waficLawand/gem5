@@ -31,6 +31,7 @@
 #include <cassert>
 #include <memory>
 
+#include "mem/cache/cache_blk.hh"
 #include "params/LRURP.hh"
 #include "sim/cur_tick.hh"
 
@@ -77,17 +78,72 @@ LRU::getVictim(const ReplacementCandidates& candidates) const
     assert(candidates.size() > 0);
 
     // Visit all candidates to find victim
-    ReplaceableEntry* victim = candidates[0];
-    for (const auto& candidate : candidates) {
+    //ReplaceableEntry* victim = candidates[0];
+
+    std::vector<ReplaceableEntry*> entries;
+
+    for (const auto& candidate : candidates)
+    {
+        if(!(static_cast<CacheBlk*>(candidate)->getLock()))
+        {
+            entries.push_back(candidate);
+        }
+    }
+    if(entries.empty())
+    {
+        //printf("ALL BLOCKS ARE LOCKED!\n");
+        return nullptr;
+    }
+
+    ReplaceableEntry* victim = entries[0];
+
+    for (const auto& candidate : entries) {
+        
+        CacheBlk* test = static_cast<CacheBlk*> (candidate);
+
+        //printf("THIS BLOCK IS GETTING EVICTED: %x and LOCK VARIABLE IS: %x\n",test->getTag(),test->getLock());
+
+        /*if(test->getLock())
+            printf("PANIC MODE ADDRESS LOCKED!!\n");*/
+        //printf("Address of cache block: %x\n",test->getTag());
+        //printf("Locked/Unlocked Block: %x\n",test->getLocked());
         // Update victim entry if necessary
-        if (std::static_pointer_cast<LRUReplData>(
+        if ((std::static_pointer_cast<LRUReplData>(
                     candidate->replacementData)->lastTouchTick <
                 std::static_pointer_cast<LRUReplData>(
-                    victim->replacementData)->lastTouchTick) {
+                    victim->replacementData)->lastTouchTick)) {
             victim = candidate;
         }
     }
 
+    /*for (const auto& candidate : candidates) {
+
+        CacheBlk* test = static_cast<CacheBlk*> (candidate);
+
+        //printf("THIS BLOCK IS GETTING EVICTED: %x and LOCK VARIABLE IS: %x\n",test->getTag(),test->getLock());
+
+        //if(test->getLock())
+            //printf("PANIC MODE ADDRESS LOCKED!!\n");
+        //printf("Address of cache block: %x\n",test->getTag());
+        //printf("Locked/Unlocked Block: %x\n",test->getLocked());
+        // Update victim entry if necessary
+        if ((std::static_pointer_cast<LRUReplData>(
+                    candidate->replacementData)->lastTouchTick <
+                std::static_pointer_cast<LRUReplData>(
+                    victim->replacementData)->lastTouchTick)) {
+            victim = candidate;
+        }
+    }*/
+
+    /*if ((static_cast<CacheBlk*>(victim))->getLock())
+    {
+        victim = nullptr;
+    }*/
+
+
+    //CacheBlk* test = static_cast<CacheBlk*> (victim);
+    //printf("THIS BLOCK IS GETTING EVICTED: %x\n",test->getTag());
+    
     return victim;
 }
 

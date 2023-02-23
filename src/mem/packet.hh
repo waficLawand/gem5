@@ -394,6 +394,8 @@ class Packet : public Printable
 
     /// The size of the request or transfer.
     unsigned size;
+    
+    bool _isLocked = 0;
 
     /**
      * Track the bytes found that satisfy a functional read.
@@ -803,6 +805,9 @@ class Packet : public Printable
     void copyError(Packet *pkt) { assert(pkt->isError()); cmd = pkt->cmd; }
 
     Addr getAddr() const { assert(flags.isSet(VALID_ADDR)); return addr; }
+
+    bool getLock() {return _isLocked;}
+
     /**
      * Update the address of this packet mid-transaction. This is used
      * by the address mapper to change an already set address to a new
@@ -811,6 +816,10 @@ class Packet : public Printable
      * valid.
      */
     void setAddr(Addr _addr) { assert(flags.isSet(VALID_ADDR)); addr = _addr; }
+
+    void setLock () { _isLocked = 1;}
+
+    void releaseLock () { _isLocked = 0;}
 
     unsigned getSize() const  { assert(flags.isSet(VALID_SIZE)); return size; }
 

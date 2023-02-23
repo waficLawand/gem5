@@ -76,6 +76,12 @@ BaseTags::findBlockBySetAndWay(int set, int way) const
     return indexingPolicy->getEntry(set, way);
 }
 
+std::vector<ReplaceableEntry*>
+BaseTags::getPossibleEntries(const Addr addr) const
+{
+    return indexingPolicy->getPossibleEntries(addr);
+}
+
 CacheBlk*
 BaseTags::findBlock(Addr addr, bool is_secure) const
 {
@@ -103,6 +109,14 @@ BaseTags::insertBlock(const PacketPtr pkt, CacheBlk *blk)
 {
     assert(!blk->isValid());
 
+    /*if(pkt->getLock())
+    {
+        blk->setLock();
+        printf("A PACKET IS LOCKED!!! at ADDRESS %x\n",pkt->getAddr());
+    }*/
+
+    //printf("Lock: %x \n",blk->getLock());
+
     // Previous block, if existed, has been removed, and now we have
     // to insert the new one
 
@@ -114,7 +128,19 @@ BaseTags::insertBlock(const PacketPtr pkt, CacheBlk *blk)
     // Insert block with tag, src requestor id and task id
     blk->insert(extractTag(pkt->getAddr()), pkt->isSecure(), requestor_id,
                 pkt->req->taskId());
+    /*printf("BLOCKS: %x\n",blk->getTag());
+    if(blk->getTag() == 0xd || blk->getTag() == 0x6)
+    {
+        //printf("LOCKED AND LOADED!\n");
+        blk->setLock();
+        //printf("LOCK VARIABLE IS: %x\n",blk->getLock());
+    }*/
 
+
+    /*if(blk->getLock())
+    {
+        printf("Lcok Variable: %x\n",blk->getLock());
+    }*/
     // Check if cache warm up is done
     if (!warmedUp && stats.tagsInUse.value() >= warmupBound) {
         warmedUp = true;

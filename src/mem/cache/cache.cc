@@ -62,6 +62,8 @@
 #include "mem/cache/write_queue_entry.hh"
 #include "mem/request.hh"
 #include "params/Cache.hh"
+#include "mem/cache/compressors/base.hh"
+#include "mem/cache/tags/indexing_policies/base.hh"
 
 namespace gem5
 {
@@ -161,6 +163,88 @@ bool
 Cache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
               PacketList &writebacks)
 {
+    //printf("WE ARE IN!!\n");
+    //printf("BLOCK SIZE IS: %x\n",blkSize*8);
+
+    std:size_t size = blkSize*8;
+
+    Addr addr = pkt->getAddr();
+
+    const std::vector<ReplaceableEntry*> entries = tags->getPossibleEntries(addr);
+
+    bool all_locked = false;
+
+    for(const auto & entry : entries)
+    {
+        if(!(static_cast<CacheBlk*>(entry)->getLock()))
+        {
+            all_locked = false;
+            //printf("Not all blocks are locked!!\n");
+            break;
+        }
+        
+        all_locked = true;
+    }
+
+    if (all_locked == true)
+    {
+        pkt->req->setFlags(Request::UNCACHEABLE);
+    }
+    /*if(pkt)
+    {
+        printf("Packet is not equal to null!\n");
+    }
+
+    if(blk)
+    {
+        printf("Block is not equal to null!\n");
+    }*/
+
+
+    //CacheBlk *blk2;
+    //blk2 = *&blk;
+    
+    /*Cycles tag_latency(0);
+    blk = tags->accessBlock(pkt, tag_latency);
+
+    if (blk != nullptr)
+    {
+        printf("BLOCK IS NOT A NULL PTR!!\n");
+        pkt->req->setFlags(Request::UNCACHEABLE);
+    }
+    else
+    {
+        printf("BLOCK IS A NULL PTR!!\n");
+    }*/
+
+    //bool victim = BaseCache::isAllSetLocked(regenerateBlkAddr(blk),blk->isSecure(),size);
+    //CacheBlk* victim = BaseCache::tags->findVictim(regenerateBlkAddr(blk), blk->isSecure(), 0, evict_blks);
+    
+    /*if(victim)
+    {   printf("THE WHOLE CACHE IS LOCKED!\n");
+        pkt->req->setFlags(Request::UNCACHEABLE);
+    }*/
+    //pkt->req->setFlags(Request::UNCACHEABLE);
+
+    //printDummy();
+    //Addr test_addr = BaseCache::regenerateBlkAddr(**&blk);
+    /*if (blk == nullptr)
+    {
+        printf("BLOCK IS A NULL PTR!!\n");
+        //pkt->req->setFlags(Request::UNCACHEABLE);
+    }
+    else
+    {
+        printf("BLOCK IS NOT A NULL PTR!!\n");
+    }*/
+    //bool test = isAllSetLocked();
+    //bool victim = BaseCache::isAllSetLocked(regenerateBlkAddr(blk),blk->isSecure());
+    //CacheBlk* victim = BaseCache::tags->findVictim(regenerateBlkAddr(blk), blk->isSecure(), 0, evict_blks);
+    /*if(victim)
+    {   printf("THE WHOLE CACHE IS LOCKED!\n");
+        //pkt->req->setFlags(Request::UNCACHEABLE);
+    }*/
+    //pkt->req->setFlags(Request::UNCACHEABLE);
 
     if (pkt->req->isUncacheable()) {
         assert(pkt->isRequest());

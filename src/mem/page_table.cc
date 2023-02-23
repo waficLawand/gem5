@@ -62,9 +62,15 @@ EmulationPageTable::map(Addr vaddr, Addr paddr, int64_t size, uint64_t flags)
                      vaddr);
             it->second = Entry(paddr, flags);
         } else {
+            //printf("Address: %x, Flags:%x",paddr,flags);
+
+            // FOR TESTING EXTRA BITS WITH PTABLES
+            /*if (paddr == 0x70000 || paddr ==0x6f000)
+                flags = 10;*/
             pTable.emplace(vaddr, Entry(paddr, flags));
         }
 
+        //printf("Address: %x, Flags: %x\n",lookup(vaddr)->paddr, lookup(vaddr)->flags);
         size -= _pageSize;
         vaddr += _pageSize;
         paddr += _pageSize;

@@ -184,6 +184,8 @@ class BaseTags : public ClockedObject
      */
     void computeStats();
 
+    std::vector<ReplaceableEntry*> getPossibleEntries(const Addr addr) const;
+
     /**
      * Print all tags used
      */

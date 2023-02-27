@@ -108,6 +108,20 @@ class CompressedTags : public SectorTags
                          const std::size_t compressed_size,
                          std::vector<CacheBlk*>& evict_blks) override;
 
+        /**
+     * Find replacement victim based on address. Checks if data can be co-
+     * allocated before choosing blocks to be evicted.
+     *
+     * @param addr Address to find a victim for.
+     * @param is_secure True if the target memory space is secure.
+     * @param compressed_size Size, in bits, of new block to allocate.
+     * @param evict_blks Cache blocks to be evicted.
+     * @return Cache block to be replaced.
+     */
+    CacheBlk* findVictimWayBased(Addr addr, const bool is_secure,
+                         const std::size_t compressed_size,
+                         std::vector<CacheBlk*>& evict_blks,int ways, std::vector<bool> way_mask, std::vector<bool> set_mask, PacketPtr pkt) override;
+
     /**
      * Visit each sub-block in the tags and apply a visitor.
      *

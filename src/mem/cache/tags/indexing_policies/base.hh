@@ -51,6 +51,8 @@
 
 #include "params/BaseIndexingPolicy.hh"
 #include "sim/sim_object.hh"
+#include "mem/packet.hh"
+#include "mem/cache/cache_blk.hh"
 
 namespace gem5
 {
@@ -148,6 +150,8 @@ class BaseIndexingPolicy : public SimObject
      */
     virtual std::vector<ReplaceableEntry*> getPossibleEntries(const Addr addr)
                                                                     const = 0;
+
+    virtual std::vector<ReplaceableEntry*> getWayBased(const Addr addr, int ways, std::vector<bool> way_mask, std::vector<bool> set_mask, PacketPtr pkt) const = 0;                                                                
 
     /**
      * Regenerate an entry's address from its tag and assigned indexing bits.

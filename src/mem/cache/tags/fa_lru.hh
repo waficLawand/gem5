@@ -220,7 +220,20 @@ class FALRU : public BaseTags
     CacheBlk* findVictim(Addr addr, const bool is_secure,
                          const std::size_t size,
                          std::vector<CacheBlk*>& evict_blks) override;
-
+    
+    /**
+     * Find replacement victim based on address. The list of evicted blocks
+     * only contains the victim.
+     *
+     * @param addr Address to find a victim for.
+     * @param is_secure True if the target memory space is secure.
+     * @param size Size, in bits, of new block to allocate.
+     * @param evict_blks Cache blocks to be evicted.
+     * @return Cache block to be replaced.
+     */
+    CacheBlk* findVictimWayBased(Addr addr, const bool is_secure,
+                         const std::size_t size,
+                         std::vector<CacheBlk*>& evict_blks,int ways, std::vector<bool> way_mask, std::vector<bool> set_mask, PacketPtr pkt) override;
     /**
      * Insert the new block into the cache and update replacement data.
      *

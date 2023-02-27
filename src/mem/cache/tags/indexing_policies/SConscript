@@ -27,9 +27,13 @@
 
 Import('*')
 
+"""SimObject('IndexingPolicies.py', sim_objects=[
+    'BaseIndexingPolicy', 'SetAssociative', 'SkewedAssociative','WayPartition'])"""
+
 SimObject('IndexingPolicies.py', sim_objects=[
-    'BaseIndexingPolicy', 'SetAssociative', 'SkewedAssociative'])
+    'BaseIndexingPolicy', 'SetAssociative'])
 
 Source('base.cc')
+#Source('way_partition.cc')
 Source('set_associative.cc')
-Source('skewed_associative.cc')
+#Source('skewed_associative.cc')

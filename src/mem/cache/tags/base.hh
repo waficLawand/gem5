@@ -82,6 +82,8 @@ class BaseTags : public ClockedObject
     /** The tag lookup latency of the cache. */
     const Cycles lookupLatency;
 
+    const bool is_llc;
+
     /** System we are currently operating in. */
     System *system;
 
@@ -281,6 +283,45 @@ class BaseTags : public ClockedObject
     virtual CacheBlk* findVictim(Addr addr, const bool is_secure,
                                  const std::size_t size,
                                  std::vector<CacheBlk*>& evict_blks) = 0;
+
+    
+        /**
+     * Find replacement victim based on address. If the address requires
+     * blocks to be evicted, their locations are listed for eviction. If a
+     * conventional cache is being used, the list only contains the victim.
+     * However, if using sector or compressed caches, the victim is one of
+     * the blocks to be evicted, but its location is the only one that will
+     * be assigned to the newly allocated block associated to this address.
+     * @sa insertBlock
+     *
+     * @param addr Address to find a victim for.
+     * @param is_secure True if the target memory space is secure.
+     * @param size Size, in bits, of new block to allocate.
+     * @param evict_blks Cache blocks to be evicted.
+     * @return Cache block to be replaced.
+     */
+    
+    virtual CacheBlk* findVictimWayBased(Addr addr, const bool is_secure,
+                                 const std::size_t size,
+                                 std::vector<CacheBlk*>& evict_blks, int ways, std::vector<bool> way_mask, std::vector<bool> set_mask, PacketPtr pkt) = 0;
+    
+    /*CacheBlk* findVictimWayBased(Addr addr, const bool is_secure,
+                         const std::size_t size,
+                         std::vector<CacheBlk*>& evict_blks) override
+    {
+        // Get possible entries to be victimized
+        const std::vector<ReplaceableEntry*> entries =
+            indexingPolicy->getPossibleEntries(addr);
+
+        // Choose replacement victim from replacement candidates
+        CacheBlk* victim = static_cast<CacheBlk*>(replacementPolicy->getVictim(
+                                entries));
+
+        // There is only one eviction for this replacement
+        evict_blks.push_back(victim);
+
+        return victim;
+    }*/
 
     /**
      * Access block and update replacement data. May not succeed, in which case

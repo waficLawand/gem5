@@ -162,6 +162,8 @@ Cache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
               PacketList &writebacks)
 {
 
+    //printf("Core %s is requesting data!\n",(system->getRequestorName(pkt->req->requestorId()).c_str()));
+
     if (pkt->req->isUncacheable()) {
         assert(pkt->isRequest());
 

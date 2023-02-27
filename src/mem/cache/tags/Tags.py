@@ -79,6 +79,8 @@ class BaseTags(ClockedObject):
     entry_size = Param.Int(
         Parent.cache_line_size, "Indexing entry size in bytes"
     )
+    
+    is_llc = Param.Bool(Parent.is_llc, "If cache is a LLC")
 
 
 class BaseSetAssoc(BaseTags):

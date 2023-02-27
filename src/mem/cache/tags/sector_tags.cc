@@ -322,6 +322,56 @@ SectorTags::findVictim(Addr addr, const bool is_secure, const std::size_t size,
     return victim;
 }
 
+CacheBlk*
+SectorTags::findVictimWayBased(Addr addr, const bool is_secure, const std::size_t size,
+                       std::vector<CacheBlk*>& evict_blks,int ways, std::vector<bool> way_mask, std::vector<bool> set_mask, PacketPtr pkt)
+{
+    // Get possible entries to be victimized
+    const std::vector<ReplaceableEntry*> sector_entries =
+        indexingPolicy->getPossibleEntries(addr);
+
+    // Check if the sector this address belongs to has been allocated
+    Addr tag = extractTag(addr);
+    SectorBlk* victim_sector = nullptr;
+    for (const auto& sector : sector_entries) {
+        SectorBlk* sector_blk = static_cast<SectorBlk*>(sector);
+        if (sector_blk->matchTag(tag, is_secure)) {
+            victim_sector = sector_blk;
+            break;
+        }
+    }
+
+    // If the sector is not present
+    if (victim_sector == nullptr){
+        // Choose replacement victim from replacement candidates
+        victim_sector = static_cast<SectorBlk*>(replacementPolicy->getVictim(
+                                                sector_entries));
+    }
+
+    // Get the entry of the victim block within the sector
+    SectorSubBlk* victim = victim_sector->blks[extractSectorOffset(addr)];
+
+    // Get evicted blocks. Blocks are only evicted if the sectors mismatch and
+    // the currently existing sector is valid.
+    if (victim_sector->matchTag(tag, is_secure)) {
+        // It would be a hit if victim was valid, and upgrades do not call
+        // findVictim, so it cannot happen
+        assert(!victim->isValid());
+    } else {
+        // The whole sector must be evicted to make room for the new sector
+        for (const auto& blk : victim_sector->blks){
+            if (blk->isValid()) {
+                evict_blks.push_back(blk);
+            }
+        }
+    }
+
+    // Update number of sub-blocks evicted due to a replacement
+    sectorStats.evictionsReplacement[evict_blks.size()]++;
+
+    return victim;
+}
+
 int
 SectorTags::extractSectorOffset(Addr addr) const
 {

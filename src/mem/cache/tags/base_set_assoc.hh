@@ -183,6 +183,35 @@ class BaseSetAssoc : public BaseTags
         return victim;
     }
 
+
+
+        /**
+     * Find replacement victim based on address. The list of evicted blocks
+     * only contains the victim.
+     *
+     * @param addr Address to find a victim for.
+     * @param is_secure True if the target memory space is secure.
+     * @param size Size, in bits, of new block to allocate.
+     * @param evict_blks Cache blocks to be evicted.
+     * @return Cache block to be replaced.
+     */
+    CacheBlk* findVictimWayBased(Addr addr, const bool is_secure,
+                         const std::size_t size,
+                         std::vector<CacheBlk*>& evict_blks,int ways, std::vector<bool> way_mask, std::vector<bool> set_mask, PacketPtr pkt) override
+    {
+        const std::vector<ReplaceableEntry*> entries =
+            indexingPolicy->getWayBased(addr,ways,way_mask,set_mask,pkt);
+
+        // Choose replacement victim from replacement candidates
+        CacheBlk* victim = static_cast<CacheBlk*>(replacementPolicy->getVictim(
+                                entries));
+
+        // There is only one eviction for this replacement
+        evict_blks.push_back(victim);
+
+        return victim;
+    }
+
     /**
      * Insert the new block into the cache and update replacement data.
      *

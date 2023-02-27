@@ -51,7 +51,18 @@ class SetAssociative(BaseIndexingPolicy):
     cxx_header = "mem/cache/tags/indexing_policies/set_associative.hh"
 
 
-class SkewedAssociative(BaseIndexingPolicy):
+
+"""class WayPartition(BaseIndexingPolicy):
+    type = "WayPartition"
+    cxx_class = "gem5::WayPartition"
+    cxx_header = "mem/cache/tags/indexing_policies/way_partition.hh"
+
+    """
+
+"""class SkewedAssociative(BaseIndexingPolicy):
     type = "SkewedAssociative"
     cxx_class = "gem5::SkewedAssociative"
     cxx_header = "mem/cache/tags/indexing_policies/skewed_associative.hh"
+
+"""
+

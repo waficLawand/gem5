@@ -364,6 +364,8 @@ class BaseCache : public ClockedObject
     /** To probe when a cache fill occurs */
     ProbePointArg<PacketPtr> *ppFill;
 
+    const bool is_llc;
+
     /**
      * To probe when the contents of a block are updated. Content updates
      * include data fills, overwrites, and invalidations, which means that
@@ -490,6 +492,12 @@ class BaseCache : public ClockedObject
      */
     virtual bool access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
                         PacketList &writebacks);
+
+    /*CacheBlk* findVictimWayBased(Addr addr, const bool is_secure,
+                         const std::size_t size,
+                         std::vector<CacheBlk*>& evict_blks, int ways, std::vector<bool> way_mask, std::vector<bool> set_mask, PacketPtr pkt);
+    std::vector<ReplaceableEntry*> getWayBased(const Addr addr, int ways, std::vector<bool> way_mask, std::vector<bool> set_mask, PacketPtr pkt);*/
+
 
     /*
      * Handle a timing request that hit in the cache

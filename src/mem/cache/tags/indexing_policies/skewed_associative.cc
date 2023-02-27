@@ -138,6 +138,8 @@ SkewedAssociative::skew(const Addr addr, const uint32_t way) const
     return addr1;
 }
 
+
+
 Addr
 SkewedAssociative::deskew(const Addr addr, const uint32_t way) const
 {
@@ -218,6 +220,39 @@ SkewedAssociative::getPossibleEntries(const Addr addr) const
     }
 
     return entries;
+}
+
+std::vector<ReplaceableEntry*>
+SkewedAssociative::getWayBased(const Addr addr, int ways, std::vector<bool> way_mask, std::vector<bool> set_mask, PacketPtr pkt)
+{
+    std::vector<ReplaceableEntry*> full_set = sets[extractSet(addr)]; 
+    std::vector<ReplaceableEntry*> possible_entries;
+    int i = 0;
+
+    for(const auto& candidate : full_set)
+    {
+        CacheBlk* blk = static_cast<CacheBlk*>(candidate);
+        
+        if(pkt->hasSharers())
+        {
+            if(set_mask[i])
+            {
+               possible_entries.push_back(candidate); 
+            }
+        }
+        else
+        {
+            if(way_mask[i] && !set_mask[i])
+            {
+                possible_entries.push_back(candidate); 
+            }
+        }
+
+        i = i + 1;
+    } 
+
+    return possible_entries;
+    
 }
 
 } // namespace gem5

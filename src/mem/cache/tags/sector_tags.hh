@@ -178,6 +178,19 @@ class SectorTags : public BaseTags
                          const std::size_t size,
                          std::vector<CacheBlk*>& evict_blks) override;
 
+        /**
+     * Find replacement victim based on address.
+     *
+     * @param addr Address to find a victim for.
+     * @param is_secure True if the target memory space is secure.
+     * @param size Size, in bits, of new block to allocate.
+     * @param evict_blks Cache blocks to be evicted.
+     * @return Cache block to be replaced.
+     */
+    CacheBlk* findVictimWayBased(Addr addr, const bool is_secure,
+                         const std::size_t size,
+                         std::vector<CacheBlk*>& evict_blks,int ways, std::vector<bool> way_mask, std::vector<bool> set_mask, PacketPtr pkt) override;
+
     /**
      * Calculate a block's offset in a sector from the address.
      *

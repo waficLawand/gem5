@@ -1,0 +1,20 @@
+std::vector<bool> way_mask = {1,1,1,1,0,0,0,0};
+std::vector<bool> set_mask = {0,0,0,0,1,1,1,1};
+Ticks : 9255059000
+
+
+std::vector<bool> way_mask = {1,1,1,1,0,0,0,0};
+std::vector<bool> set_mask = {0,0,0,0,1,1,1,1};
+Ticks : 9085836000
+
+std::vector<bool> way_mask = {1,1,1,1,1,1,1,1};
+std::vector<bool> set_mask = {0,0,0,0,1,1,1,1};
+Ticks : 9085836000
+
+
+std::vector<bool> way_mask = {1,1,1,1,1,1,1,1};
+std::vector<bool> set_mask = {0,0,0,0,0,0,0,1};
+Ticks : 8916141000
+
+Default Run:
+Ticks : 8889954000

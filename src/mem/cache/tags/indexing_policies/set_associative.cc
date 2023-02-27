@@ -47,6 +47,9 @@
 #include "mem/cache/tags/indexing_policies/set_associative.hh"
 
 #include "mem/cache/replacement_policies/replaceable_entry.hh"
+#include "mem/cache/cache_blk.hh"
+#include "mem/packet.hh"
+
 
 namespace gem5
 {
@@ -73,6 +76,41 @@ std::vector<ReplaceableEntry*>
 SetAssociative::getPossibleEntries(const Addr addr) const
 {
     return sets[extractSet(addr)];
+}
+
+std::vector<ReplaceableEntry*>
+SetAssociative::getWayBased(const Addr addr, int ways, std::vector<bool> way_mask, std::vector<bool> set_mask, PacketPtr pkt) const
+{
+    std::vector<ReplaceableEntry*> full_set = sets[extractSet(addr)]; 
+    std::vector<ReplaceableEntry*> possible_entries;
+    int i = 0;
+
+    for(const auto& candidate : full_set)
+    {
+        CacheBlk* blk = static_cast<CacheBlk*>(candidate);
+        //printf("getWayBased CALLED!\n");
+        if(pkt->hasSharers())
+        {
+            printf("PACKET IS SHARED!\n");
+            if(set_mask[i])
+            {
+               possible_entries.push_back(candidate); 
+            }
+        }
+        else
+        {
+            printf("PACKET IS NOT SHARED!\n");
+            if(way_mask[i] && !set_mask[i])
+            {
+                possible_entries.push_back(candidate); 
+            }
+        }
+
+        i = i + 1;
+    } 
+
+    return possible_entries;
+    
 }
 
 } // namespace gem5

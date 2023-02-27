@@ -172,12 +172,24 @@ class BaseCache(ClockedObject):
     # in the current cache. Typically, this would be enabled in the
     # data cache.
     write_allocator = Param.WriteAllocator(NULL, "Write allocator")
-
+    
+    
+    # Determine if the instantiated cache is an LLC
+    is_llc = Param.Bool(False, "Is instantiated cache a LLC")
 
 class Cache(BaseCache):
     type = "Cache"
     cxx_header = "mem/cache/cache.hh"
     cxx_class = "gem5::Cache"
+    
+
+
+
+
+class LLCWayPartitionedCache(BaseCache):
+    type = "LLCWayPartitionedCache"
+    cxx_header = "mem/cache/llc_way_partitioned_cache.hh"
+    cxx_class = "gem5::LLCWayPartitionedCache"
 
 
 class NoncoherentCache(BaseCache):

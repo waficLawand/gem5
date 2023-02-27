@@ -71,6 +71,44 @@ BaseIndexingPolicy::BaseIndexingPolicy(const Params &p)
     }
 }
 
+std::vector<ReplaceableEntry*>
+BaseIndexingPolicy::getPossibleEntries(const Addr addr) const
+{
+    return sets[((addr >> setShift) & setMask)];
+}
+
+std::vector<ReplaceableEntry*>
+BaseIndexingPolicy::getWayBased(const Addr addr, int ways, std::vector<bool> way_mask, std::vector<bool> set_mask, PacketPtr pkt) const
+{
+    std::vector<ReplaceableEntry*> full_set = getPossibleEntries(addr); 
+    std::vector<ReplaceableEntry*> possible_entries;
+    int i = 0;
+
+    for(const auto& candidate : full_set)
+    {
+        CacheBlk* blk = static_cast<CacheBlk*>(candidate);
+        if(pkt->hasSharers())
+        {
+            if(set_mask[i])
+            {
+               possible_entries.push_back(candidate); 
+            }
+        }
+        else
+        {
+            if(way_mask[i] && !set_mask[i])
+            {
+                possible_entries.push_back(candidate); 
+            }
+        }
+
+        i = i + 1;
+    } 
+
+    return possible_entries;
+    
+}
+
 ReplaceableEntry*
 BaseIndexingPolicy::getEntry(const uint32_t set, const uint32_t way) const
 {

@@ -118,6 +118,8 @@ Base::setCache(BaseCache *_cache)
     lBlkSize = floorLog2(blkSize);
 }
 
+
+
 Base::StatGroup::StatGroup(statistics::Group *parent)
   : statistics::Group(parent),
     ADD_STAT(demandMshrMisses, statistics::units::Count::get(),

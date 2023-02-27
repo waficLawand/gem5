@@ -38,6 +38,8 @@
 
 #include "mem/cache/tags/indexing_policies/base.hh"
 #include "params/SkewedAssociative.hh"
+#include "mem/cache/cache_blk.hh"
+#include "mem/packet.hh"
 
 namespace gem5
 {
@@ -161,8 +163,8 @@ class SkewedAssociative : public BaseIndexingPolicy
      * @return The possible entries.
      */
     std::vector<ReplaceableEntry*> getPossibleEntries(const Addr addr) const
-                                                                   override;
-
+                                                                   override;                                                                                                                   
+    std::vector<ReplaceableEntry*> getWayBased(const Addr addr, int ways, std::vector<bool> way_mask, std::vector<bool> set_mask, PacketPtr pkt) override;
     /**
      * Regenerate an entry's address from its tag and assigned set and way.
      * Uses the inverse of the skewing function.

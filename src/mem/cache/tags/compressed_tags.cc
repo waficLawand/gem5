@@ -163,6 +163,72 @@ CompressedTags::findVictim(Addr addr, const bool is_secure,
     return victim;
 }
 
+CacheBlk*
+CompressedTags::findVictimWayBased(Addr addr, const bool is_secure,
+                           const std::size_t compressed_size,
+                           std::vector<CacheBlk*>& evict_blks,int ways, std::vector<bool> way_mask, std::vector<bool> set_mask, PacketPtr pkt)
+{
+    // Get all possible locations of this superblock
+    const std::vector<ReplaceableEntry*> superblock_entries =
+        indexingPolicy->getPossibleEntries(addr);
+
+    // Check if the superblock this address belongs to has been allocated. If
+    // so, try co-allocating
+    Addr tag = extractTag(addr);
+    SuperBlk* victim_superblock = nullptr;
+    bool is_co_allocation = false;
+    const uint64_t offset = extractSectorOffset(addr);
+    for (const auto& entry : superblock_entries){
+        SuperBlk* superblock = static_cast<SuperBlk*>(entry);
+        if (superblock->matchTag(tag, is_secure) &&
+            !superblock->blks[offset]->isValid() &&
+            superblock->isCompressed() &&
+            superblock->canCoAllocate(compressed_size))
+        {
+            victim_superblock = superblock;
+            is_co_allocation = true;
+            break;
+        }
+    }
+
+    // If the superblock is not present or cannot be co-allocated a
+    // superblock must be replaced
+    if (victim_superblock == nullptr){
+        // Choose replacement victim from replacement candidates
+        victim_superblock = static_cast<SuperBlk*>(
+            replacementPolicy->getVictim(superblock_entries));
+
+        // The whole superblock must be evicted to make room for the new one
+        for (const auto& blk : victim_superblock->blks){
+            if (blk->isValid()) {
+                evict_blks.push_back(blk);
+            }
+        }
+    }
+
+    // Get the location of the victim block within the superblock
+    SectorSubBlk* victim = victim_superblock->blks[offset];
+
+    // It would be a hit if victim was valid in a co-allocation, and upgrades
+    // do not call findVictim, so it cannot happen
+    if (is_co_allocation){
+        assert(!victim->isValid());
+
+        // Print all co-allocated blocks
+        DPRINTF(CacheComp, "Co-Allocation: offset %d of %s\n", offset,
+                victim_superblock->print());
+    }
+
+    // Update number of sub-blocks evicted due to a replacement
+    sectorStats.evictionsReplacement[evict_blks.size()]++;
+
+    return victim;
+}
+
+
+
+
+
 void
 CompressedTags::forEachBlk(std::function<void(CacheBlk &)> visitor)
 {

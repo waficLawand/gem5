@@ -62,6 +62,7 @@
 #include "params/BaseCache.hh"
 #include "params/WriteAllocator.hh"
 #include "sim/cur_tick.hh"
+#include "cpu/base.hh"
 
 namespace gem5
 {
@@ -77,7 +78,8 @@ BaseCache::CacheResponsePort::CacheResponsePort(const std::string &_name,
 }
 
 BaseCache::BaseCache(const BaseCacheParams &p, unsigned blk_size)
-    : ClockedObject(p),
+    : is_llc(p.is_llc),
+      ClockedObject(p),
       cpuSidePort (p.name + ".cpu_side_port", this, "CpuSidePort"),
       memSidePort(p.name + ".mem_side_port", this, "MemSidePort"),
       mshrQueue("MSHRs", p.mshrs, 0, p.demand_mshr_reserve, p.name),
@@ -134,6 +136,8 @@ BaseCache::BaseCache(const BaseCacheParams &p, unsigned blk_size)
         "Compressed cache %s does not have a compression algorithm", name());
     if (compressor)
         compressor->setCache(this);
+    if(is_llc)
+        printf("THIS CACHE IS AN LLC!\n");
 }
 
 BaseCache::~BaseCache()
@@ -402,6 +406,7 @@ BaseCache::handleTimingReqMiss(PacketPtr pkt, MSHR *mshr, CacheBlk *blk,
 void
 BaseCache::recvTimingReq(PacketPtr pkt)
 {
+    //printf("Core %s is requesting data!\n",(system->getRequestorName(pkt->req->requestorId()).c_str()));
     // anything that is merely forwarded pays for the forward latency and
     // the delay provided by the crossbar
     Tick forward_time = clockEdge(forwardLatency) + pkt->headerDelay;
@@ -638,6 +643,7 @@ BaseCache::recvAtomic(PacketPtr pkt)
 
     // We use lookupLatency here because it is used to specify the latency
     // to access.
+    
     Cycles lat = lookupLatency;
 
     CacheBlk *blk = nullptr;
@@ -712,6 +718,7 @@ BaseCache::recvAtomic(PacketPtr pkt)
 void
 BaseCache::functionalAccess(PacketPtr pkt, bool from_cpu_side)
 {
+    //printf("Core %s is requesting data!\n",(system->getRequestorName(pkt->req->requestorId()).c_str()));
     Addr blk_addr = pkt->getBlockAddr(blkSize);
     bool is_secure = pkt->isSecure();
     CacheBlk *blk = tags->findBlock(pkt->getAddr(), is_secure);
@@ -976,6 +983,7 @@ bool
 BaseCache::updateCompressionData(CacheBlk *&blk, const uint64_t* data,
                                  PacketList &writebacks)
 {
+    printf("UPDATE COMPRESSION CALLED!!!\n");
     // tempBlock does not exist in the tags, so don't do anything for it.
     if (blk == tempBlock) {
         return true;
@@ -1020,9 +1028,25 @@ BaseCache::updateCompressionData(CacheBlk *&blk, const uint64_t* data,
         std::vector<CacheBlk*> evict_blks;
         bool victim_itself = false;
         CacheBlk *victim = nullptr;
+
+        std::vector<bool> way_mask = {1,1,1,1,0,0,0,0};
+        std::vector<bool> set_mask = {1,1,1,1,1,1,1,1};
+        
         if (replaceExpansions || is_data_contraction) {
+            /*if (is_llc)
+            {
+            victim = tags->findVictimWayBased(regenerateBlkAddr(blk),
+                blk->isSecure(), compression_size, evict_blks,8,way_mask,set_mask,pkt);
+            }
+            else
+            {
             victim = tags->findVictim(regenerateBlkAddr(blk),
                 blk->isSecure(), compression_size, evict_blks);
+            }*/
+
+            victim = tags->findVictim(regenerateBlkAddr(blk),
+                blk->isSecure(), compression_size, evict_blks);
+
 
             // It is valid to return nullptr if there is no victim
             if (!victim) {
@@ -1086,6 +1110,31 @@ BaseCache::updateCompressionData(CacheBlk *&blk, const uint64_t* data,
 void
 BaseCache::satisfyRequest(PacketPtr pkt, CacheBlk *blk, bool, bool)
 {
+    std::string str1("cpu1.inst");
+    std::string str2("cpu1.data");
+
+    std::string str3("cpu2.inst");
+    std::string str4("cpu2.data");
+
+    /*if(str1.compare((system->getRequestorName(pkt->req->requestorId()).c_str())) == 0)
+    {
+        printf("CORE 1 INST EXECUTED!!\n");
+    }
+    if(str2.compare((system->getRequestorName(pkt->req->requestorId()).c_str())) == 0)
+    {
+        printf("CORE 1 DATA EXECUTED!!\n");
+    }*/
+
+    /*if(str3.compare((system->getRequestorName(pkt->req->requestorId()).c_str())) == 0)
+    {
+        printf("CORE 2 INST EXECUTED!!\n");
+    }
+    if(str4.compare((system->getRequestorName(pkt->req->requestorId()).c_str())) == 0)
+    {
+        printf("CORE 2 DATA EXECUTED!!\n");
+    }*/
+
+    //printf("Core %s is requesting data!\n",(system->getRequestorName(pkt->req->requestorId()).c_str()));
     assert(pkt->isRequest());
 
     assert(blk && blk->isValid());
@@ -1228,6 +1277,17 @@ bool
 BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
                   PacketList &writebacks)
 {
+    //printf("Core %s is requesting data!\n",(system->getRequestorName(pkt->req->requestorId()).c_str()));
+    /*if(pkt->req->requestorId() == 1 || pkt->req->requestorId() == 2)
+    {
+        printf("Core: %d REQEUSTED!!\n");   
+    }*/
+    //printf("Max Requestors: %d\n",system->maxRequestors());
+        /*if(pkt->req->requestorId() == 1 || pkt->req->requestorId() == 2 || pkt->req->requestorId() == 3)
+    {
+        //pkt->print_stack_trace();
+        printf("Core: %d sent a request\n",pkt->req->requestorId());   
+    }*/
     // sanity check
     assert(pkt->isRequest());
 
@@ -1630,9 +1690,24 @@ BaseCache::allocateBlock(const PacketPtr pkt, PacketList &writebacks)
 
     // Find replacement victim
     std::vector<CacheBlk*> evict_blks;
-    CacheBlk *victim = tags->findVictim(addr, is_secure, blk_size_bits,
-                                        evict_blks);
+    CacheBlk *victim;
+    std::vector<bool> way_mask = {1,1,1,1,1,1,1,1};
+    std::vector<bool> set_mask = {0,0,0,0,0,0,0,1};
+   
+    if (is_llc)
+            {
+            victim = tags->findVictimWayBased(addr,
+                is_secure, blk_size_bits, evict_blks,8,way_mask,set_mask,pkt);
+            }
+            else
+            {
 
+            victim = tags->findVictim(addr, is_secure, blk_size_bits,
+                                        evict_blks);
+            }
+
+    /*victim = tags->findVictim(addr, is_secure, blk_size_bits,
+                                        evict_blks);*/
     // It is valid to return nullptr if there is no victim
     if (!victim)
         return nullptr;
@@ -1859,6 +1934,65 @@ BaseCache::nextQueueReadyTime() const
 
     return nextReady;
 }
+
+
+/*CacheBlk*
+BaseCache::findVictimWayBased(Addr addr, const bool is_secure,
+                         const std::size_t size,
+                         std::vector<CacheBlk*>& evict_blks, int ways, std::vector<bool> way_mask, std::vector<bool> set_mask, PacketPtr pkt)
+    {
+        // Get possible entries to be victimized
+        const std::vector<ReplaceableEntry*> entries =
+            getWayBased(addr,ways,way_mask,set_mask,pkt);
+
+        // Choose replacement victim from replacement candidates
+        CacheBlk* victim = static_cast<CacheBlk*>(tags->replacementPolicy->getVictim(
+                                entries));
+
+        // There is only one eviction for this replacement
+        evict_blks.push_back(victim);
+
+        return victim;
+    }
+    
+std::vector<ReplaceableEntry*> 
+BaseCache::getWayBased(const Addr addr, int ways, std::vector<bool> way_mask, std::vector<bool> set_mask, PacketPtr pkt)
+{
+    std::vector<ReplaceableEntry*> full_set = tags->indexingPolicy->getPossibleEntries(addr);
+    std::vector<ReplaceableEntry*> possible_entries;
+    int i = 0;
+
+    for(const auto& candidate : full_set)
+    {
+        CacheBlk* blk = static_cast<CacheBlk*>(candidate);
+        
+        if(pkt->hasSharers())
+        {
+            if(set_mask[i])
+            {
+               possible_entries.push_back(candidate); 
+            }
+        }
+        else
+        {
+            if(way_mask[i] && !set_mask[i])
+            {
+                possible_entries.push_back(candidate); 
+            }
+        }
+
+        i = i + 1;
+    } 
+
+    return possible_entries;
+    
+}
+*/
+
+
+
+
+
 
 
 bool
@@ -2567,6 +2701,7 @@ BaseCache::CpuSidePort::recvTimingReq(PacketPtr pkt)
 Tick
 BaseCache::CpuSidePort::recvAtomic(PacketPtr pkt)
 {
+    
     if (cache->system->bypassCaches()) {
         // Forward the request if the system is in cache bypass mode.
         return cache->memSidePort.sendAtomic(pkt);
@@ -2578,6 +2713,7 @@ BaseCache::CpuSidePort::recvAtomic(PacketPtr pkt)
 void
 BaseCache::CpuSidePort::recvFunctional(PacketPtr pkt)
 {
+    
     if (cache->system->bypassCaches()) {
         // The cache should be flushed if we are in cache bypass mode,
         // so we don't need to check if we need to update anything.

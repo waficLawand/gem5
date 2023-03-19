@@ -90,8 +90,8 @@ for cpu in system.cpu:
 thispath = os.path.dirname(os.path.realpath(__file__))
 binary = os.path.join(
     thispath,
-    "../../",
-    "tests/test-progs/threads/bin/x86/linux/threads",
+    "../../../../",
+    "ece750-benchmarks/phoenix-2.0/tests/string_match/string_match",
 )
 
 

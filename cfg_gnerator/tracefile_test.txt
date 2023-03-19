@@ -1,0 +1,130 @@
+40811000 : system.cpu : T0 : 0x10296 : @fini : lui : lui a5, 125 : IntAlu : D=0x000000000007d000
+40815000 : system.cpu : T0 : 0x1029a : @fini+4 : ld : ld a0, -1768(a5) : MemRead : D=0x0000000000000000 A=0x7c918
+40886000 : system.cpu : T0 : 0x1029e : @fini+8 : jal : jal zero, 220600 : IntAlu : D=0x00000000000102a2
+79000 : system.cpu : T0 : 0x102a4 : @_start : jal : jal ra, 44 : IntAlu : D=0x00000000000102a8
+142000 : system.cpu : T0 : 0x102a8 : @_start+4 : c_mv : c_mv a5, a0 : IntAlu : D=0x0000000000000000
+146000 : system.cpu : T0 : 0x102aa : @_start+6 : auipc : auipc a0, 0 : IntAlu : D=0x00000000000102aa
+150000 : system.cpu : T0 : 0x102ae : @_start+10 : addi : addi a0, a0, 232 : IntAlu : D=0x0000000000010392
+152000 : system.cpu : T0 : 0x102b2 : @_start+14 : c_ldsp : c_ldsp a1, 0(sp) : MemRead : D=0x0000000000000001 A=0x7ffffffffffffed0
+221000 : system.cpu : T0 : 0x102b4 : @_start+16 : c_addi4spn : c_addi4spn a2, sp, 8 : IntAlu : D=0x7ffffffffffffed8
+225000 : system.cpu : T0 : 0x102b6 : @_start+18 : andi : andi sp, sp, 18446744073709551600 : IntAlu : D=0x7ffffffffffffed0
+229000 : system.cpu : T0 : 0x102ba : @_start+22 : auipc : auipc a3, 0 : IntAlu : D=0x00000000000102ba
+233000 : system.cpu : T0 : 0x102be : @_start+26 : addi : addi a3, a3, 1504 : IntAlu : D=0x000000000001089a
+237000 : system.cpu : T0 : 0x102c2 : @_start+30 : auipc : auipc a4, 0 : IntAlu : D=0x00000000000102c2
+241000 : system.cpu : T0 : 0x102c6 : @_start+34 : addi : addi a4, a4, 1640 : IntAlu : D=0x000000000001092a
+243000 : system.cpu : T0 : 0x102ca : @_start+38 : c_mv : c_mv a6, sp : IntAlu : D=0x7ffffffffffffed0
+245000 : system.cpu : T0 : 0x102cc : @_start+40 : jal : jal zero, 230 : IntAlu : D=0x00000000000102d0
+132000 : system.cpu : T0 : 0x102d0 : @_start+44 : auipc : auipc gp, 108 : IntAlu : D=0x000000000007c2d0
+30418000 : system.cpu : T0 : 0x102d0 : @_start+44 : auipc : auipc gp, 108 : IntAlu : D=0x000000000007c2d0
+138000 : system.cpu : T0 : 0x102d4 : @_start+48 : addi : addi gp, gp, -480 : IntAlu : D=0x000000000007c0f0
+30420000 : system.cpu : T0 : 0x102d4 : @_start+48 : addi : addi gp, gp, -480 : IntAlu : D=0x000000000007c0f0
+140000 : system.cpu : T0 : 0x102d8 : @_start+52 : c_jr : c_jr ra : IntAlu : 
+30422000 : system.cpu : T0 : 0x102d8 : @_start+52 : c_jr : c_jr ra : IntAlu : 
+41203000 : system.cpu : T0 : 0x102da : @deregister_tm_clones : lui : lui a0, 124 : IntAlu : D=0x000000000007c000
+41207000 : system.cpu : T0 : 0x102de : @deregister_tm_clones+4 : lui : lui a4, 124 : IntAlu : D=0x000000000007c000
+41211000 : system.cpu : T0 : 0x102e2 : @deregister_tm_clones+8 : addi : addi a5, a0, -1872 : IntAlu : D=0x000000000007b8b0
+41215000 : system.cpu : T0 : 0x102e6 : @deregister_tm_clones+12 : addi : addi a4, a4, -1872 : IntAlu : D=0x000000000007b8b0
+41219000 : system.cpu : T0 : 0x102ea : @deregister_tm_clones+16 : beq : beq a4, a5, 22 : IntAlu : 
+41221000 : system.cpu : T0 : 0x10300 : @deregister_tm_clones+38 : c_jr : c_jr ra : IntAlu : 
+31490000 : system.cpu : T0 : 0x10302 : @register_tm_clones : lui : lui a0, 124 : IntAlu : D=0x000000000007c000
+31494000 : system.cpu : T0 : 0x10306 : @register_tm_clones+4 : addi : addi a5, a0, -1872 : IntAlu : D=0x000000000007b8b0
+31498000 : system.cpu : T0 : 0x1030a : @register_tm_clones+8 : lui : lui a4, 124 : IntAlu : D=0x000000000007c000
+31502000 : system.cpu : T0 : 0x1030e : @register_tm_clones+12 : addi : addi a1, a4, -1872 : IntAlu : D=0x000000000007b8b0
+31504000 : system.cpu : T0 : 0x10312 : @register_tm_clones+16 : c_sub : c_sub a1, a5 : IntAlu : D=0x0000000000000000
+31506000 : system.cpu : T0 : 0x10314 : @register_tm_clones+18 : c_srai : c_srai a1, 3 : IntAlu : D=0x0000000000000000
+31510000 : system.cpu : T0 : 0x10316 : @register_tm_clones+20 : srli : srli a5, a1, 63 : IntAlu : D=0x0000000000000000
+31512000 : system.cpu : T0 : 0x1031a : @register_tm_clones+24 : c_add : c_add a1, a5 : IntAlu : D=0x0000000000000000
+31514000 : system.cpu : T0 : 0x1031c : @register_tm_clones+26 : c_srai : c_srai a1, 1 : IntAlu : D=0x0000000000000000
+31516000 : system.cpu : T0 : 0x1031e : @register_tm_clones+28 : c_beqz : c_beqz a1, 20 : IntAlu : 
+31518000 : system.cpu : T0 : 0x10332 : @register_tm_clones+48 : c_jr : c_jr ra : IntAlu : 
+41073000 : system.cpu : T0 : 0x10334 : @__do_global_dtors_aux : c_addi : c_addi sp, -16 : IntAlu : D=0x7ffffffffffffd10
+41079000 : system.cpu : T0 : 0x10336 : @__do_global_dtors_aux+2 : c_sdsp : c_sdsp s0, 0(sp) : MemWrite : D=0x0000000000079f78 A=0x7ffffffffffffd10
+41083000 : system.cpu : T0 : 0x10338 : @__do_global_dtors_aux+4 : lbu : lbu a5, -640(gp) : MemRead : D=0x0000000000000000 A=0x7be70
+41087000 : system.cpu : T0 : 0x1033c : @__do_global_dtors_aux+8 : c_sdsp : c_sdsp ra, 8(sp) : MemWrite : D=0x000000000001095e A=0x7ffffffffffffd18
+41091000 : system.cpu : T0 : 0x1033e : @__do_global_dtors_aux+10 : c_bnez : c_bnez a5, 34 : IntAlu : 
+41144000 : system.cpu : T0 : 0x10340 : @__do_global_dtors_aux+12 : jal : jal ra, -102 : IntAlu : D=0x0000000000010344
+41223000 : system.cpu : T0 : 0x10344 : @__do_global_dtors_aux+16 : lui : lui a5, 89 : IntAlu : D=0x0000000000059000
+41225000 : system.cpu : T0 : 0x10348 : @__do_global_dtors_aux+20 : addi : addi a5, a5, 1050 : IntAlu : D=0x000000000005941a
+41227000 : system.cpu : T0 : 0x1034c : @__do_global_dtors_aux+24 : c_beqz : c_beqz a5, 14 : IntAlu : 
+41231000 : system.cpu : T0 : 0x1034e : @__do_global_dtors_aux+26 : lui : lui a0, 117 : IntAlu : D=0x0000000000075000
+41235000 : system.cpu : T0 : 0x10352 : @__do_global_dtors_aux+30 : addi : addi a0, a0, -504 : IntAlu : D=0x0000000000074e08
+41239000 : system.cpu : T0 : 0x10356 : @__do_global_dtors_aux+34 : jal : jal ra, 299204 : IntAlu : D=0x000000000001035a
+41644000 : system.cpu : T0 : 0x1035a : @__do_global_dtors_aux+38 : c_li : c_li a5, 1 : IntAlu : D=0x0000000000000001
+41646000 : system.cpu : T0 : 0x1035c : @__do_global_dtors_aux+40 : sb : sb a5, -640(gp) : MemWrite : D=0x0000000000000001 A=0x7be70
+41650000 : system.cpu : T0 : 0x10360 : @__do_global_dtors_aux+44 : c_ldsp : c_ldsp ra, 8(sp) : MemRead : D=0x000000000001095e A=0x7ffffffffffffd18
+41654000 : system.cpu : T0 : 0x10362 : @__do_global_dtors_aux+46 : c_ldsp : c_ldsp s0, 0(sp) : MemRead : D=0x0000000000079f78 A=0x7ffffffffffffd10
+41658000 : system.cpu : T0 : 0x10364 : @__do_global_dtors_aux+48 : c_addi : c_addi sp, 16 : IntAlu : D=0x7ffffffffffffd20
+41660000 : system.cpu : T0 : 0x10366 : @__do_global_dtors_aux+50 : c_jr : c_jr ra : IntAlu : 
+30566000 : system.cpu : T0 : 0x10368 : @frame_dummy : lui : lui a5, 89 : IntAlu : D=0x0000000000059000
+30572000 : system.cpu : T0 : 0x1036c : @frame_dummy+4 : addi : addi a5, a5, 552 : IntAlu : D=0x0000000000059228
+30574000 : system.cpu : T0 : 0x10370 : @frame_dummy+8 : c_beqz : c_beqz a5, 30 : IntAlu : 
+30578000 : system.cpu : T0 : 0x10372 : @frame_dummy+10 : lui : lui a0, 117 : IntAlu : D=0x0000000000075000
+30580000 : system.cpu : T0 : 0x10376 : @frame_dummy+14 : c_addi : c_addi sp, -16 : IntAlu : D=0x7ffffffffffffd40
+30582000 : system.cpu : T0 : 0x10378 : @frame_dummy+16 : addi : addi a1, gp, -632 : IntAlu : D=0x000000000007be78
+30584000 : system.cpu : T0 : 0x1037c : @frame_dummy+20 : addi : addi a0, a0, -504 : IntAlu : D=0x0000000000074e08
+30637000 : system.cpu : T0 : 0x10380 : @frame_dummy+24 : c_sdsp : c_sdsp ra, 8(sp) : MemWrite : D=0x0000000000010912 A=0x7ffffffffffffd48
+30643000 : system.cpu : T0 : 0x10382 : @frame_dummy+26 : jal : jal ra, 298662 : IntAlu : D=0x0000000000010386
+31221000 : system.cpu : T0 : 0x10386 : @frame_dummy+30 : c_ldsp : c_ldsp ra, 8(sp) : MemRead : D=0x0000000000010912 A=0x7ffffffffffffd48
+31225000 : system.cpu : T0 : 0x10388 : @frame_dummy+32 : c_addi : c_addi sp, 16 : IntAlu : D=0x7ffffffffffffd50
+31229000 : system.cpu : T0 : 0x1038a : @frame_dummy+34 : jal : jal zero, -136 : IntAlu : D=0x000000000001038e
+32394000 : system.cpu : T0 : 0x10392 : @main : c_addi : c_addi sp, -16 : IntAlu : D=0x7ffffffffffffd80
+32396000 : system.cpu : T0 : 0x10394 : @main+2 : c_sdsp : c_sdsp ra, 8(sp) : MemWrite : D=0x0000000000010538 A=0x7ffffffffffffd88
+32400000 : system.cpu : T0 : 0x10396 : @main+4 : c_sdsp : c_sdsp s0, 0(sp) : MemWrite : D=0x000000000001089a A=0x7ffffffffffffd80
+32404000 : system.cpu : T0 : 0x10398 : @main+6 : c_addi4spn : c_addi4spn s0, sp, 16 : IntAlu : D=0x7ffffffffffffd90
+32408000 : system.cpu : T0 : 0x1039a : @main+8 : lui : lui a5, 90 : IntAlu : D=0x000000000005a000
+32412000 : system.cpu : T0 : 0x1039e : @main+12 : addi : addi a0, a5, 800 : IntAlu : D=0x000000000005a320
+32416000 : system.cpu : T0 : 0x103a2 : @main+16 : jal : jal ra, 21198 : IntAlu : D=0x00000000000103a6
+40318000 : system.cpu : T0 : 0x103a6 : @main+20 : c_li : c_li a5, 0 : IntAlu : D=0x0000000000000000
+40324000 : system.cpu : T0 : 0x103a8 : @main+22 : c_mv : c_mv a0, a5 : IntAlu : D=0x0000000000000000
+40326000 : system.cpu : T0 : 0x103aa : @main+24 : c_ldsp : c_ldsp ra, 8(sp) : MemRead : D=0x0000000000010538 A=0x7ffffffffffffd88
+40330000 : system.cpu : T0 : 0x103ac : @main+26 : c_ldsp : c_ldsp s0, 0(sp) : MemRead : D=0x000000000001089a A=0x7ffffffffffffd80
+40334000 : system.cpu : T0 : 0x103ae : @main+28 : c_addi : c_addi sp, 16 : IntAlu : D=0x7ffffffffffffd90
+40336000 : system.cpu : T0 : 0x103b0 : @main+30 : c_jr : c_jr ra : IntAlu : 
+298000 : system.cpu : T0 : 0x103b2 : @__libc_start_main : c_addi16sp : c_addi16sp sp, -320 : IntAlu : D=0x7ffffffffffffd90
+304000 : system.cpu : T0 : 0x103b4 : @__libc_start_main+2 : lui : lui a7, 0 : IntAlu : D=0x0000000000000000
+306000 : system.cpu : T0 : 0x103b8 : @__libc_start_main+6 : c_sdsp : c_sdsp s0, 304(sp) : MemWrite : D=0x0000000000000000 A=0x7ffffffffffffec0
+310000 : system.cpu : T0 : 0x103ba : @__libc_start_main+8 : c_sdsp : c_sdsp s1, 296(sp) : MemWrite : D=0x0000000000000000 A=0x7ffffffffffffeb8
+365000 : system.cpu : T0 : 0x103bc : @__libc_start_main+10 : c_sdsp : c_sdsp s2, 288(sp) : MemWrite : D=0x0000000000000000 A=0x7ffffffffffffeb0
+369000 : system.cpu : T0 : 0x103be : @__libc_start_main+12 : c_sdsp : c_sdsp ra, 312(sp) : MemWrite : D=0x00000000000102a8 A=0x7ffffffffffffec8
+424000 : system.cpu : T0 : 0x103c0 : @__libc_start_main+14 : addi : addi t1, a7, 0 : IntAlu : D=0x0000000000000000
+430000 : system.cpu : T0 : 0x103c4 : @__libc_start_main+18 : c_sdsp : c_sdsp a0, 24(sp) : MemWrite : D=0x0000000000010392 A=0x7ffffffffffffda8
+485000 : system.cpu : T0 : 0x103c6 : @__libc_start_main+20 : c_sdsp : c_sdsp a1, 8(sp) : MemWrite : D=0x0000000000000001 A=0x7ffffffffffffd98
+489000 : system.cpu : T0 : 0x103c8 : @__libc_start_main+22 : c_sdsp : c_sdsp a2, 16(sp) : MemWrite : D=0x7ffffffffffffed8 A=0x7ffffffffffffda0
+493000 : system.cpu : T0 : 0x103ca : @__libc_start_main+24 : c_mv : c_mv s2, a5 : IntAlu : D=0x0000000000000000
+495000 : system.cpu : T0 : 0x103cc : @__libc_start_main+26 : c_mv : c_mv s0, a3 : IntAlu : D=0x000000000001089a
+497000 : system.cpu : T0 : 0x103ce : @__libc_start_main+28 : c_mv : c_mv s1, a4 : IntAlu : D=0x000000000001092a
+499000 : system.cpu : T0 : 0x103d0 : @__libc_start_main+30 : c_li : c_li a5, 0 : IntAlu : D=0x0000000000000000
+503000 : system.cpu : T0 : 0x103d2 : @__libc_start_main+32 : beq : beq t1, zero, 12 : IntAlu : 
+505000 : system.cpu : T0 : 0x103de : @__libc_start_main+44 : c_ldsp : c_ldsp a4, 8(sp) : MemRead : D=0x0000000000000001 A=0x7ffffffffffffd98
+509000 : system.cpu : T0 : 0x103e0 : @__libc_start_main+46 : addi : addi a0, a4, 1 : IntAlu : D=0x0000000000000002
+511000 : system.cpu : T0 : 0x103e4 : @__libc_start_main+50 : c_ldsp : c_ldsp a4, 16(sp) : MemRead : D=0x7ffffffffffffed8 A=0x7ffffffffffffda0
+515000 : system.cpu : T0 : 0x103e6 : @__libc_start_main+52 : c_slli : c_slli a0, 3 : IntAlu : D=0x0000000000000010
+517000 : system.cpu : T0 : 0x103e8 : @__libc_start_main+54 : c_add : c_add a0, a4 : IntAlu : D=0x7ffffffffffffee8
+521000 : system.cpu : T0 : 0x103ea : @__libc_start_main+56 : sw : sw a5, -1576(gp) : MemWrite : D=0x0000000000000000 A=0x7bac8
+592000 : system.cpu : T0 : 0x103ee : @__libc_start_main+60 : sd : sd a0, -1192(gp) : MemWrite : D=0x7ffffffffffffee8 A=0x7bc48
+649000 : system.cpu : T0 : 0x103f2 : @__libc_start_main+64 : lui : lui a5, 122 : IntAlu : D=0x000000000007a000
+653000 : system.cpu : T0 : 0x103f6 : @__libc_start_main+68 : sd : sd a6, -80(a5) : MemWrite : D=0x7ffffffffffffed0 A=0x79fb0
+722000 : system.cpu : T0 : 0x103fa : @__libc_start_main+72 : c_addi : c_addi a0, 8 : IntAlu : D=0x7ffffffffffffef0
+724000 : system.cpu : T0 : 0x103fc : @__libc_start_main+74 : ld : ld a5, -8(a0) : MemRead : D=0x0000000000000000 A=0x7ffffffffffffee8
+779000 : system.cpu : T0 : 0x10400 : @__libc_start_main+78 : c_bnez : c_bnez a5, -6 : IntAlu : 
+787000 : system.cpu : T0 : 0x10402 : @__libc_start_main+80 : jal : jal ra, 71926 : IntAlu : D=0x0000000000010406
+2609000 : system.cpu : T0 : 0x10406 : @__libc_start_main+84 : lui : lui a5, 125 : IntAlu : D=0x000000000007d000
+2613000 : system.cpu : T0 : 0x1040a : @__libc_start_main+88 : ld : ld a4, 208(a5) : MemRead : D=0x0000000000010040 A=0x7d0d0
+2619000 : system.cpu : T0 : 0x1040e : @__libc_start_main+92 : beq : beq a4, zero, 352 : IntAlu : 
+2623000 : system.cpu : T0 : 0x10412 : @__libc_start_main+96 : lw : lw a5, -1576(gp) : MemRead : D=0x0000000000000000 A=0x7bac8
+2629000 : system.cpu : T0 : 0x10416 : @__libc_start_main+100 : beq : beq a5, zero, 294 : IntAlu : 
+3300000 : system.cpu : T0 : 0x1041a : @__libc_start_main+104 : jal : jal ra, 1124 : IntAlu : D=0x000000000001041e
+5707000 : system.cpu : T0 : 0x1041e : @__libc_start_main+108 : lui : lui a5, 122 : IntAlu : D=0x000000000007a000
+5711000 : system.cpu : T0 : 0x10422 : @__libc_start_main+112 : ld : ld a5, -96(a5) : MemRead : D=0x7fffffffffffff78 A=0x79fa0
+5717000 : system.cpu : T0 : 0x10426 : @__libc_start_main+116 : lui : lui t3, 122 : IntAlu : D=0x000000000007a000
+5721000 : system.cpu : T0 : 0x1042a : @__libc_start_main+120 : addi : addi t3, t3, -112 : IntAlu : D=0x0000000000079f90
+5725000 : system.cpu : T0 : 0x1042e : @__libc_start_main+124 : lbu : lbu a4, 1(a5) : MemRead : D=0x0000000000000000 A=0x7fffffffffffff79
+5731000 : system.cpu : T0 : 0x10432 : @__libc_start_main+128 : lbu : lbu a0, 0(a5) : MemRead : D=0x0000000000000000 A=0x7fffffffffffff78
+5737000 : system.cpu : T0 : 0x10436 : @__libc_start_main+132 : lbu : lbu t6, 2(a5) : MemRead : D=0x0000000000000000 A=0x7fffffffffffff7a
+5743000 : system.cpu : T0 : 0x1043a : @__libc_start_main+136 : lbu : lbu a2, 9(a5) : MemRead : D=0x0000000000000077 A=0x7fffffffffffff81
+5851000 : system.cpu : T0 : 0x1043e : @__libc_start_main+140 : lbu : lbu t5, 3(a5) : MemRead : D=0x000000000000002f A=0x7fffffffffffff7b
+5857000 : system.cpu : T0 : 0x10442 : @__libc_start_main+144 : lbu : lbu a1, 8(a5) : MemRead : D=0x000000000000002f A=0x7fffffffffffff80
+5863000 : system.cpu : T0 : 0x10446 : @__libc_start_main+148 : lbu : lbu a3, 10(a5) : MemRead : D=0x000000000000006c A=0x7fffffffffffff82
+5869000 : system.cpu : T0 : 0x1044a : @__libc_start_main+152 : lbu : lbu t4, 4(a5) : MemRead : D=0x0000000000000068 A=0x7fffffffffffff7c
+5875000 : system.cpu : T0 : 0x1044e : @__libc_start_main+156 : lbu : lbu t1, 11(a5) : MemRead : D=0x0000000000000061 A=0x7fffffffffffff83
+5879000 : system.cpu : T0 : 0x10452 : @__libc_start_main+160 : c_slli : c_slli a4, 8 : IntAlu : D=0x0000000000000000

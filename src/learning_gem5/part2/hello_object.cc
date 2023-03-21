@@ -31,6 +31,7 @@
 #include "base/logging.hh"
 #include "base/trace.hh"
 #include "debug/HelloExample.hh"
+#include "mem/cache/base.hh"
 
 namespace gem5
 {
@@ -46,6 +47,7 @@ HelloObject::HelloObject(const HelloObjectParams &params) :
     latency(params.time_to_wait),
     timesLeft(params.number_of_fires)
 {
+    //printf("CACHE BLOCK SIZE IS: %d",params->system->maxRequestors());
     DPRINTF(HelloExample, "Created the hello object\n");
     panic_if(!goodbye, "HelloObject must have a non-null GoodbyeObject");
 }
@@ -54,6 +56,7 @@ void
 HelloObject::startup()
 {
     // Before simulation starts, we need to schedule the event
+
     schedule(event, latency);
 }
 
@@ -61,6 +64,7 @@ void
 HelloObject::processEvent()
 {
     timesLeft--;
+    
     DPRINTF(HelloExample, "Hello world! Processing the event! %d left\n",
                           timesLeft);
 

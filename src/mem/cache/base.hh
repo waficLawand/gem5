@@ -75,6 +75,9 @@
 #include "sim/serialize.hh"
 #include "sim/sim_exit.hh"
 #include "sim/system.hh"
+#include "learning_gem5/part2/hello_object.hh"
+#include "params/HelloObject.hh"
+#include <thread>
 
 namespace gem5
 {
@@ -94,6 +97,9 @@ struct BaseCacheParams;
  */
 class BaseCache : public ClockedObject
 {
+  private:
+        uint64_t game_theory_ticks = 0;
+        bool compute_allocations_flag = 0;
   protected:
     /**
      * Indexes to enumerate the MSHR queues.
@@ -105,9 +111,28 @@ class BaseCache : public ClockedObject
     };
 
   public:
+
+    //uint64_t game_theory_ticks;
+    
+
+    uint64_t get_game_theory_ticks() {return game_theory_ticks;}
+    void set_game_theory_ticks(uint64_t val) {game_theory_ticks=val;}
+    
+    bool get_compute_allocations_flag(){return compute_allocations_flag;}
+    void set_compute_allocation_flag(bool val){ compute_allocations_flag = val;}
+
+
+    void background_counter();
+    void game_theory();
+
     /**
      * Reasons for caches to be blocked.
      */
+    std::thread *myThread;
+
+    //void game_theory();
+    //void hello_test();
+
     enum BlockedCause
     {
         Blocked_NoMSHRs = MSHRQueue_MSHRs,
@@ -1161,6 +1186,7 @@ class BaseCache : public ClockedObject
     BaseCache(const BaseCacheParams &p, unsigned blk_size);
     ~BaseCache();
 
+
     void init() override;
 
     Port &getPort(const std::string &if_name,
@@ -1174,6 +1200,12 @@ class BaseCache : public ClockedObject
     getBlockSize() const
     {
         return blkSize;
+    }
+
+    void triggerEvent()
+    {
+
+        printf("HELLO FROM TRIGGERED EVENT!\n");
     }
 
     const AddrRangeList &getAddrRanges() const { return addrRanges; }

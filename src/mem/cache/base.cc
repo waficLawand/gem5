@@ -62,7 +62,12 @@
 #include "params/BaseCache.hh"
 #include "params/WriteAllocator.hh"
 #include "sim/cur_tick.hh"
+#include "sim/sim_object.hh"
+#include "sim/sim_events.hh"
 #include "cpu/base.hh"
+#include "learning_gem5/part2/hello_object.hh"
+#include <thread>
+#include <chrono>
 
 namespace gem5
 {
@@ -76,6 +81,16 @@ BaseCache::CacheResponsePort::CacheResponsePort(const std::string &_name,
       sendRetryEvent([this]{ processSendRetry(); }, _name)
 {
 }
+
+
+/*void hello_test()
+{
+        printf("HELLO FROM SCHEDULED FN!\n");
+
+        Event *event = new EventFunctionWrapper(
+                    [this]{ game_theory(); }, name(), true);
+        schedule(event, curTick()+1000);
+}*/
 
 BaseCache::BaseCache(const BaseCacheParams &p, unsigned blk_size)
     : is_llc(p.is_llc),
@@ -123,6 +138,8 @@ BaseCache::BaseCache(const BaseCacheParams &p, unsigned blk_size)
     // forward snoops is overridden in init() once we can query
     // whether the connected requestor is actually snooping or not
 
+    
+
     tempBlock = new TempCacheBlk(blkSize);
 
     tags->tagsInit();
@@ -138,11 +155,32 @@ BaseCache::BaseCache(const BaseCacheParams &p, unsigned blk_size)
         compressor->setCache(this);
     if(is_llc)
         printf("THIS CACHE IS AN LLC!\n");
+
+
+    //EventFunctionWrapper event([this]{printf("HELLO FROM LAMBDA FN!\n");},name() + ".event");
+    //schedule(event,curTick()+10000);
 }
 
 BaseCache::~BaseCache()
 {
     delete tempBlock;
+}
+/*void BaseCache::game_theory()
+{
+    //printf("%d",curTick());
+    printf("GAME THEORY FUNCTION!\n");
+    printf("%d", getBlockSize());
+}*/
+void BaseCache::background_counter()
+{
+    while(true)
+    {   
+        set_game_theory_ticks(get_game_theory_ticks()+1);
+        std::this_thread::sleep_for(std::chrono::nanoseconds(5));
+
+        if (get_game_theory_ticks()%400000 == 0)
+            set_compute_allocation_flag(1);
+    }
 }
 
 void
@@ -159,6 +197,7 @@ BaseCache::CacheResponsePort::setBlocked()
         mustSendRetry = true;
     }
 }
+
 
 void
 BaseCache::CacheResponsePort::clearBlocked()
@@ -199,6 +238,12 @@ BaseCache::init()
         fatal("Cache ports on %s are not connected\n", name());
     cpuSidePort.sendRangeChange();
     forwardSnoops = cpuSidePort.isSnooping();
+
+    //hello_test_2();
+    myThread = new std::thread(&BaseCache::background_counter,this);
+    //myThread.join();
+    //std::thread new_thread(&BaseCache::hello_test_2,this);
+    
 }
 
 Port &
@@ -1277,6 +1322,17 @@ bool
 BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
                   PacketList &writebacks)
 {
+    //game_theory_ticks+=1;
+    if(compute_allocations_flag)
+        printf("Game Theory Ticks: %d\n",get_game_theory_ticks());
+    else
+        set_compute_allocation_flag(0);
+    //hello_test();
+    //EventFunctionWrapper event([this]{hello_test();},name() + ".event");
+    
+    //schedule(event, curTick()+1);
+
+
     //printf("Core %s is requesting data!\n",(system->getRequestorName(pkt->req->requestorId()).c_str()));
     /*if(pkt->req->requestorId() == 1 || pkt->req->requestorId() == 2)
     {

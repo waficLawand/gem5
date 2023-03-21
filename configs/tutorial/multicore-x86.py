@@ -100,6 +100,8 @@ binary = os.path.join(
 )
 
 
+#system.hello = HelloObject(time_to_wait="2us", number_of_fires=5)
+#system.hello.goodbye_object = GoodbyeObject(buffer_size="100B")
 
 # Create a process for a simple "multi-threaded" application
 process = Process()
@@ -119,6 +121,9 @@ config_filesystem(system)
 # set up the root SimObject and start the simulation
 root = Root(full_system=False, system=system)
 # instantiate all of the objects we've created above
+
+
+
 m5.instantiate()
 
 

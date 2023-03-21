@@ -34,6 +34,7 @@
 #include "learning_gem5/part2/goodbye_object.hh"
 #include "params/HelloObject.hh"
 #include "sim/sim_object.hh"
+#include "mem/cache/base.hh"
 
 namespace gem5
 {

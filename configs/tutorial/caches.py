@@ -93,6 +93,7 @@ class L1DCache(L1Cache):
 
     # Set the default size
     size = "64kB"
+    
 
     SimpleOpts.add_option(
         "--l1d_size", help="L1 data cache size. Default: %s" % size
@@ -120,7 +121,7 @@ class L2Cache(LLCWayPartitionedCache):
     response_latency = 20
     mshrs = 20
     tgts_per_mshr = 12
-    is_llc = False
+    is_llc = True
 
     SimpleOpts.add_option(
         "--l2_size", help="L2 cache size. Default: %s" % size

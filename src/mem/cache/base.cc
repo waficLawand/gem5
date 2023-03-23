@@ -68,9 +68,13 @@
 #include "learning_gem5/part2/hello_object.hh"
 #include <thread>
 #include <chrono>
+#include <string.h>
+
 
 namespace gem5
 {
+
+
 
 BaseCache::CacheResponsePort::CacheResponsePort(const std::string &_name,
                                           BaseCache *_cache,
@@ -171,18 +175,24 @@ BaseCache::~BaseCache()
     printf("GAME THEORY FUNCTION!\n");
     printf("%d", getBlockSize());
 }*/
-void BaseCache::background_counter()
+/*void BaseCache::background_counter()
 {
     while(true)
     {   
         set_game_theory_ticks(get_game_theory_ticks()+1);
-        std::this_thread::sleep_for(std::chrono::nanoseconds(5));
+        std::this_thread::sleep_for(std::chrono::nanoseconds(1));
+        //printf("%d\n",get_game_theory_ticks());
 
-        if (get_game_theory_ticks()%400000 == 0)
+        if (get_game_theory_ticks()%10 == 0)
+        {
+            
             set_compute_allocation_flag(1);
+            //printf("%d\n",get_compute_allocations_flag());
+        }
+            
     }
 }
-
+*/
 void
 BaseCache::CacheResponsePort::setBlocked()
 {
@@ -240,7 +250,10 @@ BaseCache::init()
     forwardSnoops = cpuSidePort.isSnooping();
 
     //hello_test_2();
-    myThread = new std::thread(&BaseCache::background_counter,this);
+    /*if (is_llc)
+        {
+            myThread = new std::thread(&BaseCache::background_counter,this);
+        }*/
     //myThread.join();
     //std::thread new_thread(&BaseCache::hello_test_2,this);
     
@@ -1318,15 +1331,106 @@ BaseCache::calculateAccessLatency(const CacheBlk* blk, const uint32_t delay,
     return lat;
 }
 
+void
+BaseCache::gt_cache_allocation()
+{   
+    int v_priv[2] = {0};
+    float v_pub[2] = {0};
+    
+    // 0 for public file, 
+    // 1 for private of agent 1, 2 for private of agent 2
+    float allocated_space[3];
+
+    // fraction of public file allowed for agent i
+    float frac_allowed[2];
+
+    // calculate valuation for files based on hits and misses, for each agent i
+    for(auto i=0; i<2; i++) {
+        v_priv[i] = 1*get_private_hits(i) + 1.2*get_private_misses(i);
+        v_pub[i] = 1*get_public_hits(i) + 1.2*get_public_misses(i);
+
+        // normalize the values so that v_priv[i] = 1
+        v_pub[i] = float(v_pub[i] / ((float) v_priv[i]));
+    }
+
+    if ((v_pub[0]<=1) && (v_pub[1]<=1)) {
+        if (v_pub[0]*v_pub[1] < (0.25)){
+            allocated_space[0] = 0;
+            allocated_space[1] = 1;
+            allocated_space[2] = 1;
+            frac_allowed[0] = 0;
+            frac_allowed[1] = 0;
+        }
+        else {
+            allocated_space[0] = (4 * log(4*v_pub[0]*v_pub[1])) / 3;
+            allocated_space[1] = (3*v_pub[1] - 4*v_pub[0]*v_pub[1] + 1) / (3*v_pub[1]);
+            allocated_space[2] = (3*v_pub[0] - 4*v_pub[0]*v_pub[1] + 1) / (3*v_pub[0]);
+            frac_allowed[0] = allocated_space[0];
+            frac_allowed[1] = allocated_space[0];
+        }
+    } else {
+        if ((v_pub[0]>1) && (v_pub[1]<=1)) {
+            // derived from "max(v_pub1, v_pub2) <= 1" case
+            // assuming v_pub[0] = 1
+            float x0 = (4 * log(4*v_pub[1])) / 3;
+            float x1 = (3*v_pub[1] - 4*v_pub[1] + 1) / (3*v_pub[1]);
+            float x2 = (3 - 4*v_pub[1] + 1) / (3);
+
+            allocated_space[0] = x0 + x1;
+            allocated_space[1] = 0;
+            allocated_space[2] = x2;
+
+            frac_allowed[0] = allocated_space[0];
+            frac_allowed[1] = x0;
+        } else if ((v_pub[0]<=1) && (v_pub[2]>1)) {
+            // derived from "max(v_pub1, v_pub2) <= 1" case
+            // assuming v_pub[2] = 1
+            float x0 = (4 * log(4*v_pub[0])) / 3;
+            float x1 = (3 - 4*v_pub[0] + 1) / (3);
+            float x2 = (3*v_pub[0] - 4*v_pub[0] + 1) / (3*v_pub[0]);
+
+            allocated_space[0] = x0 + x2;
+            allocated_space[1] = x1;
+            allocated_space[2] = 0;
+
+            frac_allowed[0] = x0;
+            frac_allowed[1] = allocated_space[0];
+        } else {
+            allocated_space[0] = (4/3) * log(4);
+            allocated_space[1] = 0;
+            allocated_space[2] = 0;
+
+            frac_allowed[0] = allocated_space[0];
+            frac_allowed[1] = allocated_space[0];
+        }
+    }
+    printf(" V: {%f, %f} \n Allocated space: {%f, %f} \n Fraction allowed: {%f, %f}: \n",
+        v_pub[0], v_pub[1], allocated_space[0], allocated_space[1], allocated_space[2],
+        frac_allowed[0], frac_allowed[1]);
+}
+
 bool
 BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
                   PacketList &writebacks)
 {
+    //printf("Outside outside the if : %d\n",get_compute_allocations_flag());
+    //if(pkt.has)
     //game_theory_ticks+=1;
-    if(compute_allocations_flag)
-        printf("Game Theory Ticks: %d\n",get_game_theory_ticks());
-    else
-        set_compute_allocation_flag(0);
+    //printf("%d",is_llc);
+    if (is_llc)
+    {
+        printf("Outside the if : %d\n",get_compute_allocations_flag());
+
+        if(get_compute_allocations_flag()) {
+
+            printf("Inside the if : %d\n",get_compute_allocations_flag());
+            gt_cache_allocation();
+            printf("Game Theory Ticks: %d\n",get_game_theory_ticks());
+            set_compute_allocation_flag(0);
+        }
+
+    }
+
     //hello_test();
     //EventFunctionWrapper event([this]{hello_test();},name() + ".event");
     
@@ -1354,6 +1458,29 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
     // Access block in the tags
     Cycles tag_latency(0);
     blk = tags->accessBlock(pkt, tag_latency);
+    if(is_llc)
+    {
+        std::string cpu_id_str = system->getRequestorName(pkt->req->requestorId()).c_str();
+        cpu_id_str = cpu_id_str.substr(3);
+        int cpu_id_int = stoi(cpu_id_str);
+
+        if(blk)
+            {
+                if(pkt->hasSharers())
+                {
+                    increment_public_hits(cpu_id_int);
+                }
+                else
+                {
+                    increment_private_hits(cpu_id_int);
+                }
+            }
+        else
+            {
+                increment_private_misses(cpu_id_int);
+            }
+    }
+    
 
     DPRINTF(Cache, "%s for %s %s\n", __func__, pkt->print(),
             blk ? "hit " + blk->print() : "miss");
@@ -1748,9 +1875,12 @@ BaseCache::allocateBlock(const PacketPtr pkt, PacketList &writebacks)
     std::vector<CacheBlk*> evict_blks;
     CacheBlk *victim;
     std::vector<bool> way_mask = {1,1,1,1,1,1,1,1};
-    std::vector<bool> set_mask = {0,0,0,0,0,0,0,1};
-   
-    if (is_llc)
+    std::vector<bool> set_mask = {0,0,0,0,1,1,1,1};
+    
+
+    victim = tags->findVictim(addr, is_secure, blk_size_bits,
+                                        evict_blks);
+    /*if (is_llc)
             {
             victim = tags->findVictimWayBased(addr,
                 is_secure, blk_size_bits, evict_blks,8,way_mask,set_mask,pkt);
@@ -1760,7 +1890,7 @@ BaseCache::allocateBlock(const PacketPtr pkt, PacketList &writebacks)
 
             victim = tags->findVictim(addr, is_secure, blk_size_bits,
                                         evict_blks);
-            }
+            }*/
 
     /*victim = tags->findVictim(addr, is_secure, blk_size_bits,
                                         evict_blks);*/
@@ -1851,6 +1981,18 @@ BaseCache::writebackBlk(CacheBlk *blk)
     } else {
         // we are in the Owned state, tell the receiver
         pkt->setHasSharers();
+        
+        // greedy way of accounting for incorrect private misses
+        if(is_llc)
+        {
+            std::string cpu_id_str = system->getRequestorName(pkt->req->requestorId()).c_str();
+            cpu_id_str = cpu_id_str.substr(3);
+            int cpu_id_int = stoi(cpu_id_str);
+
+            decrement_private_hits(cpu_id_int);
+            increment_public_misses(cpu_id_int);
+        }
+
     }
 
     // make sure the block is not marked dirty
@@ -1896,6 +2038,18 @@ BaseCache::writecleanBlk(CacheBlk *blk, Request::Flags dest, PacketId id)
     } else {
         // we are in the Owned state, tell the receiver
         pkt->setHasSharers();
+        
+        // greedy way of accounting for incorrect private misses
+        if(is_llc)
+        {
+            std::string cpu_id_str = system->getRequestorName(pkt->req->requestorId()).c_str();
+            cpu_id_str = cpu_id_str.substr(3);
+            int cpu_id_int = stoi(cpu_id_str);
+
+            decrement_private_hits(cpu_id_int);
+            increment_public_misses(cpu_id_int);
+        }
+
     }
 
     // make sure the block is not marked dirty

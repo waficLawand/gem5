@@ -79,6 +79,8 @@
 #include "params/HelloObject.hh"
 #include <thread>
 
+#define NUM_CORES 2
+
 namespace gem5
 {
 
@@ -100,6 +102,12 @@ class BaseCache : public ClockedObject
   private:
         uint64_t game_theory_ticks = 0;
         bool compute_allocations_flag = 0;
+        
+        uint32_t public_hits[NUM_CORES]={0};
+        uint32_t public_misses[NUM_CORES]={0};
+
+        uint32_t private_hits[NUM_CORES]={0};
+        uint32_t private_misses[NUM_CORES]={0};
   protected:
     /**
      * Indexes to enumerate the MSHR queues.
@@ -114,12 +122,27 @@ class BaseCache : public ClockedObject
 
     //uint64_t game_theory_ticks;
     
+    uint32_t get_private_hits(int cpu_id){return private_hits[cpu_id];}
+    uint32_t get_private_misses(int cpu_id){return private_misses[cpu_id];}
 
+    uint32_t get_public_hits(int cpu_id) {return public_hits[cpu_id];}
+    uint32_t get_public_misses(int cpu_id) {return public_misses[cpu_id];}
+
+    void increment_private_hits(int cpu_id){private_hits[cpu_id]+=1;}
+    void increment_private_misses(int cpu_id){private_misses[cpu_id]+=1;}
+    
+    void increment_public_hits(int cpu_id){public_hits[cpu_id]+=1;}
+    void increment_public_misses(int cpu_id){public_misses[cpu_id]+=1;}
+    
+    void decrement_private_hits(int cpu_id){private_hits[cpu_id]-=1;}
+    
     uint64_t get_game_theory_ticks() {return game_theory_ticks;}
     void set_game_theory_ticks(uint64_t val) {game_theory_ticks=val;}
     
     bool get_compute_allocations_flag(){return compute_allocations_flag;}
     void set_compute_allocation_flag(bool val){ compute_allocations_flag = val;}
+
+    void gt_cache_allocation();
 
 
     void background_counter();
@@ -389,7 +412,7 @@ class BaseCache : public ClockedObject
     /** To probe when a cache fill occurs */
     ProbePointArg<PacketPtr> *ppFill;
 
-    const bool is_llc;
+    bool is_llc;
 
     /**
      * To probe when the contents of a block are updated. Content updates

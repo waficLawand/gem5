@@ -91,7 +91,7 @@ SetAssociative::getWayBased(const Addr addr, int ways, std::vector<bool> way_mas
         //printf("getWayBased CALLED!\n");
         if(pkt->hasSharers())
         {
-            printf("PACKET IS SHARED!\n");
+            //printf("PACKET IS SHARED!\n");
             if(set_mask[i])
             {
                possible_entries.push_back(candidate); 
@@ -99,7 +99,7 @@ SetAssociative::getWayBased(const Addr addr, int ways, std::vector<bool> way_mas
         }
         else
         {
-            printf("PACKET IS NOT SHARED!\n");
+            //printf("PACKET IS NOT SHARED!\n");
             if(way_mask[i] && !set_mask[i])
             {
                 possible_entries.push_back(candidate); 

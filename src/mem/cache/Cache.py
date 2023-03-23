@@ -173,6 +173,8 @@ class BaseCache(ClockedObject):
     # data cache.
     write_allocator = Param.WriteAllocator(NULL, "Write allocator")
 
+    is_llc = Param.Bool(False, "Is instantiated cache a LLC")
+
 
 class Cache(BaseCache):
     type = "Cache"

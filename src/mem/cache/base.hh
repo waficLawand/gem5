@@ -387,6 +387,8 @@ class BaseCache : public ClockedObject
      */
     WriteAllocator * const writeAllocator;
 
+    const bool is_llc;
+
     /**
      * Temporary cache block for occasional transitory use.  We use
      * the tempBlock to fill when allocation fails (e.g., when there

@@ -122,11 +122,18 @@ class BaseCache : public ClockedObject
 
     //uint64_t game_theory_ticks;
     
-    uint32_t get_private_hits(int cpu_id){return private_hits[cpu_id];}
-    uint32_t get_private_misses(int cpu_id){return private_misses[cpu_id];}
+    uint32_t get_private_hits(int cpu_id) {return private_hits[cpu_id];}
+    uint32_t get_private_misses(int cpu_id) {return private_misses[cpu_id];}
 
     uint32_t get_public_hits(int cpu_id) {return public_hits[cpu_id];}
     uint32_t get_public_misses(int cpu_id) {return public_misses[cpu_id];}
+
+    // TODO: Create a clear counter function
+    void set_private_hits(int cpu_id, int val) {private_hits[cpu_id] = 0;}
+    void set_private_misses(int cpu_id, int val) {private_misses[cpu_id] = 0;}
+
+    void set_public_hits(int cpu_id, int val) {public_hits[cpu_id] = 0;}
+    void set_public_misses(int cpu_id, int val) {public_misses[cpu_id] = 0;}
 
     void increment_private_hits(int cpu_id){private_hits[cpu_id]+=1;}
     void increment_private_misses(int cpu_id){private_misses[cpu_id]+=1;}
@@ -141,6 +148,8 @@ class BaseCache : public ClockedObject
     
     bool get_compute_allocations_flag(){return compute_allocations_flag;}
     void set_compute_allocation_flag(bool val){ compute_allocations_flag = val;}
+
+
 
     void gt_cache_allocation();
 

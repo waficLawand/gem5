@@ -33,7 +33,7 @@ line options from each individual class.
 
 import m5
 from m5.objects import Cache
-from m5.objects import LLCWayPartitionedCache
+#from m5.objects import LLCWayPartitionedCache
 # Add the common scripts to our path
 m5.util.addToPath("../")
 
@@ -110,7 +110,7 @@ class L1DCache(L1Cache):
         self.cpu_side = cpu.dcache_port
 
 
-class L2Cache(LLCWayPartitionedCache):
+class L2Cache(Cache):
     """Simple L2 Cache with default values"""
 
     # Default parameters

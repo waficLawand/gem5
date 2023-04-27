@@ -78,7 +78,7 @@ BaseIndexingPolicy::getPossibleEntries(const Addr addr) const
 }
 
 std::vector<ReplaceableEntry*>
-BaseIndexingPolicy::getWayBased(const Addr addr, int ways, std::vector<bool> way_mask, std::vector<bool> set_mask, PacketPtr pkt) const
+BaseIndexingPolicy::getWayBased(const Addr addr, int ways, std::vector<int> way_mask, std::vector<int> set_mask, PacketPtr pkt) const
 {
     std::vector<ReplaceableEntry*> full_set = getPossibleEntries(addr); 
     std::vector<ReplaceableEntry*> possible_entries;

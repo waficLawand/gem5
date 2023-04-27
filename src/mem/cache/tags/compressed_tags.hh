@@ -120,7 +120,7 @@ class CompressedTags : public SectorTags
      */
     CacheBlk* findVictimWayBased(Addr addr, const bool is_secure,
                          const std::size_t compressed_size,
-                         std::vector<CacheBlk*>& evict_blks,int ways, std::vector<bool> way_mask, std::vector<bool> set_mask, PacketPtr pkt) override;
+                         std::vector<CacheBlk*>& evict_blks,int ways, std::vector<int> way_mask, std::vector<int> set_mask, PacketPtr pkt) override;
 
     /**
      * Visit each sub-block in the tags and apply a visitor.

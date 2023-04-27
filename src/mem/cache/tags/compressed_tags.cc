@@ -166,7 +166,7 @@ CompressedTags::findVictim(Addr addr, const bool is_secure,
 CacheBlk*
 CompressedTags::findVictimWayBased(Addr addr, const bool is_secure,
                            const std::size_t compressed_size,
-                           std::vector<CacheBlk*>& evict_blks,int ways, std::vector<bool> way_mask, std::vector<bool> set_mask, PacketPtr pkt)
+                           std::vector<CacheBlk*>& evict_blks,int ways, std::vector<int> way_mask, std::vector<int> set_mask, PacketPtr pkt)
 {
     // Get all possible locations of this superblock
     const std::vector<ReplaceableEntry*> superblock_entries =

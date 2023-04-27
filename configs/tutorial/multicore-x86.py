@@ -46,7 +46,7 @@ system.mem_mode = "timing"
 system.mem_ranges = [AddrRange("512MB")]
 
 # Instantiating CPUs
-system.cpu = [X86TimingSimpleCPU() for i in range(4)]
+system.cpu = [X86TimingSimpleCPU() for i in range(3)]
 
 # Create a DDR3 memory controller and connect it to the membus
 system.mem_ctrl = MemCtrl()
@@ -56,7 +56,7 @@ system.mem_ctrl.dram.range = system.mem_ranges[0]
 system.l2bus = L2XBar()
 
 
-print(len(system.cpu))
+print(system.cache_line_size)
 # create the interrupt controller for the CPU and connect to the membus
 for cpu in system.cpu:
     cpu.createInterruptController()
@@ -95,8 +95,8 @@ for cpu in system.cpu:
 thispath = os.path.dirname(os.path.realpath(__file__))
 binary = os.path.join(
     thispath,
-    "../../",
-    "tests/test-progs/threads/bin/x86/linux/threads",
+   "../../../../",
+    "ece750-benchmarks/test/phoenix-2.0/tests/bench"
 )
 
 

@@ -80,6 +80,13 @@
 #include <thread>
 
 #define NUM_CORES 2
+#define NUM_WAYS 8
+#define NUM_SETS 512
+#define INFO_0
+#define PRIVATE_BLOCK   0
+#define PUBLIC_BLOCK    1
+// #define DEBUG_ALLOCATE_BLOCK
+// #define DEBUG_INITCACHE
 
 namespace gem5
 {
@@ -149,10 +156,15 @@ class BaseCache : public ClockedObject
     bool get_compute_allocations_flag(){return compute_allocations_flag;}
     void set_compute_allocation_flag(bool val){ compute_allocations_flag = val;}
 
+    std::vector < std::vector <int> > set_mask_for_core0;
+    std::vector < std::vector <int> > set_mask_for_core1;
 
+    std::vector < int > way_mask_for_core0;
+    std::vector < int > way_mask_for_core1;
+
+    void initialize_cache(float allocated_space[]);
 
     void gt_cache_allocation();
-
 
     void background_counter();
     void game_theory();
@@ -1564,6 +1576,9 @@ class WriteAllocator : public SimObject
      * WriteReq MSHR.
      */
     std::unordered_map<Addr, Counter> delayCtr;
+
+
+
 };
 
 } // namespace gem5

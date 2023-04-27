@@ -151,7 +151,7 @@ class BaseIndexingPolicy : public SimObject
     virtual std::vector<ReplaceableEntry*> getPossibleEntries(const Addr addr)
                                                                     const = 0;
 
-    virtual std::vector<ReplaceableEntry*> getWayBased(const Addr addr, int ways, std::vector<bool> way_mask, std::vector<bool> set_mask, PacketPtr pkt) const = 0;                                                                
+    virtual std::vector<ReplaceableEntry*> getWayBased(const Addr addr, int ways, std::vector<int> way_mask, std::vector<int> set_mask, PacketPtr pkt) const = 0;                                                                
 
     /**
      * Regenerate an entry's address from its tag and assigned indexing bits.

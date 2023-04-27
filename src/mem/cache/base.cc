@@ -72,10 +72,14 @@
 #include <iostream>
 #include <ctype.h>
 
+// #define NUM_CORES 2
+// #define NUM_WAYS 8
+// #define NUM_SETS 8
+// #define INFO_0
+#define DEBUG_INITCACHE
+
 namespace gem5
 {
-
-
 
 BaseCache::CacheResponsePort::CacheResponsePort(const std::string &_name,
                                           BaseCache *_cache,
@@ -159,8 +163,28 @@ BaseCache::BaseCache(const BaseCacheParams &p, unsigned blk_size)
     if (compressor)
         compressor->setCache(this);
     if(is_llc)
-        printf("THIS CACHE IS AN LLC!\n");
+    {
+        set_mask_for_core0.resize(NUM_SETS, std::vector <int> (NUM_WAYS, 0));
+        set_mask_for_core1.resize(NUM_SETS, std::vector <int> (NUM_WAYS, 0));
 
+        way_mask_for_core0.resize(NUM_WAYS, 0);
+        way_mask_for_core1.resize(NUM_WAYS, 0);
+
+        for (int i=0; i < NUM_WAYS; i++) {
+            if (i < int(NUM_WAYS/2)) {
+                way_mask_for_core0[i] = 1;
+                way_mask_for_core1[i] = 0;
+            } if (i >= int(NUM_WAYS/2)) {
+                way_mask_for_core0[i] = 0;
+                way_mask_for_core1[i] = 1;
+            }
+        }
+
+        float test [3] = {0.0,1.0,1.0};
+        initialize_cache(test);
+    }
+
+        
 
     //EventFunctionWrapper event([this]{printf("HELLO FROM LAMBDA FN!\n");},name() + ".event");
     //schedule(event,curTick()+10000);
@@ -1351,15 +1375,26 @@ BaseCache::gt_cache_allocation()
         v_pub[i] = 1*get_public_hits(i) + 1.2*get_public_misses(i);
 
         // normalize the values so that v_priv[i] = 1
-        v_pub[i] = float(v_pub[i] / ((float) v_priv[i]));
+        
+        if(v_priv[i] == 0) {
+            if (v_pub[i] == 0) {
+                v_pub[i] = 0;
+            } else if (v_pub[i] > 0) {
+                v_pub[i] = 1;
+            }
+        } else {
+            // normalize public valuation
+            v_pub[i] = float(v_pub[i] / ((float) v_priv[i]));
+        }
     }
-
-    printf("v_priv: {%f, %f}\n", v_priv[0], v_priv[1]);
-    printf("v_pub: {%f, %f}\n", v_pub[0], v_pub[1]);
-    printf("priv_hits: {%d, %d}\n", get_private_hits(0),get_private_hits(1));
-    printf("priv_misses: {%d, %d}\n", get_private_misses(0),get_private_misses(1));
-    printf("pub_hits: {%d, %d}\n", get_public_hits(0),get_public_hits(1));
-    printf("pub_misses: {%d, %d}\n", get_public_misses(0),get_public_misses(1));
+    # ifdef DEBUG_0
+        printf("v_priv: {%f, %f}\n", v_priv[0], v_priv[1]);
+        printf("v_pub: {%f, %f}\n", v_pub[0], v_pub[1]);
+        printf("priv_hits: {%d, %d}\n", get_private_hits(0),get_private_hits(1));
+        printf("priv_misses: {%d, %d}\n", get_private_misses(0),get_private_misses(1));
+        printf("pub_hits: {%d, %d}\n", get_public_hits(0),get_public_hits(1));
+        printf("pub_misses: {%d, %d}\n", get_public_misses(0),get_public_misses(1));    
+    #endif
     
     if (v_pub[0]==0) {
         v_pub[0] = 0.00001;
@@ -1429,9 +1464,11 @@ BaseCache::gt_cache_allocation()
             frac_allowed[1] = allocated_space[0];
         }
     }
-    /*printf(" V: {%f, %f} \n Allocated space: {%f, %f, %f} \n Fraction allowed: {%f, %f}: \n",
+    #ifdef INFO_0
+    printf(" V: {%f, %f} \n Allocated space: {%f, %f, %f} \n Fraction allowed: {%f, %f}: \n",
         v_pub[0], v_pub[1], allocated_space[0], allocated_space[1], allocated_space[2],
-        frac_allowed[0], frac_allowed[1]);*/
+        frac_allowed[0], frac_allowed[1]);
+    #endif 
     
     for(auto i =0; i<2;i++) {
         set_private_hits(i, 0);
@@ -1439,6 +1476,10 @@ BaseCache::gt_cache_allocation()
         set_private_misses(i, 0);
         set_public_misses(i, 0);
     }
+
+    int pub_ways = allocated_space[0] * NUM_WAYS; 
+
+    initialize_cache(allocated_space);
 }
 
 bool
@@ -1457,7 +1498,7 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
 
             //printf("Inside the if : %d\n",get_compute_allocations_flag());
             gt_cache_allocation();
-            printf("\nGame Theory Ticks: %d\n",get_game_theory_ticks());
+            //printf("\nGame Theory Ticks: %d\n",get_game_theory_ticks());
             set_compute_allocation_flag(0);
         }
 
@@ -1883,6 +1924,62 @@ BaseCache::handleFill(PacketPtr pkt, CacheBlk *blk, PacketList &writebacks,
     return blk;
 }
 
+void 
+BaseCache::initialize_cache(float allocated_space[])
+{
+    int num_ways_for_core[2];
+    // for private data of cores
+    for(int i = 0; i < NUM_CORES; i++) {
+
+        int base_int = int(allocated_space[i+1]);
+        if (allocated_space[i+1] - base_int >= 0.5) {
+            num_ways_for_core[i] = ceil(allocated_space[i+1])*NUM_WAYS;
+        } else {
+            num_ways_for_core[i] = floor(allocated_space[i+1])*NUM_WAYS;
+        }
+    }
+
+    for (int j=0; j<NUM_SETS; j++) {
+        for (int k=0; k<NUM_WAYS; k++) {
+            if (k < num_ways_for_core[0]) {                      
+                set_mask_for_core0[j][k] = PRIVATE_BLOCK;
+            } else {
+                set_mask_for_core0[j][k] = PUBLIC_BLOCK;
+            }        
+
+            if (k < num_ways_for_core[1]) {                      
+                set_mask_for_core1[j][k] = PRIVATE_BLOCK;
+            } else {
+                set_mask_for_core1[j][k] = PUBLIC_BLOCK;
+            }        
+        } 
+    }
+            
+
+    for (int l=0; l<NUM_SETS; l++) {
+        set_mask_for_core0[l][0] = PRIVATE_BLOCK;
+        set_mask_for_core0[l][int(NUM_WAYS/2)-1] = PUBLIC_BLOCK;
+        set_mask_for_core1[l][int(NUM_WAYS/2)] = PRIVATE_BLOCK;
+        set_mask_for_core1[l][NUM_WAYS-1] = PUBLIC_BLOCK;
+    }
+    #ifdef DEBUG_INITCACHE
+        for (int j=0; j <NUM_SETS; j++) {
+            printf("Core 0 Set %d: ", j);
+            for (int l=0; l<NUM_WAYS; l++) {
+                printf("%d ", set_mask_for_core0[j][l]);
+            }
+            printf("\n");
+        }
+        for (int j=0; j <NUM_SETS; j++) {        
+            printf("Core 1 Set %d: ", j);
+            for (int l=0; l<NUM_WAYS; l++) {
+                printf("%d ", set_mask_for_core1[j][l]);
+            }
+            printf("\n");
+        }
+    #endif
+}
+
 CacheBlk*
 BaseCache::allocateBlock(const PacketPtr pkt, PacketList &writebacks)
 {
@@ -1913,26 +2010,66 @@ BaseCache::allocateBlock(const PacketPtr pkt, PacketList &writebacks)
     // Find replacement victim
     std::vector<CacheBlk*> evict_blks;
     CacheBlk *victim;
-    std::vector<bool> way_mask = {1,1,1,1,1,1,1,1};
-    std::vector<bool> set_mask = {0,0,0,0,1,1,1,1};
     
+    if (is_llc) {
+        CacheBlk *blk = tags->findBlock(pkt->getAddr(), is_secure);
 
-    victim = tags->findVictim(addr, is_secure, blk_size_bits,
-                                        evict_blks);
-    /*if (is_llc)
-            {
-            victim = tags->findVictimWayBased(addr,
-                is_secure, blk_size_bits, evict_blks,8,way_mask,set_mask,pkt);
+        uint32_t set = blk->getSet();
+
+        std::string cpu_id_str = (system->getRequestorName(pkt->req->requestorId()).c_str());
+        cpu_id_str = cpu_id_str.substr(3,1);
+        
+         std::vector <int> way_mask; 
+         way_mask = {1,1,1,1,1,1,1,1};
+         std::vector <int> set_mask; 
+         set_mask = {1,1,1,0,0,0,0,0};
+
+        if(std::isdigit(cpu_id_str[0]))
+        {
+            int cpu_id_int = std::stoi(cpu_id_str);
+            if (cpu_id_int==0) {
+                #ifdef DEBUG_ALLOCATE_BLOCK
+                    printf("\nCore %d", cpu_id_int);
+
+                    printf("\nWay: ");
+                    for (int i=0; i<NUM_WAYS; i++) {
+                        printf("%d ", way_mask_for_core0[i]);
+                    }
+
+                    for (int i=0; i<NUM_SETS; i++) {
+                        printf("\nSet %d: ", i);
+                        for (int l=0; l<NUM_WAYS; l++) {
+                            printf("%d ", set_mask_for_core0[i][l]);
+                        }
+                    }
+                #endif
+                victim = tags->findVictimWayBased(addr, is_secure, blk_size_bits, evict_blks, 8, way_mask_for_core0, set_mask_for_core0[set], pkt);
+            } else if (cpu_id_int==1) {
+                #ifdef DEBUG_ALLOCATE_BLOCK
+                    printf("\nCore %d", cpu_id_int);
+
+                    printf("\nWay: ");
+                    for (int i=0; i<NUM_WAYS; i++) {
+                        printf("%d ", way_mask_for_core1[i]);
+                    }
+                
+                    for (int i=0; i<NUM_SETS; i++) {
+                        printf("\nSet %d: ", i);
+                        for (int l=0; l<NUM_WAYS; l++) {
+                            printf("%d ", set_mask_for_core1[i][l]);
+                        }
+                    }
+                #endif
+                victim = tags->findVictimWayBased(addr, is_secure, blk_size_bits, evict_blks, 8, way_mask_for_core1, set_mask_for_core1[set], pkt);
             }
-            else
-            {
-
-            victim = tags->findVictim(addr, is_secure, blk_size_bits,
+        }
+        victim = tags->findVictimWayBased(addr, is_secure, blk_size_bits, evict_blks, 8, way_mask, set_mask, pkt);
+            
+    } else {
+        victim = tags->findVictim(addr, is_secure, blk_size_bits,
                                         evict_blks);
-            }*/
+    }
 
-    /*victim = tags->findVictim(addr, is_secure, blk_size_bits,
-                                        evict_blks);*/
     // It is valid to return nullptr if there is no victim
     if (!victim)
         return nullptr;

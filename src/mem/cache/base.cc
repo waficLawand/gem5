@@ -2012,9 +2012,10 @@ BaseCache::allocateBlock(const PacketPtr pkt, PacketList &writebacks)
     CacheBlk *victim;
     
     if (is_llc) {
-        CacheBlk *blk = tags->findBlock(pkt->getAddr(), is_secure);
-
-        uint32_t set = blk->getSet();
+        // Find Set for the address
+        uint32_t setShift = 6;
+        uint32_t setMask = 512 - 1;
+        uint32_t set = (addr >> setShift) & setMask;
 
         std::string cpu_id_str = (system->getRequestorName(pkt->req->requestorId()).c_str());
         cpu_id_str = cpu_id_str.substr(3,1);

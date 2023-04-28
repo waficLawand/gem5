@@ -79,13 +79,17 @@
 #include "params/HelloObject.hh"
 #include <thread>
 
-#define NUM_CORES 2
+#define NUM_CORES 3
 #define NUM_WAYS 8
 #define NUM_SETS 512
 #define INFO_0
 #define PRIVATE_BLOCK   0
 #define PUBLIC_BLOCK    1
-// #define DEBUG_ALLOCATE_BLOCK
+#define CORE0_WAYEND    2
+#define GT_DEBUG
+#define GT_INFO
+// #define DEBUG_ALLOCATE_BLOCK_SET
+// #define DEBUG_ALLOCATE_BLOCK_MASKS
 // #define DEBUG_INITCACHE
 
 namespace gem5
@@ -156,11 +160,13 @@ class BaseCache : public ClockedObject
     bool get_compute_allocations_flag(){return compute_allocations_flag;}
     void set_compute_allocation_flag(bool val){ compute_allocations_flag = val;}
 
-    std::vector < std::vector <int> > set_mask_for_core0;
+    std::vector < int > set_mask_for_core0;
     std::vector < std::vector <int> > set_mask_for_core1;
+    std::vector < std::vector <int> > set_mask_for_core2;
 
     std::vector < int > way_mask_for_core0;
     std::vector < int > way_mask_for_core1;
+    std::vector < int > way_mask_for_core2;
 
     void initialize_cache(float allocated_space[]);
 

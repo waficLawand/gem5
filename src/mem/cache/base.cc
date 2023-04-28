@@ -76,7 +76,7 @@
 // #define NUM_WAYS 8
 // #define NUM_SETS 8
 // #define INFO_0
-#define DEBUG_INITCACHE
+// #define DEBUG_INITCACHE
 
 namespace gem5
 {
@@ -164,19 +164,38 @@ BaseCache::BaseCache(const BaseCacheParams &p, unsigned blk_size)
         compressor->setCache(this);
     if(is_llc)
     {
-        set_mask_for_core0.resize(NUM_SETS, std::vector <int> (NUM_WAYS, 0));
+        set_mask_for_core0.resize(NUM_WAYS, 0);
         set_mask_for_core1.resize(NUM_SETS, std::vector <int> (NUM_WAYS, 0));
+        set_mask_for_core2.resize(NUM_SETS, std::vector <int> (NUM_WAYS, 0));        
 
         way_mask_for_core0.resize(NUM_WAYS, 0);
         way_mask_for_core1.resize(NUM_WAYS, 0);
+        way_mask_for_core2.resize(NUM_WAYS, 0);
 
-        for (int i=0; i < NUM_WAYS; i++) {
-            if (i < int(NUM_WAYS/2)) {
+        for (int i=0; i<CORE0_WAYEND; i++) {
+            if (i<int(CORE0_WAYEND/2)) {
+                set_mask_for_core0[i] = PRIVATE_BLOCK;
+            } else {
+                set_mask_for_core0[i] = PUBLIC_BLOCK;
+            }
+            way_mask_for_core0[i] = 1;
+        }
+
+        for (int i=CORE0_WAYEND; i < NUM_WAYS; i++) {
+            if (i < CORE0_WAYEND) {
                 way_mask_for_core0[i] = 1;
                 way_mask_for_core1[i] = 0;
-            } if (i >= int(NUM_WAYS/2)) {
+                way_mask_for_core2[i] = 0;
+            }
+            else if (i < int((CORE0_WAYEND+NUM_WAYS)/2)) {
                 way_mask_for_core0[i] = 0;
                 way_mask_for_core1[i] = 1;
+                way_mask_for_core2[i] = 0;
+            } 
+            else if (i >= int((CORE0_WAYEND+NUM_WAYS)/2)) {
+                way_mask_for_core0[i] = 0;
+                way_mask_for_core1[i] = 0;
+                way_mask_for_core2[i] = 1;
             }
         }
 
@@ -1358,19 +1377,19 @@ BaseCache::calculateAccessLatency(const CacheBlk* blk, const uint32_t delay,
 
 void
 BaseCache::gt_cache_allocation()
-{   
-    float v_priv[2] = {0};
-    float v_pub[2] = {0};
+{      
+    float v_priv[NUM_CORES] = {0};
+    float v_pub[NUM_CORES] = {0};
     
     // 0 for public file, 
-    // 1 for private of agent 1, 2 for private of agent 2
-    float allocated_space[3];
+    // 1 for private of agent 1, 2 for private of agent 2, ...
+    float allocated_space[NUM_CORES+1];
 
     // fraction of public file allowed for agent i
-    float frac_allowed[2];
+    float frac_allowed[NUM_CORES];
 
     // calculate valuation for files based on hits and misses, for each agent i
-    for(auto i=0; i<2; i++) {
+    for(auto i=0; i<NUM_CORES; i++) {
         v_priv[i] = 1*get_private_hits(i) + 1.2*get_private_misses(i);
         v_pub[i] = 1*get_public_hits(i) + 1.2*get_public_misses(i);
 
@@ -1378,7 +1397,7 @@ BaseCache::gt_cache_allocation()
         
         if(v_priv[i] == 0) {
             if (v_pub[i] == 0) {
-                v_pub[i] = 0;
+                v_pub[i] = 0 ;
             } else if (v_pub[i] > 0) {
                 v_pub[i] = 1;
             }
@@ -1386,88 +1405,91 @@ BaseCache::gt_cache_allocation()
             // normalize public valuation
             v_pub[i] = float(v_pub[i] / ((float) v_priv[i]));
         }
+        v_pub[i] += 0.4;
+        v_priv[i] += 0.02;
     }
-    # ifdef DEBUG_0
-        printf("v_priv: {%f, %f}\n", v_priv[0], v_priv[1]);
-        printf("v_pub: {%f, %f}\n", v_pub[0], v_pub[1]);
-        printf("priv_hits: {%d, %d}\n", get_private_hits(0),get_private_hits(1));
-        printf("priv_misses: {%d, %d}\n", get_private_misses(0),get_private_misses(1));
-        printf("pub_hits: {%d, %d}\n", get_public_hits(0),get_public_hits(1));
-        printf("pub_misses: {%d, %d}\n", get_public_misses(0),get_public_misses(1));    
+    #ifdef GT_DEBUG
+        printf("v_priv: {%f, %f, %f}\n", v_priv[0], v_priv[1], v_priv[2]);
+        printf("v_pub: {%f, %f, %f}\n", v_pub[0], v_pub[1], v_pub[2]);
+        printf("priv_hits: {%d, %d, %d}\n", get_private_hits(0),get_private_hits(1),get_private_hits(2));
+        printf("priv_misses: {%d, %d, %d}\n", get_private_misses(0),get_private_misses(1),get_private_misses(2));
+        printf("pub_hits: {%d, %d, %d}\n", get_public_hits(0),get_public_hits(1),get_public_hits(2));
+        printf("pub_misses: {%d, %d, %d}\n", get_public_misses(0),get_public_misses(1),get_public_misses(2));  
+        printf("\n");  
     #endif
     
-    if (v_pub[0]==0) {
-        v_pub[0] = 0.00001;
-    }
-
     if (v_pub[1]==0) {
         v_pub[1] = 0.00001;
     }
 
-        if (v_priv[0]==0) {
-        v_priv[0] = 0.00001;
+    if (v_pub[2]==0) {
+        v_pub[2] = 0.00001;
     }
 
     if (v_priv[1]==0) {
         v_priv[1] = 0.00001;
     }
+
+    if (v_priv[2]==0) {
+        v_priv[2] = 0.00001;
+    }
     
 
-    if ((v_pub[0]<=1) && (v_pub[1]<=1)) {
-        if (v_pub[0]*v_pub[1] < (0.25)){
-            allocated_space[0] = 0;
-            allocated_space[1] = 1;
-            allocated_space[2] = 1;
-            frac_allowed[0] = 0;
+    if ((v_pub[1]<=1) && (v_pub[2]<=1)) {
+        if (v_pub[1]*v_pub[2] < (0.25)){
+            allocated_space[0] = 0;     // public
+            allocated_space[2] = 1;     // core 1 private
+            allocated_space[3] = 1;     // core 2 private
             frac_allowed[1] = 0;
+            frac_allowed[2] = 0;
         }
         else {
-            allocated_space[0] = (4 * log(4*v_pub[0]*v_pub[1])) / 3;
-            allocated_space[1] = (3*v_pub[1] - 4*v_pub[0]*v_pub[1] + 1) / (3*v_pub[1]);
-            allocated_space[2] = (3*v_pub[0] - 4*v_pub[0]*v_pub[1] + 1) / (3*v_pub[0]);
-            frac_allowed[0] = allocated_space[0];
+            allocated_space[0] = (4 * log(4*v_pub[1]*v_pub[2])) / 3;
+            allocated_space[1] = (3*v_pub[2] - 4*v_pub[1]*v_pub[2] + 1) / (3*v_pub[2]);
+            allocated_space[3] = (3*v_pub[1] - 4*v_pub[1]*v_pub[2] + 1) / (3*v_pub[1]);
             frac_allowed[1] = allocated_space[0];
+            frac_allowed[2] = allocated_space[0];
         }
     } else {
-        if ((v_pub[0]>1) && (v_pub[1]<=1)) {
+        if ((v_pub[1]>1) && (v_pub[2]<=1)) {
             // derived from "max(v_pub1, v_pub2) <= 1" case
-            // assuming v_pub[0] = 1
-            float x0 = (4 * log(4*v_pub[1])) / 3;
-            float x1 = (3*v_pub[1] - 4*v_pub[1] + 1) / (3*v_pub[1]);
-            float x2 = (3 - 4*v_pub[1] + 1) / (3);
+            // assuming v_pub[1] = 1
+            float x0 = (4 * log(4*v_pub[2])) / 3;
+            float x1 = (3*v_pub[2] - 4*v_pub[2] + 1) / (3*v_pub[2]);
+            float x2 = (3 - 4*v_pub[2] + 1) / (3);
 
             allocated_space[0] = x0 + x1;
-            allocated_space[1] = 0;
-            allocated_space[2] = x2;
+            allocated_space[2] = 0;
+            allocated_space[3] = x2;
 
-            frac_allowed[0] = allocated_space[0];
-            frac_allowed[1] = x0;
-        } else if ((v_pub[0]<=1) && (v_pub[2]>1)) {
+            frac_allowed[1] = allocated_space[0];
+            frac_allowed[2] = x0;
+        } else if ((v_pub[1]<=1) && (v_pub[2]>1)) {
             // derived from "max(v_pub1, v_pub2) <= 1" case
             // assuming v_pub[2] = 1
-            float x0 = (4 * log(4*v_pub[0])) / 3;
-            float x1 = (3 - 4*v_pub[0] + 1) / (3);
-            float x2 = (3*v_pub[0] - 4*v_pub[0] + 1) / (3*v_pub[0]);
+            float x0 = (4 * log(4*v_pub[1])) / 3;
+            float x1 = (3 - 4*v_pub[1] + 1) / (3);
+            float x2 = (3*v_pub[1] - 4*v_pub[1] + 1) / (3*v_pub[1]);
 
             allocated_space[0] = x0 + x2;
-            allocated_space[1] = x1;
-            allocated_space[2] = 0;
+            allocated_space[2] = x1;
+            allocated_space[3] = 0;
 
-            frac_allowed[0] = x0;
-            frac_allowed[1] = allocated_space[0];
+            frac_allowed[1] = x0;
+            frac_allowed[2] = allocated_space[0];
         } else {
             allocated_space[0] = (4/3) * log(4);
-            allocated_space[1] = 0;
             allocated_space[2] = 0;
+            allocated_space[3] = 0;
 
-            frac_allowed[0] = allocated_space[0];
             frac_allowed[1] = allocated_space[0];
+            frac_allowed[2] = allocated_space[0];
         }
     }
-    #ifdef INFO_0
-    printf(" V: {%f, %f} \n Allocated space: {%f, %f, %f} \n Fraction allowed: {%f, %f}: \n",
-        v_pub[0], v_pub[1], allocated_space[0], allocated_space[1], allocated_space[2],
-        frac_allowed[0], frac_allowed[1]);
+    #ifdef GT_INFO
+    printf(" V: {%f, %f} \n Allocated space: {%f, %f, %f} \n Fraction allowed: {%f, %f}: \n\n\n",
+        v_pub[0], v_pub[1], allocated_space[0], allocated_space[2], allocated_space[3],
+        frac_allowed[1], frac_allowed[2]);
     #endif 
     
     for(auto i =0; i<2;i++) {
@@ -1486,17 +1508,17 @@ bool
 BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
                   PacketList &writebacks)
 {
-    //printf("Outside outside the if : %d\n",get_compute_allocations_flag());
+    // printf("Outside outside the LLC if : %d\n",get_compute_allocations_flag());
     //if(pkt.has)
     //game_theory_ticks+=1;
     //printf("%d",is_llc);
     if (is_llc)
     {
-        //printf("Outside the if : %d\n",get_compute_allocations_flag());
+        // printf("Outside the if : %d\n",get_compute_allocations_flag());
 
         if(get_compute_allocations_flag()) {
 
-            //printf("Inside the if : %d\n",get_compute_allocations_flag());
+            // printf("Inside the if : %d\n",get_compute_allocations_flag());
             gt_cache_allocation();
             //printf("\nGame Theory Ticks: %d\n",get_game_theory_ticks());
             set_compute_allocation_flag(0);
@@ -1930,7 +1952,6 @@ BaseCache::initialize_cache(float allocated_space[])
     int num_ways_for_core[2];
     // for private data of cores
     for(int i = 0; i < NUM_CORES; i++) {
-
         int base_int = int(allocated_space[i+1]);
         if (allocated_space[i+1] - base_int >= 0.5) {
             num_ways_for_core[i] = ceil(allocated_space[i+1])*NUM_WAYS;
@@ -1939,29 +1960,36 @@ BaseCache::initialize_cache(float allocated_space[])
         }
     }
 
+    // for core 1
     for (int j=0; j<NUM_SETS; j++) {
-        for (int k=0; k<NUM_WAYS; k++) {
+        for (int k=CORE0_WAYEND; k<(int)(NUM_WAYS+CORE0_WAYEND)/2; k++) {
             if (k < num_ways_for_core[0]) {                      
-                set_mask_for_core0[j][k] = PRIVATE_BLOCK;
-            } else {
-                set_mask_for_core0[j][k] = PUBLIC_BLOCK;
-            }        
-
-            if (k < num_ways_for_core[1]) {                      
                 set_mask_for_core1[j][k] = PRIVATE_BLOCK;
             } else {
                 set_mask_for_core1[j][k] = PUBLIC_BLOCK;
             }        
         } 
     }
-            
-
-    for (int l=0; l<NUM_SETS; l++) {
-        set_mask_for_core0[l][0] = PRIVATE_BLOCK;
-        set_mask_for_core0[l][int(NUM_WAYS/2)-1] = PUBLIC_BLOCK;
-        set_mask_for_core1[l][int(NUM_WAYS/2)] = PRIVATE_BLOCK;
-        set_mask_for_core1[l][NUM_WAYS-1] = PUBLIC_BLOCK;
+    
+    // for core 2
+    for (int j=0; j<NUM_SETS; j++) {
+        for (int k=(int)(NUM_WAYS+CORE0_WAYEND)/2; k<NUM_WAYS; k++) {
+            if (k-(int)(NUM_WAYS+CORE0_WAYEND)/2 < num_ways_for_core[1]) {                      
+                set_mask_for_core2[j][k] = PRIVATE_BLOCK;
+            } else {
+                set_mask_for_core2[j][k] = PUBLIC_BLOCK;
+            }        
+        } 
     }
+
+    // Make sure at least way is left for PUBLIC, and one for PRIVATE
+    for (int l=0; l<NUM_SETS; l++) {
+        set_mask_for_core1[l][CORE0_WAYEND] = PRIVATE_BLOCK;
+        set_mask_for_core1[l][int((NUM_WAYS+CORE0_WAYEND)/2)-1] = PUBLIC_BLOCK;
+        set_mask_for_core2[l][int((NUM_WAYS+CORE0_WAYEND)/2)] = PRIVATE_BLOCK;
+        set_mask_for_core2[l][NUM_WAYS-1] = PUBLIC_BLOCK;
+    }
+
     #ifdef DEBUG_INITCACHE
         for (int j=0; j <NUM_SETS; j++) {
             printf("Core 0 Set %d: ", j);
@@ -2012,9 +2040,13 @@ BaseCache::allocateBlock(const PacketPtr pkt, PacketList &writebacks)
     CacheBlk *victim;
     
     if (is_llc) {
-        CacheBlk *blk = tags->findBlock(pkt->getAddr(), is_secure);
+        // CacheBlk *blk = tags->findBlock(pkt->getAddr(), is_secure);
+        // uint32_t set = blk->getSet(); 
 
-        uint32_t set = blk->getSet();
+        // Find Set for the address
+        uint32_t setShift = 6;
+        uint32_t setMask = 512 - 1;
+        uint32_t set = (addr >> setShift) & setMask;
 
         std::string cpu_id_str = (system->getRequestorName(pkt->req->requestorId()).c_str());
         cpu_id_str = cpu_id_str.substr(3,1);
@@ -2027,8 +2059,13 @@ BaseCache::allocateBlock(const PacketPtr pkt, PacketList &writebacks)
         if(std::isdigit(cpu_id_str[0]))
         {
             int cpu_id_int = std::stoi(cpu_id_str);
+
+            #ifdef DEBUG_ALLOCATE_BLOCK_SET                
+                // printf("Set: %d for Core %d\n", set, cpu_id_int);
+                printf("\nSet %d", set);
+            #endif
             if (cpu_id_int==0) {
-                #ifdef DEBUG_ALLOCATE_BLOCK
+                #ifdef DEBUG_ALLOCATE_BLOCK_MASKS
                     printf("\nCore %d", cpu_id_int);
 
                     printf("\nWay: ");
@@ -2036,23 +2073,23 @@ BaseCache::allocateBlock(const PacketPtr pkt, PacketList &writebacks)
                         printf("%d ", way_mask_for_core0[i]);
                     }
 
-                    for (int i=0; i<NUM_SETS; i++) {
-                        printf("\nSet %d: ", i);
-                        for (int l=0; l<NUM_WAYS; l++) {
-                            printf("%d ", set_mask_for_core0[i][l]);
-                        }
+                    printf("\nSet: ");
+                    for (int l=0; l<NUM_WAYS; l++) {
+                        printf("%d ", set_mask_for_core0[l]);
                     }
+
                 #endif
-                victim = tags->findVictimWayBased(addr, is_secure, blk_size_bits, evict_blks, 8, way_mask_for_core0, set_mask_for_core0[set], pkt);
-            } else if (cpu_id_int==1) {
-                #ifdef DEBUG_ALLOCATE_BLOCK
+                victim = tags->findVictimWayBased(addr, is_secure, blk_size_bits, evict_blks, 8, way_mask_for_core0, set_mask_for_core0, pkt);
+            }
+            else if (cpu_id_int==1) {
+                #ifdef DEBUG_ALLOCATE_BLOCK_MASKS
                     printf("\nCore %d", cpu_id_int);
 
                     printf("\nWay: ");
                     for (int i=0; i<NUM_WAYS; i++) {
                         printf("%d ", way_mask_for_core1[i]);
                     }
-                
+
                     for (int i=0; i<NUM_SETS; i++) {
                         printf("\nSet %d: ", i);
                         for (int l=0; l<NUM_WAYS; l++) {
@@ -2061,13 +2098,30 @@ BaseCache::allocateBlock(const PacketPtr pkt, PacketList &writebacks)
                     }
                 #endif
                 victim = tags->findVictimWayBased(addr, is_secure, blk_size_bits, evict_blks, 8, way_mask_for_core1, set_mask_for_core1[set], pkt);
-            }
-        }
-        victim = tags->findVictimWayBased(addr, is_secure, blk_size_bits, evict_blks, 8, way_mask, set_mask, pkt);
-            
+            } else if (cpu_id_int==2) {
+                #ifdef DEBUG_ALLOCATE_BLOCK_MASKS
+                    printf("\nCore %d", cpu_id_int);
+
+                    printf("\nWay: ");
+                    for (int i=0; i<NUM_WAYS; i++) {
+                        printf("%d ", way_mask_for_core2[i]);
+                    }
+                
+                    for (int i=0; i<NUM_SETS; i++) {
+                        printf("\nSet %d: ", i);
+                        for (int l=0; l<NUM_WAYS; l++) {
+                            printf("%d ", set_mask_for_core2[i][l]);
+                        }
+                    }
+                #endif
+                victim = tags->findVictimWayBased(addr, is_secure, blk_size_bits, evict_blks, 8, way_mask_for_core2, set_mask_for_core2[set], pkt);
+            }    
+            // victim = tags->findVictimWayBased(addr, is_secure, blk_size_bits, evict_blks, 8, way_mask_for_core0, set_mask_for_core0, pkt);
+        } else {
+            victim = tags->findVictimWayBased(addr, is_secure, blk_size_bits, evict_blks, 8, way_mask_for_core0, set_mask_for_core0, pkt);
+        }        
     } else {
-        victim = tags->findVictim(addr, is_secure, blk_size_bits,
-                                        evict_blks);
+        victim = tags->findVictim(addr, is_secure, blk_size_bits, evict_blks);
     }
 
     // It is valid to return nullptr if there is no victim

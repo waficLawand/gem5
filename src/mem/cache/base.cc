@@ -202,7 +202,7 @@ void BaseCache::background_counter()
         set_game_theory_ticks(get_game_theory_ticks()+1);
         std::this_thread::sleep_for(std::chrono::nanoseconds(1));
 
-        if (get_game_theory_ticks()%10 == 0)
+        if (get_game_theory_ticks()%1000 == 0)
         {
             
             set_compute_allocation_flag(1);
@@ -1993,7 +1993,7 @@ BaseCache::allocateBlock(const PacketPtr pkt, PacketList &writebacks)
                         printf("%d ", set_mask_for_core0[l]);
                     }
                 #endif
-                victim = tags->findVictimWayBased(addr, is_secure, blk_size_bits, evict_blks, 8, way_mask_for_core0, set_mask_for_core0, pkt);
+                victim = tags->findVictimWayBased(addr, is_secure, blk_size_bits, evict_blks, NUM_WAYS, way_mask_for_core0, set_mask_for_core0, pkt);
             }
             else if (cpu_id_int==1) {
                 #ifdef DEBUG_ALLOCATE_BLOCK_MASKS
@@ -2011,7 +2011,7 @@ BaseCache::allocateBlock(const PacketPtr pkt, PacketList &writebacks)
                         }
                     }
                 #endif
-                victim = tags->findVictimWayBased(addr, is_secure, blk_size_bits, evict_blks, 8, way_mask_for_core1, set_mask_for_core1[set], pkt);
+                victim = tags->findVictimWayBased(addr, is_secure, blk_size_bits, evict_blks, NUM_WAYS, way_mask_for_core1, set_mask_for_core1[set], pkt);
             } else if (cpu_id_int==2) {
                 #ifdef DEBUG_ALLOCATE_BLOCK_MASKS
                     printf("\nCore %d", cpu_id_int);
@@ -2028,10 +2028,10 @@ BaseCache::allocateBlock(const PacketPtr pkt, PacketList &writebacks)
                         }
                     }
                 #endif
-                victim = tags->findVictimWayBased(addr, is_secure, blk_size_bits, evict_blks, 8, way_mask_for_core2, set_mask_for_core2[set], pkt);
+                victim = tags->findVictimWayBased(addr, is_secure, blk_size_bits, evict_blks, NUM_WAYS, way_mask_for_core2, set_mask_for_core2[set], pkt);
             }
         } else {
-            victim = tags->findVictimWayBased(addr, is_secure, blk_size_bits, evict_blks, 8, way_mask_for_core0, set_mask_for_core0, pkt);
+            victim = tags->findVictimWayBased(addr, is_secure, blk_size_bits, evict_blks, NUM_WAYS, way_mask_for_core0, set_mask_for_core0, pkt);
         }
     } else {
         victim = tags->findVictim(addr, is_secure, blk_size_bits,

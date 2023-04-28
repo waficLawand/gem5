@@ -23,15 +23,15 @@ int counter = 0;
 
 // Thread 1
 void _thread1Func() {
-    
-    
+
+
     #ifdef FETCH
     std::cout << "Thread 1: prefetching\n";
     for (int i = 0; i < T1_SIZE; i++) {
         arr1[i] = i;
     }
     //
-    
+
     {
         std::lock_guard<std::mutex> lock(mtx);
         eventTriggered = true;
@@ -54,15 +54,15 @@ void _thread1Func() {
 
 
 void thread1Func() {
-    
-    
+
+
     #ifdef FETCH
     std::cout << "Thread 1: prefetching\n";
     for (int i = 0; i < T1_SIZE; i++) {
         arr1[i] = i;
     }
     //
-    
+
     {
         std::lock_guard<std::mutex> lock(mtx);
         eventTriggered = true;
@@ -75,8 +75,8 @@ void thread1Func() {
     for (int i = 0; i < T1_SIZE; i++) {
         arr1[i] = i;
     }
-    
-    
+
+
     std::cout << "Thread 1: Computation\n";
     while(!terminate) {
         #ifdef FETCH
@@ -99,7 +99,7 @@ void thread1Func() {
 
 // Thread 2
 void _thread2Func() {
-    
+
     int wait_var = 0;
     #ifdef FETCH
     std::unique_lock<std::mutex> lock(mtx);
@@ -125,7 +125,7 @@ void _thread2Func() {
 }
 
 void thread2Func() {
-    
+
     int wait_var = 0;
     #ifdef FETCH
     std::unique_lock<std::mutex> lock(mtx);
@@ -141,7 +141,7 @@ void thread2Func() {
     while(wait_var<T2_WAIT)
         wait_var++;
     wait_var = 0;
-    
+
     std::cout << "Thread 2: 2nd Access\n";
     for (int i = 0; i < T2_SIZE; i++) {
         tmp2 = arr2[i];

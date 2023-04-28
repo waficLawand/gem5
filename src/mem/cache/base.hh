@@ -86,9 +86,9 @@
 #define PUBLIC_BLOCK    1
 #define CORE0_WAYEND    2
 
-#define GT_INFO                     // print allocation values
-#define GT_DEBUG                    // print input to gt_cache_algo
-// #define DEBUG_ALLOCATE_BLOCK        // print masks received by allocateBlock
+// #define GT_INFO                     // print allocation values
+// #define GT_DEBUG                    // print input to gt_cache_algo
+#define DEBUG_ALLOCATE_BLOCK        // print masks received by allocateBlock
 // #define DEBUG_INITCACHE             // print masks received by initialize_cache
 
 namespace gem5

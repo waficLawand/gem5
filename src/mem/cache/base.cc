@@ -1396,7 +1396,7 @@ BaseCache::gt_cache_allocation()
         }
         else {
             allocated_space[0] = (4 * log(4*v_pub[1]*v_pub[2])) / 3;
-            allocated_space[1] = (3*v_pub[2] - 4*v_pub[1]*v_pub[2] + 1) / (3*v_pub[2]);
+            allocated_space[2] = (3*v_pub[2] - 4*v_pub[1]*v_pub[2] + 1) / (3*v_pub[2]);
             allocated_space[3] = (3*v_pub[1] - 4*v_pub[1]*v_pub[2] + 1) / (3*v_pub[1]);
             frac_allowed[1] = allocated_space[0];
             frac_allowed[2] = allocated_space[0];

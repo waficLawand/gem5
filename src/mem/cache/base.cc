@@ -72,12 +72,6 @@
 #include <iostream>
 #include <ctype.h>
 
-// #define NUM_CORES 2
-// #define NUM_WAYS 8
-// #define NUM_SETS 8
-// #define INFO_0
-#define DEBUG_INITCACHE
-
 namespace gem5
 {
 
@@ -91,15 +85,6 @@ BaseCache::CacheResponsePort::CacheResponsePort(const std::string &_name,
 {
 }
 
-
-/*void hello_test()
-{
-        printf("HELLO FROM SCHEDULED FN!\n");
-
-        Event *event = new EventFunctionWrapper(
-                    [this]{ game_theory(); }, name(), true);
-        schedule(event, curTick()+1000);
-}*/
 
 BaseCache::BaseCache(const BaseCacheParams &p, unsigned blk_size)
     : is_llc(p.is_llc),
@@ -162,57 +147,65 @@ BaseCache::BaseCache(const BaseCacheParams &p, unsigned blk_size)
         "Compressed cache %s does not have a compression algorithm", name());
     if (compressor)
         compressor->setCache(this);
+
     if(is_llc)
     {
-        set_mask_for_core0.resize(NUM_SETS, std::vector <int> (NUM_WAYS, 0));
+        set_mask_for_core0.resize(NUM_WAYS, 0);
         set_mask_for_core1.resize(NUM_SETS, std::vector <int> (NUM_WAYS, 0));
+        set_mask_for_core2.resize(NUM_SETS, std::vector <int> (NUM_WAYS, 0));        
 
         way_mask_for_core0.resize(NUM_WAYS, 0);
         way_mask_for_core1.resize(NUM_WAYS, 0);
+        way_mask_for_core2.resize(NUM_WAYS, 0);
 
-        for (int i=0; i < NUM_WAYS; i++) {
-            if (i < int(NUM_WAYS/2)) {
+        for (int i=0; i<CORE0_WAYEND; i++) {
+            if (i<int(CORE0_WAYEND/2)) {
+                set_mask_for_core0[i] = PRIVATE_BLOCK;
+            } else {
+                set_mask_for_core0[i] = PUBLIC_BLOCK;
+            }
+            way_mask_for_core0[i] = 1;
+        }
+
+        for (int i=CORE0_WAYEND; i < NUM_WAYS; i++) {
+            if (i < CORE0_WAYEND) {
                 way_mask_for_core0[i] = 1;
                 way_mask_for_core1[i] = 0;
-            } if (i >= int(NUM_WAYS/2)) {
+                way_mask_for_core2[i] = 0;
+            }
+            else if (i < int((CORE0_WAYEND+NUM_WAYS)/2)) {
                 way_mask_for_core0[i] = 0;
                 way_mask_for_core1[i] = 1;
+                way_mask_for_core2[i] = 0;
+            } 
+            else if (i >= int((CORE0_WAYEND+NUM_WAYS)/2)) {
+                way_mask_for_core0[i] = 0;
+                way_mask_for_core1[i] = 0;
+                way_mask_for_core2[i] = 1;
             }
         }
 
         float test [3] = {0.0,1.0,1.0};
         initialize_cache(test);
     }
-
-        
-
-    //EventFunctionWrapper event([this]{printf("HELLO FROM LAMBDA FN!\n");},name() + ".event");
-    //schedule(event,curTick()+10000);
 }
 
 BaseCache::~BaseCache()
 {
     delete tempBlock;
 }
-/*void BaseCache::game_theory()
-{
-    //printf("%d",curTick());
-    printf("GAME THEORY FUNCTION!\n");
-    printf("%d", getBlockSize());
-}*/
+
 void BaseCache::background_counter()
 {
     while(true)
     {   
         set_game_theory_ticks(get_game_theory_ticks()+1);
         std::this_thread::sleep_for(std::chrono::nanoseconds(1));
-        //printf("%d\n",get_game_theory_ticks());
 
         if (get_game_theory_ticks()%10 == 0)
         {
             
             set_compute_allocation_flag(1);
-            //printf("%d\n",get_compute_allocations_flag());
         }
             
     }
@@ -489,7 +482,6 @@ BaseCache::handleTimingReqMiss(PacketPtr pkt, MSHR *mshr, CacheBlk *blk,
 void
 BaseCache::recvTimingReq(PacketPtr pkt)
 {
-    //printf("Core %s is requesting data!\n",(system->getRequestorName(pkt->req->requestorId()).c_str()));
     // anything that is merely forwarded pays for the forward latency and
     // the delay provided by the crossbar
     Tick forward_time = clockEdge(forwardLatency) + pkt->headerDelay;
@@ -801,7 +793,6 @@ BaseCache::recvAtomic(PacketPtr pkt)
 void
 BaseCache::functionalAccess(PacketPtr pkt, bool from_cpu_side)
 {
-    //printf("Core %s is requesting data!\n",(system->getRequestorName(pkt->req->requestorId()).c_str()));
     Addr blk_addr = pkt->getBlockAddr(blkSize);
     bool is_secure = pkt->isSecure();
     CacheBlk *blk = tags->findBlock(pkt->getAddr(), is_secure);
@@ -1066,7 +1057,6 @@ bool
 BaseCache::updateCompressionData(CacheBlk *&blk, const uint64_t* data,
                                  PacketList &writebacks)
 {
-    printf("UPDATE COMPRESSION CALLED!!!\n");
     // tempBlock does not exist in the tags, so don't do anything for it.
     if (blk == tempBlock) {
         return true;
@@ -1199,25 +1189,6 @@ BaseCache::satisfyRequest(PacketPtr pkt, CacheBlk *blk, bool, bool)
     std::string str3("cpu2.inst");
     std::string str4("cpu2.data");
 
-    /*if(str1.compare((system->getRequestorName(pkt->req->requestorId()).c_str())) == 0)
-    {
-        printf("CORE 1 INST EXECUTED!!\n");
-    }
-    if(str2.compare((system->getRequestorName(pkt->req->requestorId()).c_str())) == 0)
-    {
-        printf("CORE 1 DATA EXECUTED!!\n");
-    }*/
-
-    /*if(str3.compare((system->getRequestorName(pkt->req->requestorId()).c_str())) == 0)
-    {
-        printf("CORE 2 INST EXECUTED!!\n");
-    }
-    if(str4.compare((system->getRequestorName(pkt->req->requestorId()).c_str())) == 0)
-    {
-        printf("CORE 2 DATA EXECUTED!!\n");
-    }*/
-
-    //printf("Core %s is requesting data!\n",(system->getRequestorName(pkt->req->requestorId()).c_str()));
     assert(pkt->isRequest());
 
     assert(blk && blk->isValid());
@@ -1359,18 +1330,18 @@ BaseCache::calculateAccessLatency(const CacheBlk* blk, const uint32_t delay,
 void
 BaseCache::gt_cache_allocation()
 {   
-    float v_priv[2] = {0};
-    float v_pub[2] = {0};
+    float v_priv[NUM_CORES] = {0};
+    float v_pub[NUM_CORES] = {0};
     
     // 0 for public file, 
-    // 1 for private of agent 1, 2 for private of agent 2
-    float allocated_space[3];
+    // 1 for private of agent 1, 2 for private of agent 2, ...
+    float allocated_space[NUM_CORES+1];
 
     // fraction of public file allowed for agent i
-    float frac_allowed[2];
+    float frac_allowed[NUM_CORES];
 
     // calculate valuation for files based on hits and misses, for each agent i
-    for(auto i=0; i<2; i++) {
+    for(auto i=0; i<NUM_CORES; i++) {
         v_priv[i] = 1*get_private_hits(i) + 1.2*get_private_misses(i);
         v_pub[i] = 1*get_public_hits(i) + 1.2*get_public_misses(i);
 
@@ -1378,7 +1349,7 @@ BaseCache::gt_cache_allocation()
         
         if(v_priv[i] == 0) {
             if (v_pub[i] == 0) {
-                v_pub[i] = 0;
+                v_pub[i] = 0 ;
             } else if (v_pub[i] > 0) {
                 v_pub[i] = 1;
             }
@@ -1386,88 +1357,90 @@ BaseCache::gt_cache_allocation()
             // normalize public valuation
             v_pub[i] = float(v_pub[i] / ((float) v_priv[i]));
         }
+        v_pub[i] += 0.6;
     }
-    # ifdef DEBUG_0
-        printf("v_priv: {%f, %f}\n", v_priv[0], v_priv[1]);
-        printf("v_pub: {%f, %f}\n", v_pub[0], v_pub[1]);
-        printf("priv_hits: {%d, %d}\n", get_private_hits(0),get_private_hits(1));
-        printf("priv_misses: {%d, %d}\n", get_private_misses(0),get_private_misses(1));
-        printf("pub_hits: {%d, %d}\n", get_public_hits(0),get_public_hits(1));
-        printf("pub_misses: {%d, %d}\n", get_public_misses(0),get_public_misses(1));    
+    #ifdef GT_DEBUG
+        printf("v_priv: %f, %f, %f\n", v_priv[0], v_priv[1], v_priv[2]);
+        printf("vnorm_pub: %f, %f, %f\n", v_pub[0], v_pub[1], v_pub[2]);
+        printf("priv_hits: %d, %d, %d\n", get_private_hits(0),get_private_hits(1),get_private_hits(2));
+        printf("priv_misses: %d, %d, %d\n", get_private_misses(0),get_private_misses(1),get_private_misses(2));
+        printf("pub_hits: %d, %d, %d\n", get_public_hits(0),get_public_hits(1),get_public_hits(2));
+        printf("pub_misses: %d, %d, %d\n", get_public_misses(0),get_public_misses(1),get_public_misses(2));  
+        printf("\n");  
     #endif
     
-    if (v_pub[0]==0) {
-        v_pub[0] = 0.00001;
-    }
-
     if (v_pub[1]==0) {
         v_pub[1] = 0.00001;
     }
 
-        if (v_priv[0]==0) {
-        v_priv[0] = 0.00001;
+    if (v_pub[2]==0) {
+        v_pub[2] = 0.00001;
     }
 
     if (v_priv[1]==0) {
         v_priv[1] = 0.00001;
     }
+
+    if (v_priv[2]==0) {
+        v_priv[2] = 0.00001;
+    }
     
 
-    if ((v_pub[0]<=1) && (v_pub[1]<=1)) {
-        if (v_pub[0]*v_pub[1] < (0.25)){
-            allocated_space[0] = 0;
-            allocated_space[1] = 1;
-            allocated_space[2] = 1;
-            frac_allowed[0] = 0;
+    if ((v_pub[1]<=1) && (v_pub[2]<=1)) {
+        if (v_pub[1]*v_pub[2] < (0.25)){
+            allocated_space[0] = 0;     // public
+            allocated_space[2] = 1;     // core 1 private
+            allocated_space[3] = 1;     // core 2 private
             frac_allowed[1] = 0;
+            frac_allowed[2] = 0;
         }
         else {
-            allocated_space[0] = (4 * log(4*v_pub[0]*v_pub[1])) / 3;
-            allocated_space[1] = (3*v_pub[1] - 4*v_pub[0]*v_pub[1] + 1) / (3*v_pub[1]);
-            allocated_space[2] = (3*v_pub[0] - 4*v_pub[0]*v_pub[1] + 1) / (3*v_pub[0]);
-            frac_allowed[0] = allocated_space[0];
+            allocated_space[0] = (4 * log(4*v_pub[1]*v_pub[2])) / 3;
+            allocated_space[1] = (3*v_pub[2] - 4*v_pub[1]*v_pub[2] + 1) / (3*v_pub[2]);
+            allocated_space[3] = (3*v_pub[1] - 4*v_pub[1]*v_pub[2] + 1) / (3*v_pub[1]);
             frac_allowed[1] = allocated_space[0];
+            frac_allowed[2] = allocated_space[0];
         }
     } else {
-        if ((v_pub[0]>1) && (v_pub[1]<=1)) {
+        if ((v_pub[1]>1) && (v_pub[2]<=1)) {
             // derived from "max(v_pub1, v_pub2) <= 1" case
-            // assuming v_pub[0] = 1
-            float x0 = (4 * log(4*v_pub[1])) / 3;
-            float x1 = (3*v_pub[1] - 4*v_pub[1] + 1) / (3*v_pub[1]);
-            float x2 = (3 - 4*v_pub[1] + 1) / (3);
+            // assuming v_pub[1] = 1
+            float x0 = (4 * log(4*v_pub[2])) / 3;
+            float x1 = (3*v_pub[2] - 4*v_pub[2] + 1) / (3*v_pub[2]);
+            float x2 = (3 - 4*v_pub[2] + 1) / (3);
 
             allocated_space[0] = x0 + x1;
-            allocated_space[1] = 0;
-            allocated_space[2] = x2;
+            allocated_space[2] = 0;
+            allocated_space[3] = x2;
 
-            frac_allowed[0] = allocated_space[0];
-            frac_allowed[1] = x0;
-        } else if ((v_pub[0]<=1) && (v_pub[2]>1)) {
+            frac_allowed[1] = allocated_space[0];
+            frac_allowed[2] = x0;
+        } else if ((v_pub[1]<=1) && (v_pub[2]>1)) {
             // derived from "max(v_pub1, v_pub2) <= 1" case
             // assuming v_pub[2] = 1
-            float x0 = (4 * log(4*v_pub[0])) / 3;
-            float x1 = (3 - 4*v_pub[0] + 1) / (3);
-            float x2 = (3*v_pub[0] - 4*v_pub[0] + 1) / (3*v_pub[0]);
+            float x0 = (4 * log(4*v_pub[1])) / 3;
+            float x1 = (3 - 4*v_pub[1] + 1) / (3);
+            float x2 = (3*v_pub[1] - 4*v_pub[1] + 1) / (3*v_pub[1]);
 
             allocated_space[0] = x0 + x2;
-            allocated_space[1] = x1;
-            allocated_space[2] = 0;
+            allocated_space[2] = x1;
+            allocated_space[3] = 0;
 
-            frac_allowed[0] = x0;
-            frac_allowed[1] = allocated_space[0];
+            frac_allowed[1] = x0;
+            frac_allowed[2] = allocated_space[0];
         } else {
             allocated_space[0] = (4/3) * log(4);
-            allocated_space[1] = 0;
             allocated_space[2] = 0;
+            allocated_space[3] = 0;
 
-            frac_allowed[0] = allocated_space[0];
             frac_allowed[1] = allocated_space[0];
+            frac_allowed[2] = allocated_space[0];
         }
     }
-    #ifdef INFO_0
-    printf(" V: {%f, %f} \n Allocated space: {%f, %f, %f} \n Fraction allowed: {%f, %f}: \n",
-        v_pub[0], v_pub[1], allocated_space[0], allocated_space[1], allocated_space[2],
-        frac_allowed[0], frac_allowed[1]);
+    #ifdef GT_INFO
+    printf(" Vnorm_pub: %f, %f\nAllocated space: %f, %f, %f\nFraction allowed: %f, %f\n\n\n",
+        v_pub[0], v_pub[1], allocated_space[0], allocated_space[2], allocated_space[3],
+        frac_allowed[1], frac_allowed[2]);
     #endif 
     
     for(auto i =0; i<2;i++) {
@@ -1486,41 +1459,15 @@ bool
 BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
                   PacketList &writebacks)
 {
-    //printf("Outside outside the if : %d\n",get_compute_allocations_flag());
-    //if(pkt.has)
-    //game_theory_ticks+=1;
-    //printf("%d",is_llc);
     if (is_llc)
     {
-        //printf("Outside the if : %d\n",get_compute_allocations_flag());
-
         if(get_compute_allocations_flag()) {
-
-            //printf("Inside the if : %d\n",get_compute_allocations_flag());
             gt_cache_allocation();
-            //printf("\nGame Theory Ticks: %d\n",get_game_theory_ticks());
             set_compute_allocation_flag(0);
         }
 
     }
 
-    //hello_test();
-    //EventFunctionWrapper event([this]{hello_test();},name() + ".event");
-    
-    //schedule(event, curTick()+1);
-
-
-    
-    /*if(pkt->req->requestorId() == 1 || pkt->req->requestorId() == 2)
-    {
-        printf("Core: %d REQEUSTED!!\n");   
-    }*/
-    //printf("Max Requestors: %d\n",system->maxRequestors());
-        /*if(pkt->req->requestorId() == 1 || pkt->req->requestorId() == 2 || pkt->req->requestorId() == 3)
-    {
-        //pkt->print_stack_trace();
-        printf("Core: %d sent a request\n",pkt->req->requestorId());   
-    }*/
     // sanity check
     assert(pkt->isRequest());
 
@@ -1533,8 +1480,6 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
     blk = tags->accessBlock(pkt, tag_latency);
     if(is_llc)
     {
-        //printf("Core %s is requesting data!\n",(system->getRequestorName(pkt->req->requestorId()).c_str()));
-
         std::string cpu_id_str = (system->getRequestorName(pkt->req->requestorId()).c_str());
         cpu_id_str = cpu_id_str.substr(3,1);
         
@@ -1930,7 +1875,6 @@ BaseCache::initialize_cache(float allocated_space[])
     int num_ways_for_core[2];
     // for private data of cores
     for(int i = 0; i < NUM_CORES; i++) {
-
         int base_int = int(allocated_space[i+1]);
         if (allocated_space[i+1] - base_int >= 0.5) {
             num_ways_for_core[i] = ceil(allocated_space[i+1])*NUM_WAYS;
@@ -1939,41 +1883,48 @@ BaseCache::initialize_cache(float allocated_space[])
         }
     }
 
+    // for core 1
     for (int j=0; j<NUM_SETS; j++) {
-        for (int k=0; k<NUM_WAYS; k++) {
+        for (int k=CORE0_WAYEND; k<(int)(NUM_WAYS+CORE0_WAYEND)/2; k++) {
             if (k < num_ways_for_core[0]) {                      
-                set_mask_for_core0[j][k] = PRIVATE_BLOCK;
-            } else {
-                set_mask_for_core0[j][k] = PUBLIC_BLOCK;
-            }        
-
-            if (k < num_ways_for_core[1]) {                      
                 set_mask_for_core1[j][k] = PRIVATE_BLOCK;
             } else {
                 set_mask_for_core1[j][k] = PUBLIC_BLOCK;
             }        
         } 
     }
-            
-
-    for (int l=0; l<NUM_SETS; l++) {
-        set_mask_for_core0[l][0] = PRIVATE_BLOCK;
-        set_mask_for_core0[l][int(NUM_WAYS/2)-1] = PUBLIC_BLOCK;
-        set_mask_for_core1[l][int(NUM_WAYS/2)] = PRIVATE_BLOCK;
-        set_mask_for_core1[l][NUM_WAYS-1] = PUBLIC_BLOCK;
+    
+    // for core 2
+    for (int j=0; j<NUM_SETS; j++) {
+        for (int k=(int)(NUM_WAYS+CORE0_WAYEND)/2; k<NUM_WAYS; k++) {
+            if (k-(int)(NUM_WAYS+CORE0_WAYEND)/2 < num_ways_for_core[1]) {                      
+                set_mask_for_core2[j][k] = PRIVATE_BLOCK;
+            } else {
+                set_mask_for_core2[j][k] = PUBLIC_BLOCK;
+            }        
+        } 
     }
+
+    // Make sure at least way is left for PUBLIC, and one for PRIVATE
+    for (int l=0; l<NUM_SETS; l++) {
+        set_mask_for_core1[l][CORE0_WAYEND] = PRIVATE_BLOCK;
+        set_mask_for_core1[l][int((NUM_WAYS+CORE0_WAYEND)/2)-1] = PUBLIC_BLOCK;
+        set_mask_for_core2[l][int((NUM_WAYS+CORE0_WAYEND)/2)] = PRIVATE_BLOCK;
+        set_mask_for_core2[l][NUM_WAYS-1] = PUBLIC_BLOCK;
+    }
+
     #ifdef DEBUG_INITCACHE
         for (int j=0; j <NUM_SETS; j++) {
-            printf("Core 0 Set %d: ", j);
+            printf("Core 1 Set %d: ", j);
             for (int l=0; l<NUM_WAYS; l++) {
-                printf("%d ", set_mask_for_core0[j][l]);
+                printf("%d ", set_mask_for_core1[j][l]);
             }
             printf("\n");
         }
         for (int j=0; j <NUM_SETS; j++) {        
-            printf("Core 1 Set %d: ", j);
+            printf("Core 2 Set %d: ", j);
             for (int l=0; l<NUM_WAYS; l++) {
-                printf("%d ", set_mask_for_core1[j][l]);
+                printf("%d ", set_mask_for_core2[j][l]);
             }
             printf("\n");
         }
@@ -2029,7 +1980,7 @@ BaseCache::allocateBlock(const PacketPtr pkt, PacketList &writebacks)
         {
             int cpu_id_int = std::stoi(cpu_id_str);
             if (cpu_id_int==0) {
-                #ifdef DEBUG_ALLOCATE_BLOCK
+                #ifdef DEBUG_ALLOCATE_BLOCK_MASKS
                     printf("\nCore %d", cpu_id_int);
 
                     printf("\nWay: ");
@@ -2037,23 +1988,22 @@ BaseCache::allocateBlock(const PacketPtr pkt, PacketList &writebacks)
                         printf("%d ", way_mask_for_core0[i]);
                     }
 
-                    for (int i=0; i<NUM_SETS; i++) {
-                        printf("\nSet %d: ", i);
-                        for (int l=0; l<NUM_WAYS; l++) {
-                            printf("%d ", set_mask_for_core0[i][l]);
-                        }
+                    printf("\nSet: ");
+                    for (int l=0; l<NUM_WAYS; l++) {
+                        printf("%d ", set_mask_for_core0[l]);
                     }
                 #endif
-                victim = tags->findVictimWayBased(addr, is_secure, blk_size_bits, evict_blks, 8, way_mask_for_core0, set_mask_for_core0[set], pkt);
-            } else if (cpu_id_int==1) {
-                #ifdef DEBUG_ALLOCATE_BLOCK
+                victim = tags->findVictimWayBased(addr, is_secure, blk_size_bits, evict_blks, 8, way_mask_for_core0, set_mask_for_core0, pkt);
+            }
+            else if (cpu_id_int==1) {
+                #ifdef DEBUG_ALLOCATE_BLOCK_MASKS
                     printf("\nCore %d", cpu_id_int);
 
                     printf("\nWay: ");
                     for (int i=0; i<NUM_WAYS; i++) {
                         printf("%d ", way_mask_for_core1[i]);
                     }
-                
+
                     for (int i=0; i<NUM_SETS; i++) {
                         printf("\nSet %d: ", i);
                         for (int l=0; l<NUM_WAYS; l++) {
@@ -2062,10 +2012,27 @@ BaseCache::allocateBlock(const PacketPtr pkt, PacketList &writebacks)
                     }
                 #endif
                 victim = tags->findVictimWayBased(addr, is_secure, blk_size_bits, evict_blks, 8, way_mask_for_core1, set_mask_for_core1[set], pkt);
+            } else if (cpu_id_int==2) {
+                #ifdef DEBUG_ALLOCATE_BLOCK_MASKS
+                    printf("\nCore %d", cpu_id_int);
+
+                    printf("\nWay: ");
+                    for (int i=0; i<NUM_WAYS; i++) {
+                        printf("%d ", way_mask_for_core2[i]);
+                    }
+                
+                    for (int i=0; i<NUM_SETS; i++) {
+                        printf("\nSet %d: ", i);
+                        for (int l=0; l<NUM_WAYS; l++) {
+                            printf("%d ", set_mask_for_core2[i][l]);
+                        }
+                    }
+                #endif
+                victim = tags->findVictimWayBased(addr, is_secure, blk_size_bits, evict_blks, 8, way_mask_for_core2, set_mask_for_core2[set], pkt);
             }
+        } else {
+            victim = tags->findVictimWayBased(addr, is_secure, blk_size_bits, evict_blks, 8, way_mask_for_core0, set_mask_for_core0, pkt);
         }
-        victim = tags->findVictimWayBased(addr, is_secure, blk_size_bits, evict_blks, 8, way_mask, set_mask, pkt);
-            
     } else {
         victim = tags->findVictim(addr, is_secure, blk_size_bits,
                                         evict_blks);

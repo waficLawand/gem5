@@ -110,7 +110,7 @@ class L1DCache(L1Cache):
         self.cpu_side = cpu.dcache_port
 
 
-class L2Cache(LLCWayPartitionedCache):
+class L2Cache(Cache):
     """Simple L2 Cache with default values"""
 
     # Default parameters

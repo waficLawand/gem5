@@ -82,11 +82,14 @@
 #define NUM_CORES 3
 #define NUM_WAYS 8
 #define NUM_SETS 512
-#define INFO_0
 #define PRIVATE_BLOCK   0
 #define PUBLIC_BLOCK    1
-// #define DEBUG_ALLOCATE_BLOCK
-// #define DEBUG_INITCACHE
+#define CORE0_WAYEND    2
+
+#define GT_INFO                     // print allocation values
+#define GT_DEBUG                    // print input to gt_cache_algo
+// #define DEBUG_ALLOCATE_BLOCK        // print masks received by allocateBlock
+// #define DEBUG_INITCACHE             // print masks received by initialize_cache
 
 namespace gem5
 {
@@ -156,7 +159,7 @@ class BaseCache : public ClockedObject
     bool get_compute_allocations_flag(){return compute_allocations_flag;}
     void set_compute_allocation_flag(bool val){ compute_allocations_flag = val;}
 
-    std::vector < std::vector <int> > set_mask_for_core0;
+    std::vector < int > set_mask_for_core0;
     std::vector < std::vector <int> > set_mask_for_core1;
     std::vector < std::vector <int> > set_mask_for_core2;
 

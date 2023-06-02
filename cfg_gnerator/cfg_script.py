@@ -6,10 +6,10 @@ from collections import deque
 from IPython.display import Image
 
 # File containing register values trace
-reg_values_file = './riscv_regvals_matrix.txt'
+reg_values_file = './riscv_insns_five_nested_loops_reg.txt'
 
 # File containing instructions trace
-insns_file = './riscv_insns_matrix.txt'
+insns_file = './riscv_insns_five_nested_loops.txt'
 
 # Number of instructions cconsidered for analysis
 considered_lines = 100
@@ -63,7 +63,7 @@ for line in lines:
             loop_bounds_dict[int(array_of_tokens[3],16)] = loop_bounds_dict[int(array_of_tokens[3],16)] + 1
         
         if int(array_of_tokens[3],16) not in insns_dict:
-            if array_of_tokens[5] in included_insns:
+            #if array_of_tokens[5] in included_insns:
                 insns_dict[int(array_of_tokens[3],16)] = array_of_tokens
 
 sorted_tokens = sorted(all_tokens, key=lambda x: int(x[3],0))
@@ -114,8 +114,8 @@ unique_insns = set([token[5] for token in all_tokens])
 
 for i,key in enumerate(sorted(insns_dict.keys())):
 
-    if insns_dict[key][5] not in included_insns:
-        continue
+    #if insns_dict[key][5] not in included_insns:
+     #   continue
 
     #if i == considered_lines:
      #   break
@@ -162,7 +162,6 @@ for i,key in enumerate(sorted(insns_dict.keys())):
             mem_data.append('')
             mem_read_write.append('')
 
-
 for i,key in enumerate(sorted(insns_dict.keys())):
    # if i == considered_lines:
        # break
@@ -184,17 +183,24 @@ for i,key in enumerate(sorted(insns_dict.keys())):
 
          # Add branch edge, other edges will be added by nonbranch nodes
         if(pc[i]+branch_imm[i] != pc[i+1]):
-            cfg.add_edge(edge)
+            if(pc[i]+branch_imm[i] in insns_dict.keys()):
+                cfg.add_edge(edge)
 
         
     elif insn[i] in jmp_imm_insns:
         node = pydot.Node(hex(pc[i]),label=str("pc: "+hex(pc[i])+ " insn: "+insn[i]))
+        
+
         cfg.add_node(node)
-       
+        
+        #if(pc[i]+jmp_imm[i] in insns_dict.keys()):
+         #   edge = pydot.Edge(hex(pc[i]),hex(pc[i]+jmp_imm[i]))
+          #  cfg.add_edge(edge)  
         
     elif insn[i] in jmp_reg_insns:
         node = pydot.Node(hex(pc[i]),label=str("pc: "+hex(pc[i])+ " insn: "+insn[i]))
         cfg.add_node(node)
+        
         
     else:
         node = pydot.Node(hex(pc[i]),label=str("pc: "+hex(pc[i])+ " insn: "+insn[i]))
@@ -203,10 +209,9 @@ for i,key in enumerate(sorted(insns_dict.keys())):
 
     if i != 0:
         if (insns_dict[key][4].split('+')[0] == insns_dict[pc[i-1]][4].split('+')[0]): 
-            edge = pydot.Edge(hex(pc[i-1]),hex(pc[i]))
-            cfg.add_edge(edge)
-
-
+           # if insn[i-1] not in jmp_imm_insns:
+                edge = pydot.Edge(hex(pc[i-1]),hex(pc[i]))
+                cfg.add_edge(edge)
 
 cfg_dict['@main'].write_pdf('cfg.pdf')
 
@@ -233,125 +238,156 @@ def get_entrances_exits(node,graph):
 
 
 class Region:
-    def __init__(self, start_node):
+    def __init__(self, start_node,region_type):
         self.start_node = start_node
+        self.region_type = region_type
         self.end_node = None
         self.nodes = []
         self.loop_bound = 1
+        self.nested_regions = []
         self.parent = None
-        self.nested_regions = None
+        
+def generate_regions_refined_take_1(graph):
 
+    curr_region = Region('start','multiple-entry')
+    curr_region_2 = Region('start','multiple-entry')
 
-
-
-def generate_regions(graph):
-
-    curr_region = Region('start')
     curr_region.parent = curr_region
     
     region_bottom_stack = deque()
     region_top_stack = deque()
-
-    region_top_stack.append(curr_region)
     
+    region_top_stack.append(curr_region)
+    region_bottom_stack.append(curr_region_2)
+
     # loop over al the nodes
     for node in graph.get_node_list():
-        # Check all entrance and exit nodes
         entrance_nodes,exit_nodes = get_entrances_exits(node,graph)
 
-        if len(entrance_nodes) >= 2:
-            region = Region(node.get_name())
+        # ==================== DEBUG SECTION==============================================
+        #print("--------- HEREE -----------------------")
+        #for element in region_top_stack:
+         #   if element.start_node == "start":
+          #      for regions in element.nested_regions:
+           #         print(regions.start_node)
+        #print("--------- HEREE -----------------------")
+        #print("---------------stack elements --------------------------")
+        #for element in region_top_stack:
+         #   print(element.start_node)
+        #print("---------------stack elements --------------------------")
+        # ==================== DEBUG SECTION==============================================
+
+        if len(entrance_nodes) == 0:
+         #   print("entry")
+            region = Region(node.get_name(),"single-entry")
             region.parent = region_top_stack[-1]
+            region.loop_bound = int(loop_bounds_dict[int(node.get_name().strip('"'),0)] / region.parent.loop_bound) 
             region_top_stack.append(region)
+            region_top_stack[-1].nodes.append(node)
+        
+        elif len(entrance_nodes) >= 2:
+            if region_top_stack[-1].region_type == "single-entry":
+                popped_region = region_top_stack.pop()
+                region_top_stack[-1].nested_regions.append(popped_region)
 
-        else:
-            if region_top_stack[-1].start_node in [node.get_name() for node in get_entrances_exits(node,graph)[1]]:
-                print('HELLOOOO')
-                region_top_stack[-1].end_node = node.get_name()
+            if region_bottom_stack[-1].start_node in [node.get_name() for node in get_entrances_exits(node,graph)[0]]:
                 
+                # ==================== DEBUG SECTION==============================================
+                #print("inverted!")
+                #print("=======new===")
+                #print(region_bottom_stack[-1].start_node)
+                #print(region_top_stack[-1].start_node)
+                #for region in region_top_stack[-1].nested_regions:
+                #    print("region:"+region.start_node)
+                #print("last node: "+node.get_name())
+                #print("====new====")
+                # ==================== DEBUG SECTION==============================================
+
                 temp_region = region_top_stack.pop()
-                curr_region = region_top_stack[-1]
-                curr_region.nested_region = temp_region
+                temp_region.nodes.append(node)
+                region_top_stack[-1].nested_regions.append(temp_region)
 
-                
+                temp_region2 = region_bottom_stack.pop()
+                temp_region2.nodes.append(node)
+                #curr_region = region_bottom_stack[-1]
+                region_bottom_stack[-1].nested_regions.append(temp_region2)
+
+     
 
             else:
-                region_top_stack[-1].loop_bound = loop_bounds_dict[int(node.get_name().strip('"'),0)] / region_top_stack[-1].parent.loop_bound
-                #print(region_top_stack[-1].loop_bound )
-                region_top_stack[-1].nodes.append(node)
+                region = Region(node.get_name(),"multiple-entry")
+                region.nodes.append(node)
+                region.parent = region_top_stack[-1]
+                region.loop_bound = int(loop_bounds_dict[int(node.get_name().strip('"'),0)] / region.parent.loop_bound) 
+                region_top_stack.append(region)
 
-        #print(region_top_stack)
+        elif len(exit_nodes)  >= 2:
+            if region_top_stack[-1].region_type == "single-entry":
+                popped_region = region_top_stack.pop()
+                region_top_stack[-1].nested_regions.append(popped_region)
 
-    #print(curr_region.nested_region.nested_region.start_node)
+            if region_top_stack[-1].start_node in [node.get_name() for node in get_entrances_exits(node,graph)[1]]:
+                temp_region = region_top_stack.pop()
+                temp_region.nodes.append(node)
+                #curr_region = region_top_stack[-1]
+                region_top_stack[-1].nested_regions.append(temp_region)
 
-    return curr_region
+            else:
+                region = Region(node.get_name(),"multiple-entry")
+                region.nodes.append(node)
+
+                
+
+                region.parent = region_top_stack[-1]
+                region.loop_bound = int(loop_bounds_dict[int(node.get_name().strip('"'),0)] / region.parent.loop_bound) 
+                region_top_stack.append(region)
+                
+                
+                region_bottom_stack.append(region)
+
+        elif len(exit_nodes) == 0:
+            region_top_stack[-1].nodes.append(node)
+
+            if region_top_stack[-1].region_type == "single-entry":
+                temp_region = region_top_stack.pop()
+                region_top_stack[-1].nested_regions.append(temp_region)
+
+            elif region_top_stack[-1].region_type == "multiple-entry":
+                region = Region(node.get_name(),"single-entry")
+                region.nodes.append(node)
+                region_top_stack[-1].nested_regions.append(region)
+
+        else:
+            if region_top_stack[-1].region_type == "multiple-entry":
+                region = Region(node.get_name(),"single-entry")
+                region.parent = region_top_stack[-1]
+                region.loop_bound = int(loop_bounds_dict[int(node.get_name().strip('"'),0)] / region.parent.loop_bound) 
+                region_top_stack.append(region)
+
+            region_top_stack[-1].nodes.append(node)
+
+    return region_top_stack[-1]
 
 
-regions = generate_regions(cfg_dict['@main'])
+regions = generate_regions_refined_take_1(cfg_dict['@main'])
 
-print(regions.loop_bound)
 
-while(regions != None):
-    print(regions.parent.start_node)
-    regions = regions.nested_region
+with open('./test_cfg.txt','w') as f:
+    for key in sorted(insns_dict.keys()):
+        f.write(insns_dict[key][3]+" "+insns_dict[key][4]+" "+insns_dict[key][5]+" "+insns_dict[key][6]+"\n")
+    
+for region in regions.nested_regions:
+    print(region.start_node)
+
+
+#while(regions != None):
+    #print(regions.parent.start_node)
+    #regions = regions.nested_regions
 
 #for node in regions:
     #print(loop_bounds_dict[int('0x10600',0)])
  #   print(node.get_name())
 
-
-def generate_regions_1(graph):
-    
-    region_bottom_stack = deque()
-    region_top_stack = deque()
-
-    regions = []
-    temp_region = []
-    region_counter = 0
-
-    for node in graph.get_node_list():
-        entrance_nodes,exit_nodes = get_entrances_exits(node,graph)
-        #print(int(node.get_name().split('"')[1].split('"')[0],16))
-        
-        if(len(entrance_nodes) == 0) or len(exit_nodes) ==0:
-            region_bottom_stack.append(node.get_name())
-            region_top_stack.append(node.get_name())
-        
-        # Starting node case
-        if len(entrance_nodes) == 0 or (len(entrance_nodes) == 1 and len(exit_nodes) == 1) or (len(entrance_nodes) == 1 and len(exit_nodes) == 0):
-            temp_region.append(node)
-            
-        
-        elif len(entrance_nodes) >= 2:
-            if region_bottom_stack[-1] in get_entrances_exits(node,graph)[0]:
-                region_bottom_stack.pop()
-                
-                regions.append(temp_region)
-                temp_region = []
-                temp_region.append(node)
-            
-            else:
-                region_top_stack.append(node)
-            
-
-
-        elif len(exit_nodes) >= 2:
-            if region_top_stack[-1] == node.get_name():
-                region_top_stack.pop()
-            else:
-                region_bottom_stack.append(node)
-            
-            regions.append(temp_region)
-            temp_region = []
-            temp_region.append(node)
-
-                
-
-
-    return regions
-
-
-            #region_track_stack.append(node)
         
     
 

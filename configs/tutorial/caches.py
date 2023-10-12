@@ -35,6 +35,7 @@ line options from each individual class.
 import m5
 from m5.objects import Cache
 
+
 # Add the common scripts to our path
 m5.util.addToPath("../")
 
@@ -43,20 +44,24 @@ from common import SimpleOpts
 # Some specific options for caches
 # For all options see src/mem/cache/BaseCache.py
 
+# Performs better
+# assoc = 16
+# cache size = 2kb
 
 class L1Cache(Cache):
     """Simple L1 Cache with default values"""
-
-    assoc = 2
     tag_latency = 2
     data_latency = 2
     response_latency = 2
-    mshrs = 4
-    tgts_per_mshr = 20
+    mshrs = 1
+    tgts_per_mshr = 1
 
-    def __init__(self, options=None):
+    def __init__(self, size="8kB", assoc=1, is_l1_cache_locking=False,is_l1_cache_locking_full_context=False):
         super(L1Cache, self).__init__()
-        pass
+        self.size = size
+        self.assoc = assoc
+        self.is_l1_cache_locking = is_l1_cache_locking
+        self.is_l1_cache_locking_full_context = is_l1_cache_locking_full_context
 
     def connectBus(self, bus):
         """Connect this cache to a memory-side bus"""
@@ -71,18 +76,8 @@ class L1Cache(Cache):
 class L1ICache(L1Cache):
     """Simple L1 instruction cache with default values"""
 
-    # Set the default size
-    size = "16kB"
-
-    SimpleOpts.add_option(
-        "--l1i_size", help="L1 instruction cache size. Default: %s" % size
-    )
-
-    def __init__(self, opts=None):
-        super(L1ICache, self).__init__(opts)
-        if not opts or not opts.l1i_size:
-            return
-        self.size = opts.l1i_size
+    def __init__(self, size="32kB", assoc=8, is_l1_cache_locking=False,is_l1_cache_locking_full_context=False):
+        super(L1ICache, self).__init__(size, assoc, is_l1_cache_locking,is_l1_cache_locking_full_context)
 
     def connectCPU(self, cpu):
         """Connect this cache's port to a CPU icache port"""
@@ -92,23 +87,12 @@ class L1ICache(L1Cache):
 class L1DCache(L1Cache):
     """Simple L1 data cache with default values"""
 
-    # Set the default size
-    size = "64kB"
-
-    SimpleOpts.add_option(
-        "--l1d_size", help="L1 data cache size. Default: %s" % size
-    )
-
-    def __init__(self, opts=None):
-        super(L1DCache, self).__init__(opts)
-        if not opts or not opts.l1d_size:
-            return
-        self.size = opts.l1d_size
+    def __init__(self, size="8kB", assoc=2, is_l1_cache_locking=False,is_l1_cache_locking_full_context=False):
+        super(L1DCache, self).__init__(size, assoc, is_l1_cache_locking,is_l1_cache_locking_full_context)
 
     def connectCPU(self, cpu):
         """Connect this cache's port to a CPU dcache port"""
         self.cpu_side = cpu.dcache_port
-
 
 class L2Cache(Cache):
     """Simple L2 Cache with default values"""

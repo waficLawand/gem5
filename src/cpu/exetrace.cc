@@ -66,7 +66,14 @@ ExeTracerRecord::traceInst(const StaticInstPtr &inst, bool ran)
         return;
     if (!in_user_mode && !debug::ExecKernel)
         return;
+    
+    // Skip the trace for int and floating point instructions
+    //if (inst->isFloating() || (inst->isInteger() and !(inst->isLoad() && inst->isStore() && inst->isAtomic() && inst->isStoreConditional())))
+      //  return;
 
+    /*if((inst->opClass() == enums::IntAlu || inst->opClass() == enums::IntMult || inst->opClass() == enums::IntDiv)&& !(inst->isControl()     || inst->isCall()        || inst->isReturn()      || inst->isDirectCtrl()  || inst->isIndirectCtrl()|| inst->isCondCtrl()    || inst->isUncondCtrl()))
+        return;*/
+    
     if (debug::ExecAsid) {
         outs << "A" << std::dec <<
             thread->getIsaPtr()->getExecutingAsid() << " ";

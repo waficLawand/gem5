@@ -37,7 +37,8 @@
 
 #include <string>
 #include <unordered_map>
-
+#include <map>
+#include <unordered_map>
 #include "base/bitfield.hh"
 #include "base/intmath.hh"
 #include "base/types.hh"
@@ -102,6 +103,9 @@ class EmulationPageTable : public Serializable
 
     // flag which marks the page table as shared among software threads
     bool shared;
+
+    // Unique Virtual Addresses
+    std::unordered_map <int,bool> unique_virt_addr;
 
     virtual void initState() {};
 

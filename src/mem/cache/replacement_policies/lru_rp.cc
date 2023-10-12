@@ -91,7 +91,7 @@ LRU::getVictim(const ReplacementCandidates& candidates) const
     }
     if(entries.empty())
     {
-        //printf("ALL BLOCKS ARE LOCKED!\n");
+        printf("ALL BLOCKS ARE LOCKED!\n");
         return nullptr;
     }
 
@@ -143,6 +143,8 @@ LRU::getVictim(const ReplacementCandidates& candidates) const
 
     //CacheBlk* test = static_cast<CacheBlk*> (victim);
     //printf("THIS BLOCK IS GETTING EVICTED: %x\n",test->getTag());
+
+    //printf("VICTIM IS: 0x%x\n",victim->getSet());
     
     return victim;
 }

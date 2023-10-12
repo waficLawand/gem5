@@ -173,6 +173,13 @@ class BaseCache(ClockedObject):
     # data cache.
     write_allocator = Param.WriteAllocator(NULL, "Write allocator")
 
+    # If cache is L1 and supports locking
+    is_l1_cache_locking = Param.Bool(False,"L1 cache locking")
+
+    
+    # If cache is L1 and supports locking
+    is_l1_cache_locking_full_context = Param.Bool(False,"L1 cache locking For Full Context")
+
 
 class Cache(BaseCache):
     type = "Cache"

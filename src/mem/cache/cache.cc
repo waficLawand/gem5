@@ -64,6 +64,8 @@
 #include "params/Cache.hh"
 #include "mem/cache/compressors/base.hh"
 #include "mem/cache/tags/indexing_policies/base.hh"
+#include "mem/page_table.hh"
+
 
 namespace gem5
 {
@@ -166,11 +168,16 @@ Cache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
     //printf("WE ARE IN!!\n");
     //printf("BLOCK SIZE IS: %x\n",blkSize*8);
 
+    RequestPtr request = pkt->req;
+
+
     std:size_t size = blkSize*8;
 
     Addr addr = pkt->getAddr();
+    //printf("Physical Address is FROM ACCESS: %x\n",addr);
+    //printf("Virtual Address is FROM ACCESS: %x\n",request->getVaddr());
 
-    const std::vector<ReplaceableEntry*> entries = tags->getPossibleEntries(addr);
+    /*const std::vector<ReplaceableEntry*> entries = tags->getPossibleEntries(addr);
 
     bool all_locked = false;
 
@@ -188,6 +195,7 @@ Cache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
 
     if (all_locked == true)
     {
+        printf("ALL LOCKED!!!\n");
         pkt->req->setFlags(Request::UNCACHEABLE);
     }
     /*if(pkt)
@@ -245,6 +253,8 @@ Cache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
         //pkt->req->setFlags(Request::UNCACHEABLE);
     }*/
     //pkt->req->setFlags(Request::UNCACHEABLE);
+
+    
 
     if (pkt->req->isUncacheable()) {
         assert(pkt->isRequest());

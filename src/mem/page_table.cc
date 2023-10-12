@@ -51,7 +51,7 @@ EmulationPageTable::map(Addr vaddr, Addr paddr, int64_t size, uint64_t flags)
     // starting address must be page aligned
     assert(pageOffset(vaddr) == 0);
 
-    DPRINTF(MMU, "Allocating Page: %#x-%#x\n", vaddr, vaddr + size);
+    //DPRINTF(MMU, "Allocating Page: %#x-%#x\n", vaddr, vaddr + size);
 
     while (size > 0) {
         auto it = pTable.find(vaddr);
@@ -62,7 +62,7 @@ EmulationPageTable::map(Addr vaddr, Addr paddr, int64_t size, uint64_t flags)
                      vaddr);
             it->second = Entry(paddr, flags);
         } else {
-            //printf("Address: %x, Flags:%x",paddr,flags);
+
 
             // FOR TESTING EXTRA BITS WITH PTABLES
             /*if (paddr == 0x70000 || paddr ==0x6f000)
@@ -83,8 +83,7 @@ EmulationPageTable::remap(Addr vaddr, int64_t size, Addr new_vaddr)
     assert(pageOffset(vaddr) == 0);
     assert(pageOffset(new_vaddr) == 0);
 
-    DPRINTF(MMU, "moving pages from vaddr %08p to %08p, size = %d\n", vaddr,
-            new_vaddr, size);
+    //DPRINTF(MMU, "moving pages from vaddr %08p to %08p, size = %d\n", vaddr,new_vaddr, size);
 
     while (size > 0) {
         [[maybe_unused]] auto new_it = pTable.find(new_vaddr);
@@ -111,7 +110,7 @@ EmulationPageTable::unmap(Addr vaddr, int64_t size)
 {
     assert(pageOffset(vaddr) == 0);
 
-    DPRINTF(MMU, "Unmapping page: %#x-%#x\n", vaddr, vaddr + size);
+    //DPRINTF(MMU, "Unmapping page: %#x-%#x\n", vaddr, vaddr + size);
 
     while (size > 0) {
         auto it = pTable.find(vaddr);
@@ -148,13 +147,26 @@ EmulationPageTable::lookup(Addr vaddr)
 bool
 EmulationPageTable::translate(Addr vaddr, Addr &paddr)
 {
+    //printf("PAGE SIZE= %d",_pageSize);
     const Entry *entry = lookup(vaddr);
     if (!entry) {
-        DPRINTF(MMU, "Couldn't Translate: %#x\n", vaddr);
+        //DPRINTF(MMU, "Couldn't Translate: %#x\n", vaddr);
         return false;
     }
     paddr = pageOffset(vaddr) + entry->paddr;
+
     DPRINTF(MMU, "Translating: %#x->%#x\n", vaddr, paddr);
+
+    //printf("Physical Address: %x\n",paddr);
+    //printf("Virtual Address: %x\n",vaddr);
+
+    /*if (unique_virt_addr.count(vaddr) == 0)
+        {
+            DPRINTF(MMU, "Translating: %#x->%#x\n", vaddr, paddr);
+            
+        
+        }*/
+    unique_virt_addr[vaddr] = 1;
     return true;
 }
 

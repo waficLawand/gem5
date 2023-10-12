@@ -42,6 +42,16 @@
  * @file
  * Definition of BaseCache functions.
  */
+#include <iostream>
+#include <fstream>
+#include <map>
+#include <string>
+#include <sstream>
+#include <map>
+#include <vector>
+#include <tuple>
+#include <iostream>
+#include <fstream>  // Required for file handling
 
 #include "mem/cache/base.hh"
 
@@ -110,6 +120,8 @@ BaseCache::BaseCache(const BaseCacheParams &p, unsigned blk_size)
       missCount(p.max_miss_count),
       addrRanges(p.addr_ranges.begin(), p.addr_ranges.end()),
       system(p.system),
+      is_l1_cache_locking(p.is_l1_cache_locking),
+      is_l1_cache_locking_full_context(p.is_l1_cache_locking_full_context),
       stats(*this)
 {
     // the MSHR queue has no reserve entries as we check the MSHR
@@ -120,6 +132,64 @@ BaseCache::BaseCache(const BaseCacheParams &p, unsigned blk_size)
 
     // forward snoops is overridden in init() once we can query
     // whether the connected requestor is actually snooping or not
+    if (is_l1_cache_locking_full_context)
+        {
+
+        
+        std::ifstream inputFile;
+        inputFile.open("full_context_locking.txt");
+
+        std::string line;
+
+    if (!inputFile) {
+            std::cerr << "Error opening the file." << std::endl;
+        }
+
+while (std::getline(inputFile, line)) {
+        int key, lastValue;
+        std::vector<int> addresses;
+
+        std::stringstream ss(line);
+        ss >> key;
+
+        char discard;
+        ss >> discard;  // Discard the comma
+
+        ss >> lastValue;
+
+        char openBrace;
+        ss >> openBrace;  // Read the opening brace
+
+        std::string hexNum;
+        std::cout<<"Addresses are: ";
+        while (std::getline(ss, hexNum, ',')) {
+            if (hexNum.find('}') != std::string::npos) {
+                hexNum.erase(hexNum.find('}'));
+            }
+            if (!hexNum.empty()) {
+                addresses.push_back(std::stoi(hexNum, nullptr, 16));
+                std::cout<<"0x"<<std::hex<<std::stoi(hexNum, nullptr, 16)<<",";
+            }
+            
+        }
+        std::cout<<"\n";
+
+     // Extract the last value after the curly brace and comma
+
+
+        interval_locked_map[key] = std::make_tuple(addresses, lastValue);
+        //std::cout<<key<<","<<lastValue<<std::endl;
+    }
+
+    inputFile.close();
+
+
+
+        inputFile.close();
+        printf("Done processing text file!\n");
+
+    
+        }
 
     tempBlock = new TempCacheBlk(blkSize);
 
@@ -134,6 +204,9 @@ BaseCache::BaseCache(const BaseCacheParams &p, unsigned blk_size)
         "Compressed cache %s does not have a compression algorithm", name());
     if (compressor)
         compressor->setCache(this);
+
+    if(is_l1_cache_locking)
+        printf("IS L1 CACHE LOCKING!");
 }
 
 BaseCache::~BaseCache()
@@ -1239,6 +1312,1379 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
     Cycles tag_latency(0);
     blk = tags->accessBlock(pkt, tag_latency);
 
+/*lockingDurationsTable[0xfffff8d8]=36;
+lockingDurationsTable[0xfffff938]=100;
+lockingDurationsTable[0xfffffd6c]=94;
+lockingDurationsTable[0xfffff8b0]=39;
+lockingDurationsTable[0x0007ea28]=38;
+lockingDurationsTable[0xfffff878]=4;
+lockingDurationsTable[0xfffffb00]=5;
+lockingDurationsTable[0xfffffb40]=5;
+lockingDurationsTable[0xfffffac0]=6;
+lockingDurationsTable[0xfffff9c0]=5;
+lockingDurationsTable[0xfffffa40]=5;
+lockingDurationsTable[0xfffffa80]=6;
+lockingDurationsTable[0xfffff9a0]=5;
+lockingDurationsTable[0x000503d0]=2;
+lockingDurationsTable[0x0004ffa0]=2;
+lockingDurationsTable[0x00050800]=2;*/
+
+/*lockingDurationsTable[0xfffff8d8]=36;
+lockingDurationsTable[0xfffff938]=100;
+lockingDurationsTable[0xfffffd6c]=94;
+lockingDurationsTable[0xfffff8b0]=39;
+lockingDurationsTable[0x0007ea28]=38;
+lockingDurationsTable[0xfffff878]=4;
+lockingDurationsTable[0xfffff9c0]=5;
+lockingDurationsTable[0xfffff9a0]=5;*/
+
+
+
+
+
+
+
+/*lockingDurationsTable[0x0006e230]=1010;
+lockingDurationsTable[0x00070cac]=1096;
+lockingDurationsTable[0x0006e258]=839;
+lockingDurationsTable[0xfffff590]=1064;
+lockingDurationsTable[0xfffff568]=938;
+lockingDurationsTable[0x0006e308]=577;
+lockingDurationsTable[0x000697d0]=456;
+lockingDurationsTable[0x0006e2f0]=297;*/
+
+/* Window Size 45000*/
+/*lockingDurationsTable[0xfffffae8]=1532;
+lockingDurationsTable[0xfffffb10]=877;
+lockingDurationsTable[0x00073340]=332;
+lockingDurationsTable[0x000733b0]=325;
+lockingDurationsTable[0x000733d0]=322;
+lockingDurationsTable[0x000734b0]=316;
+lockingDurationsTable[0x00073430]=315;
+lockingDurationsTable[0x00073470]=311;*/
+/* Window Size 45000*/
+
+/* Window Size 5000*/
+/*lockingDurationsTable[0xfffffae8]=228;
+lockingDurationsTable[0xfffffb10]=118;
+lockingDurationsTable[0x00073340]=54;
+lockingDurationsTable[0x000733b0]=53;
+lockingDurationsTable[0x000733d0]=55;
+lockingDurationsTable[0x000734b0]=53;
+lockingDurationsTable[0x00073430]=54;
+lockingDurationsTable[0x00073470]=48;*/
+/* Window Size 5000*/
+
+/*Window Size 100*/
+/*lockingDurationsTable[0xfffffae8]=45;
+lockingDurationsTable[0xfffffb10]=9;
+lockingDurationsTable[0x00073340]=9;
+lockingDurationsTable[0x000733b0]=5;
+lockingDurationsTable[0x000733d0]=7;
+lockingDurationsTable[0x000734b0]=5;
+lockingDurationsTable[0x00073430]=5;
+lockingDurationsTable[0x00073470]=4;*/
+/*Window Size 100*/
+
+/*Window Size 500*/
+/*lockingDurationsTable[0xfffffae8]=60;
+lockingDurationsTable[0xfffffb10]=18;
+lockingDurationsTable[0x00073340]=22;
+lockingDurationsTable[0x000733b0]=11;
+lockingDurationsTable[0x000733d0]=11;
+lockingDurationsTable[0x000734b0]=10;
+lockingDurationsTable[0x00073430]=10;
+lockingDurationsTable[0x00073470]=6;*/
+
+/*fft Window size 100*/
+/*lockingDurationsTable[0xfffffc9c]=28;
+lockingDurationsTable[0xfffffd6c]=19;
+lockingDurationsTable[0xfffffd0c]=5;
+lockingDurationsTable[0xfffffcdc]=3;
+lockingDurationsTable[0x0004d278]=2;
+lockingDurationsTable[0x00070f84]=3;
+lockingDurationsTable[0x00070fc4]=3;
+lockingDurationsTable[0x00071004]=3;*/
+/*fft Window size 100*/
+
+/*Window Size 500*/
+    /*lockingDurationsTable[0x6e230]=21234;
+    lockingDurationsTable[0x70cac]=19523;
+    lockingDurationsTable[0x6e258]=19414;
+    lockingDurationsTable[0xfffff590]=19391;
+    lockingDurationsTable[0xfffff568]=17327;
+    lockingDurationsTable[0x6e308]=13502;
+    lockingDurationsTable[0x697d0]=10696;
+    lockingDurationsTable[0x6e2f0]=5588;*/
+
+    /* #######################All functions including printfs and memcopy ####################*/
+    /*lockingDurationsTable[0x6e230]=21234;
+    lockingDurationsTable[0x70cac]=19523;
+    lockingDurationsTable[0x6e258]=19414;
+    lockingDurationsTable[0xfffff590]=19391;
+    lockingDurationsTable[0xfffff568]=17327;
+    lockingDurationsTable[0xfffff4a8]=17072;
+    lockingDurationsTable[0xfffff478]=16226;
+    lockingDurationsTable[0x6e308]=13502;
+    lockingDurationsTable[0xfffff558]=10998;
+    lockingDurationsTable[0x697d0]=10696;
+    lockingDurationsTable[0xfffff9df]=8100;
+    lockingDurationsTable[0xfffff598]=6803;
+    lockingDurationsTable[0xfffff530]=6258;
+    lockingDurationsTable[0xfffffa00]=5713;
+    lockingDurationsTable[0x6e2f0]=5588;
+    lockingDurationsTable[0xfffff6e0]=5484;*/
+    /* #######################All functions including printfs and memcopy ####################*/
+
+/*lockingDurationsTable[0x0006e230]=8278;
+lockingDurationsTable[0x00070cac]=7648;
+lockingDurationsTable[0x0006e258]=7442;
+lockingDurationsTable[0xfffff590]=9524;
+lockingDurationsTable[0xfffff568]=8459;
+lockingDurationsTable[0xfffff4a8]=8427;
+lockingDurationsTable[0xfffff478]=8143;
+lockingDurationsTable[0x0006e308]=5073;
+lockingDurationsTable[0xfffff558]=5234;
+lockingDurationsTable[0x000697d0]=4071;
+lockingDurationsTable[0xfffff9df]=4073;
+lockingDurationsTable[0xfffff598]=2754;
+lockingDurationsTable[0xfffff530]=2863;
+lockingDurationsTable[0xfffffa00]=2822;
+lockingDurationsTable[0x0006e2f0]=2178;
+lockingDurationsTable[0xfffff6e0]=3158;*/
+
+
+/*lockingDurationsTable[0x0006e230]=8278;
+lockingDurationsTable[0x00070cac]=7648;
+lockingDurationsTable[0x0006e258]=7442;
+lockingDurationsTable[0xfffff590]=9524;
+lockingDurationsTable[0xfffff568]=8459;
+lockingDurationsTable[0xfffff4a8]=8427;
+lockingDurationsTable[0xfffff4a0]=8427;
+lockingDurationsTable[0xfffff490]=8285;*/
+
+/*Minver Dataset*/
+/*lockingDurationsTable[0xfffffd44]=218;
+lockingDurationsTable[0xfffffd4c]=235;
+lockingDurationsTable[0xfffffd38]=118;
+lockingDurationsTable[0xfffff53c]=84;
+lockingDurationsTable[0xfffffcf8]=24;
+lockingDurationsTable[0xfffffcf0]=23;
+lockingDurationsTable[0x0006d018]=25;
+lockingDurationsTable[0x0006d020]=23;
+lockingDurationsTable[0x0006d040]=21;
+lockingDurationsTable[0xfffffd88]=17;
+lockingDurationsTable[0xfffffd80]=17;
+lockingDurationsTable[0x0006ec90]=3;
+lockingDurationsTable[0xffffecb8]=11;
+lockingDurationsTable[0xfffffc58]=6;
+lockingDurationsTable[0x0006fdc0]=0;
+lockingDurationsTable[0xfffffbd0]=6;*/
+
+    
+    // list benchmark 1 iter 
+    
+    /*lockingDurationsTable[0x73340]=712;
+    lockingDurationsTable[0x734f0]=681;
+    lockingDurationsTable[0x733b0]=671;
+    lockingDurationsTable[0x73510]=670;
+    lockingDurationsTable[0x733d0]=667;
+    lockingDurationsTable[0x73480]=664;
+    lockingDurationsTable[0x73420]=661;
+    lockingDurationsTable[0x73470]=654;*/
+    
+    // list benchmark 5 iter 
+    /*lockingDurationsTable[0x73340]=3376;
+    lockingDurationsTable[0x734f0]=3338;
+    lockingDurationsTable[0x733b0]=3296;
+    lockingDurationsTable[0x73510]=3281;
+    lockingDurationsTable[0x733d0]=3267;
+    lockingDurationsTable[0x73480]=3245;
+    lockingDurationsTable[0x73430]=3240;
+    lockingDurationsTable[0x73470]=3213;*/
+
+
+/*lockingDurationsTable[0xfffffae8]=3291;
+lockingDurationsTable[0xfffffb10]=1889;
+lockingDurationsTable[0x73340]=682;
+lockingDurationsTable[0x733b0]=668;
+lockingDurationsTable[0x733d0]=664;
+lockingDurationsTable[0x73480]=661;
+lockingDurationsTable[0x73420]=658;
+lockingDurationsTable[0x73460]=651;*/
+
+    /*lockingDurationsTable[0xfffffae8]=3288;
+    lockingDurationsTable[0xfffffb10]=1888;
+    lockingDurationsTable[0x73340]=667;
+    lockingDurationsTable[0x733b0]=657;
+    lockingDurationsTable[0x733d0]=651;
+    lockingDurationsTable[0x734b0]=647;
+    lockingDurationsTable[0x73430]=646;
+    lockingDurationsTable[0x73470]=640;*/
+    //printf("Address is: %d",pkt->req->getVaddr());
+    /*lockingDurationsTable[0xfffffae8]=32883;
+    lockingDurationsTable[0xfffffb10]=18881;
+    lockingDurationsTable[0x7367e]=1081;
+    lockingDurationsTable[0x73680]=10810;
+    lockingDurationsTable[0x735dc]=9610;
+    lockingDurationsTable[0x73600]=9610;
+    lockingDurationsTable[0x73740]=3600;
+    lockingDurationsTable[0x73780]=2800;*/
+
+/*lockingDurationsTable[0xfffffae8]=411;
+lockingDurationsTable[0xfffffb10]=228;
+lockingDurationsTable[0xfffffb18]=108;
+lockingDurationsTable[0xfffffaf4]=80;*/
+
+/*lockingDurationsTable[0xfffffd18]=42;
+lockingDurationsTable[0xfffffcd8]=38;
+lockingDurationsTable[0xfffffbe8]=45;
+lockingDurationsTable[0xfffffc18]=34;
+lockingDurationsTable[0xfffffb98]=45;
+lockingDurationsTable[0xfffffc60]=33;
+lockingDurationsTable[0xfffffb48]=44;
+lockingDurationsTable[0xfffffcb0]=33;*/
+/*
+lockingDurationsTable[0xfffffc1c]=92;
+lockingDurationsTable[0xfffffc60]=37;
+lockingDurationsTable[0xfffffd28]=55;
+lockingDurationsTable[0xfffffc88]=18;
+lockingDurationsTable[0xfffffd6c]=149;
+lockingDurationsTable[0xfffffcc8]=36;*/
+
+/*lockingDurationsTable[0xfffffc1c]=148;
+lockingDurationsTable[0xfffffc60]=79;
+lockingDurationsTable[0xfffffd28]=72;
+lockingDurationsTable[0xfffffc88]=34;
+lockingDurationsTable[0xfffffd6c]=325;
+lockingDurationsTable[0xfffffcc8]=76;
+lockingDurationsTable[0x000705b0]=2;
+lockingDurationsTable[0x000705e8]=3;*/
+
+
+/*Dataset for EPIC 2kb 2 ways 1line per set*/
+/*lockingDurationsTable[0xfffffbf0]=25;
+lockingDurationsTable[0xfffffc08]=25;
+lockingDurationsTable[0xfffffb84]=62;
+lockingDurationsTable[0xfffffb50]=24;
+lockingDurationsTable[0xfffffd6c]=115;
+lockingDurationsTable[0xfffffcc8]=6;
+lockingDurationsTable[0xfffffcb0]=5;
+lockingDurationsTable[0x0004de60]=23;
+lockingDurationsTable[0xfffffc78]=55;*/
+/*Dataset for EPIC 2kb 2 ways 1line per set*/
+
+/*Anagram data*/
+/*lockingDurationsTable[0xfffffcc8]=95;
+lockingDurationsTable[0xfffffcb8]=67;
+lockingDurationsTable[0xfffffd2c]=126;
+lockingDurationsTable[0xfffffd40]=53;
+lockingDurationsTable[0xfffffc50]=100;
+lockingDurationsTable[0x00077b88]=25;
+lockingDurationsTable[0xfffffc38]=45;
+lockingDurationsTable[0x000779d8]=4;*/
+
+/*Locking for SHA 256B 4 ways*/
+/*lockingDurationsTable[0xffffdcec]=120;
+lockingDurationsTable[0xffffdd1c]=59;
+lockingDurationsTable[0xfffffd6c]=64;*/
+
+/*lockingDurationsTable[0x52000]=3;
+
+lockingDurationsTable[0x7f000]=50;
+
+lockingDurationsTable[0x9a000]=50;
+
+lockingDurationsTable[0x74000]=50;
+
+lockingDurationsTable[0x96000]=50;
+
+lockingDurationsTable[0x84000]=50;
+
+lockingDurationsTable[0x95000]=50;
+
+lockingDurationsTable[0x8e000]=50;
+
+lockingDurationsTable[0x62000]=6;
+
+lockingDurationsTable[0x99000]=50;
+
+lockingDurationsTable[0x9b000]=50;
+
+lockingDurationsTable[0x81000]=50;
+
+lockingDurationsTable[0x94000]=50;
+
+lockingDurationsTable[0x0]=8;
+
+lockingDurationsTable[0x71000]=50;*/
+
+
+
+/*Disparity 4 ways 50 window size*/
+
+/*lockingDurationsTable[0x96000]=50;
+
+lockingDurationsTable[0x95000]=50;
+
+lockingDurationsTable[0x73000]=33;
+
+lockingDurationsTable[0x74000]=50;
+
+lockingDurationsTable[0x81000]=50;
+
+lockingDurationsTable[0x84000]=50;
+
+lockingDurationsTable[0x99000]=50;
+
+lockingDurationsTable[0x0]=8;
+
+lockingDurationsTable[0x71000]=50;
+
+lockingDurationsTable[0x9b000]=50;
+
+lockingDurationsTable[0x70000]=4;
+
+lockingDurationsTable[0x76000]=1;
+
+lockingDurationsTable[0x8e000]=50;
+
+lockingDurationsTable[0x6e000]=13;
+
+lockingDurationsTable[0x93000]=50;
+
+lockingDurationsTable[0x6f000]=13;
+
+lockingDurationsTable[0x8d000]=50;
+
+lockingDurationsTable[0x9a000]=50;
+
+lockingDurationsTable[0x8b000]=50;
+
+lockingDurationsTable[0x94000]=50;*/
+
+
+/*Tracking window size 50*/
+/*lockingDurationsTable[0x78000]=50;
+
+lockingDurationsTable[0x89000]=50;
+
+lockingDurationsTable[0x8f000]=22;
+
+lockingDurationsTable[0x74000]=32;
+
+lockingDurationsTable[0x77000]=1;
+
+lockingDurationsTable[0x91000]=12;
+
+lockingDurationsTable[0x54000]=2;
+
+lockingDurationsTable[0x83000]=50;
+
+lockingDurationsTable[0x96000]=12;
+
+lockingDurationsTable[0x53000]=3;
+
+lockingDurationsTable[0x4f000]=2;
+
+lockingDurationsTable[0x6d000]=17;
+
+lockingDurationsTable[0x72000]=50;
+
+lockingDurationsTable[0x5f000]=12;
+
+lockingDurationsTable[0x90000]=22;
+
+lockingDurationsTable[0x0]=8;*/
+
+
+/**MSER Window size =50 sim 4kB 4 ways*/
+/*lockingDurationsTable[0x7b000]=12;
+
+lockingDurationsTable[0x4e000]=2;
+
+lockingDurationsTable[0xc2000]=2;
+
+lockingDurationsTable[0xa7000]=50;
+
+lockingDurationsTable[0x73000]=33;
+
+lockingDurationsTable[0x5e000]=2;
+
+lockingDurationsTable[0xb3000]=50;
+
+lockingDurationsTable[0x6f000]=12;
+
+lockingDurationsTable[0x71000]=50;
+
+lockingDurationsTable[0x74000]=50;
+
+lockingDurationsTable[0x86000]=30;
+
+lockingDurationsTable[0x8b000]=18;
+
+lockingDurationsTable[0x76000]=1;
+
+lockingDurationsTable[0x94000]=50;
+
+lockingDurationsTable[0xb9000]=24;
+
+lockingDurationsTable[0x52000]=3;
+
+lockingDurationsTable[0x8e000]=12;
+
+lockingDurationsTable[0xb7000]=25;
+
+lockingDurationsTable[0x0]=8;*/
+
+
+/**MSER Window size =50 cif 4kB 4 ways*/
+/*lockingDurationsTable[0x390000]=10;
+
+lockingDurationsTable[0x3dc000]=10;
+
+lockingDurationsTable[0x373000]=50;
+
+lockingDurationsTable[0x3ef000]=30;
+
+lockingDurationsTable[0x3a6000]=10;
+
+lockingDurationsTable[0x52000]=3;
+
+lockingDurationsTable[0x77000]=4;
+
+lockingDurationsTable[0x3ea000]=10;
+
+lockingDurationsTable[0x394000]=10;
+
+lockingDurationsTable[0x409000]=29;
+
+lockingDurationsTable[0x3a2000]=10;
+
+lockingDurationsTable[0x387000]=10;
+
+lockingDurationsTable[0x38e000]=10;
+
+lockingDurationsTable[0x172000]=14;
+
+lockingDurationsTable[0x3cf000]=10;
+
+lockingDurationsTable[0x499000]=30;
+
+lockingDurationsTable[0x3e7000]=10;
+
+lockingDurationsTable[0x459000]=23;
+
+lockingDurationsTable[0x188000]=12;
+
+lockingDurationsTable[0x62000]=7;
+
+lockingDurationsTable[0x3cb000]=10;
+
+lockingDurationsTable[0x3de000]=10;
+
+lockingDurationsTable[0x4f000]=1;
+
+lockingDurationsTable[0x14a000]=10;
+
+lockingDurationsTable[0x15f000]=14;
+
+lockingDurationsTable[0x1bc000]=14;
+
+lockingDurationsTable[0x3e0000]=10;
+
+lockingDurationsTable[0x3a8000]=10;
+
+lockingDurationsTable[0x354000]=10;
+
+lockingDurationsTable[0x73000]=33;
+
+lockingDurationsTable[0x38a000]=50;
+
+lockingDurationsTable[0x38c000]=10;
+
+lockingDurationsTable[0x3c7000]=10;
+
+lockingDurationsTable[0x35b000]=10;
+
+lockingDurationsTable[0x3d3000]=10;
+
+lockingDurationsTable[0x37a000]=10;
+
+lockingDurationsTable[0x1e3000]=16;
+
+lockingDurationsTable[0x363000]=10;
+
+lockingDurationsTable[0x3c3000]=50;
+
+lockingDurationsTable[0x76000]=50;
+
+lockingDurationsTable[0x366000]=50;
+
+lockingDurationsTable[0x3d2000]=10;
+
+lockingDurationsTable[0x378000]=10;
+
+lockingDurationsTable[0x352000]=10;
+
+lockingDurationsTable[0x3e4000]=10;
+
+lockingDurationsTable[0x382000]=10;
+
+lockingDurationsTable[0x16b000]=16;
+
+lockingDurationsTable[0x3d6000]=10;
+
+lockingDurationsTable[0x3ee000]=10;
+
+lockingDurationsTable[0x3d0000]=10;
+
+lockingDurationsTable[0x356000]=10;
+
+lockingDurationsTable[0x3a4000]=10;
+
+lockingDurationsTable[0x393000]=50;
+
+lockingDurationsTable[0x74000]=50;
+
+lockingDurationsTable[0x3c6000]=10;
+
+lockingDurationsTable[0x392000]=10;
+
+lockingDurationsTable[0x3d7000]=10;
+
+lockingDurationsTable[0x0]=8;
+
+lockingDurationsTable[0x42d000]=30;
+
+lockingDurationsTable[0x374000]=10;
+
+lockingDurationsTable[0x370000]=10;
+
+lockingDurationsTable[0x1c8000]=14;
+
+lockingDurationsTable[0x376000]=10;
+
+lockingDurationsTable[0x3d4000]=50;
+
+lockingDurationsTable[0x36e000]=10;
+
+lockingDurationsTable[0x3c2000]=10;
+
+lockingDurationsTable[0x380000]=10;
+
+lockingDurationsTable[0x3b0000]=10;
+
+lockingDurationsTable[0x3a0000]=10;
+
+lockingDurationsTable[0x13c000]=12;
+
+lockingDurationsTable[0x71000]=50;
+
+lockingDurationsTable[0x36c000]=10;
+
+lockingDurationsTable[0x372000]=10;
+
+lockingDurationsTable[0x3ae000]=10;
+
+lockingDurationsTable[0x3e2000]=10;
+
+lockingDurationsTable[0x3eb000]=10;
+
+lockingDurationsTable[0x364000]=50;
+
+lockingDurationsTable[0x3f1000]=26;
+
+lockingDurationsTable[0x353000]=50;
+
+lockingDurationsTable[0x37c000]=10;
+
+lockingDurationsTable[0x3e6000]=10;
+
+lockingDurationsTable[0x3da000]=10;
+
+lockingDurationsTable[0x37e000]=10;
+
+lockingDurationsTable[0x3ac000]=10;
+
+lockingDurationsTable[0x1c2000]=8;
+
+lockingDurationsTable[0x3aa000]=10;
+
+lockingDurationsTable[0x3c4000]=10;
+
+lockingDurationsTable[0x35f000]=10;
+
+lockingDurationsTable[0x3df000]=50;
+
+lockingDurationsTable[0x1cb000]=8;
+
+lockingDurationsTable[0x3ca000]=10;
+
+lockingDurationsTable[0x383000]=10;
+
+lockingDurationsTable[0x5e000]=2;*/
+
+
+
+/** disparity 8kB 2 ways Average durations**/
+/*lockingDurationsTable[0x91000]=16;
+
+lockingDurationsTable[0x98000]=22;
+
+lockingDurationsTable[0x7f000]=23;
+
+lockingDurationsTable[0x85000]=12;
+
+lockingDurationsTable[0x53000]=1;
+
+lockingDurationsTable[0x81000]=22;
+
+lockingDurationsTable[0x52000]=3;
+
+lockingDurationsTable[0x8d000]=25;
+
+lockingDurationsTable[0x90000]=16;
+
+lockingDurationsTable[0x6c000]=4;
+
+lockingDurationsTable[0x5e000]=1;
+
+lockingDurationsTable[0x9b000]=22;
+
+lockingDurationsTable[0x71000]=33;
+
+lockingDurationsTable[0x95000]=28;
+
+lockingDurationsTable[0x92000]=17;
+
+lockingDurationsTable[0x99000]=22;
+
+lockingDurationsTable[0x94000]=28;
+
+lockingDurationsTable[0x0]=7;
+
+lockingDurationsTable[0x80000]=22;
+
+lockingDurationsTable[0x9a000]=22;
+
+lockingDurationsTable[0x8e000]=25;
+
+lockingDurationsTable[0x96000]=28;
+
+lockingDurationsTable[0x83000]=14;
+
+lockingDurationsTable[0x64000]=1;
+
+lockingDurationsTable[0x51000]=12;
+
+lockingDurationsTable[0x70000]=1;*/
+
+/* Tracking 8kB 2 ways*/
+/*lockingDurationsTable[0x4e000]=1;
+
+lockingDurationsTable[0x93000]=6;
+
+lockingDurationsTable[0x70000]=6;
+
+lockingDurationsTable[0x55000]=1;
+
+lockingDurationsTable[0x96000]=10;
+
+lockingDurationsTable[0x5f000]=3;
+
+lockingDurationsTable[0x73000]=3;
+
+lockingDurationsTable[0x50000]=1;
+
+lockingDurationsTable[0x8d000]=8;
+
+lockingDurationsTable[0x71000]=1;
+
+lockingDurationsTable[0x65000]=1;
+
+lockingDurationsTable[0x8b000]=15;
+
+lockingDurationsTable[0x8f000]=11;
+
+lockingDurationsTable[0x72000]=32;*/
+
+
+/*MSER window size 50 8kB 2 ways*/
+/*lockingDurationsTable[0x86000]=13;
+
+lockingDurationsTable[0x0]=7;
+
+lockingDurationsTable[0x4f000]=1;
+
+lockingDurationsTable[0x54000]=1;
+
+lockingDurationsTable[0x62000]=3;
+
+lockingDurationsTable[0x65000]=2;
+
+lockingDurationsTable[0x6d000]=9;
+
+lockingDurationsTable[0x51000]=11;
+
+lockingDurationsTable[0x70000]=1;
+
+lockingDurationsTable[0x52000]=3;
+
+lockingDurationsTable[0x50000]=1;
+
+lockingDurationsTable[0x5e000]=2;
+
+lockingDurationsTable[0x71000]=32;*/
+
+
+/*lockingDurationsTable[0x75aa0]=3794;
+lockingDurationsTable[0x75990]=17;
+lockingDurationsTable[0x75994]=1;
+lockingDurationsTable[0x759d8]=790;
+lockingDurationsTable[0x75978]=1;
+lockingDurationsTable[0x75970]=1;
+lockingDurationsTable[0x86600]=32;
+lockingDurationsTable[0x7e5e0]=790;
+lockingDurationsTable[0x8a610]=1;
+lockingDurationsTable[0xb0720]=3733;
+lockingDurationsTable[0xb0724]=3733;
+lockingDurationsTable[0x78444]=772;
+lockingDurationsTable[0x78678]=9255;
+lockingDurationsTable[0x78684]=1;
+lockingDurationsTable[0x754e0]=194;
+lockingDurationsTable[0x752d0]=288;*/
+
+/*lockingDurationsTable[0x75aa0]=3794;
+lockingDurationsTable[0x75990]=17;
+lockingDurationsTable[0x75994]=1;
+lockingDurationsTable[0x75998]=1;
+lockingDurationsTable[0x759d8]=790;
+lockingDurationsTable[0x75978]=1;
+lockingDurationsTable[0x75970]=1;
+lockingDurationsTable[0x75968]=1;
+lockingDurationsTable[0x86600]=32;
+lockingDurationsTable[0x7e5e0]=790;
+lockingDurationsTable[0x825f0]=1;
+lockingDurationsTable[0x8a610]=1;
+lockingDurationsTable[0xb0720]=3733;
+lockingDurationsTable[0xb0724]=3733;
+lockingDurationsTable[0x78444]=772;
+lockingDurationsTable[0x78678]=9255;
+lockingDurationsTable[0xb1730]=1;
+lockingDurationsTable[0x92630]=1;
+lockingDurationsTable[0x78448]=772;
+lockingDurationsTable[0x78684]=1;
+lockingDurationsTable[0x6bcb0]=772;
+lockingDurationsTable[0x754e0]=194;
+lockingDurationsTable[0x752d0]=288;
+lockingDurationsTable[0x756ec]=32;*/
+
+
+/*lockingDurationsTable[0x71a08]=9926;
+lockingDurationsTable[0x71560]=9926;
+lockingDurationsTable[0x71a10]=9926;
+lockingDurationsTable[0x755d0]=3081;
+lockingDurationsTable[0x71568]=9926;
+lockingDurationsTable[0x712f8]=2388;
+lockingDurationsTable[0x712f0]=2388;
+lockingDurationsTable[0x713f0]=3981;
+lockingDurationsTable[0x6e7c8]=3981;
+lockingDurationsTable[0x713c0]=2388;
+lockingDurationsTable[0x71580]=9926;
+lockingDurationsTable[0x72730]=2388;
+lockingDurationsTable[0x10aecd0]=10535;
+lockingDurationsTable[0x7dbf8]=31586;
+lockingDurationsTable[0x71378]=2388;
+lockingDurationsTable[0x75360]=796;
+lockingDurationsTable[0x719b8]=796;
+lockingDurationsTable[0x719b0]=796;
+lockingDurationsTable[0x71400]=2388;
+lockingDurationsTable[0x712b8]=2388;
+lockingDurationsTable[0x71581]=9928;
+lockingDurationsTable[0x71b60]=4777;
+lockingDurationsTable[0x71a88]=796;
+lockingDurationsTable[0x71b08]=796;
+lockingDurationsTable[0x71af8]=796;
+lockingDurationsTable[0x71b00]=796;
+lockingDurationsTable[0x71ac0]=796;
+lockingDurationsTable[0x75444]=796;
+lockingDurationsTable[0x719d8]=796;
+lockingDurationsTable[0x719e8]=796;
+lockingDurationsTable[0x72720]=2388;
+lockingDurationsTable[0x6e980]=2388;
+lockingDurationsTable[0x71b68]=1;
+lockingDurationsTable[0x10aecc0]=3081;
+lockingDurationsTable[0x53d80]=1592;
+lockingDurationsTable[0x71aa8]=796;
+lockingDurationsTable[0x75448]=796;
+lockingDurationsTable[0x6e948]=2388;
+lockingDurationsTable[0x4d97c]=2388;
+lockingDurationsTable[0x6e9c0]=2388;
+lockingDurationsTable[0x5df58]=2388;
+lockingDurationsTable[0x5df48]=2388;
+lockingDurationsTable[0x71a40]=1;
+lockingDurationsTable[0x53da2]=3981;
+lockingDurationsTable[0x71380]=796;
+lockingDurationsTable[0x713a0]=796;
+lockingDurationsTable[0x6e9d8]=796;
+lockingDurationsTable[0x4cfc1]=1;
+lockingDurationsTable[0x4cfba]=1;
+lockingDurationsTable[0x4cfbf]=1;
+lockingDurationsTable[0x70328]=4964;
+lockingDurationsTable[0x70410]=4964;
+lockingDurationsTable[0x703c8]=4964;
+lockingDurationsTable[0x70408]=4964;
+lockingDurationsTable[0x71a68]=2;
+lockingDurationsTable[0x75420]=796;
+lockingDurationsTable[0x6e760]=796;
+lockingDurationsTable[0x71338]=796;
+lockingDurationsTable[0x71328]=796;
+lockingDurationsTable[0x6e768]=796;
+lockingDurationsTable[0x644f8]=796;
+lockingDurationsTable[0x70340]=660;
+lockingDurationsTable[0x4cfc3]=1;
+lockingDurationsTable[0x10aead0]=1820;
+lockingDurationsTable[0x10ae968]=369;
+lockingDurationsTable[0x10ae788]=1;
+lockingDurationsTable[0x10ae784]=1;
+lockingDurationsTable[0x10ad020]=64;
+lockingDurationsTable[0x10ad030]=1;
+lockingDurationsTable[0x703a0]=4964;
+lockingDurationsTable[0x10aeef0]=6;
+lockingDurationsTable[0x10aeef8]=1;
+lockingDurationsTable[0x10aef10]=31;
+lockingDurationsTable[0x10aef18]=22;
+lockingDurationsTable[0x10ad068]=1;
+lockingDurationsTable[0x10aee78]=168;
+lockingDurationsTable[0x10ad6d0]=293;
+lockingDurationsTable[0x10aee70]=26;
+lockingDurationsTable[0x10ad080]=1;
+lockingDurationsTable[0x10ae6f8]=1;
+lockingDurationsTable[0x10ad830]=6881;
+lockingDurationsTable[0x10aee88]=1;
+lockingDurationsTable[0x10ad6f8]=1;
+lockingDurationsTable[0x10ad120]=53;
+lockingDurationsTable[0x10aef50]=24;
+lockingDurationsTable[0x10ad838]=4122;
+lockingDurationsTable[0x10ad840]=8;
+lockingDurationsTable[0x10ad288]=599;
+lockingDurationsTable[0x10aee38]=557;
+lockingDurationsTable[0x10aeea8]=3692;
+lockingDurationsTable[0x10aee00]=1;
+lockingDurationsTable[0x10ad720]=1;
+lockingDurationsTable[0x10aed00]=5;
+lockingDurationsTable[0x10ad888]=1;
+lockingDurationsTable[0x10ad890]=1;
+lockingDurationsTable[0x10aed70]=805;
+lockingDurationsTable[0x10aed78]=805;
+lockingDurationsTable[0x10aed80]=884;
+lockingDurationsTable[0x10aed88]=884;
+lockingDurationsTable[0x10aeab8]=837;
+lockingDurationsTable[0x10aea08]=369;
+lockingDurationsTable[0x10b0f60]=6;
+lockingDurationsTable[0x10ae4c8]=237;
+lockingDurationsTable[0x10a7140]=274;
+lockingDurationsTable[0x10b0aa0]=31;
+lockingDurationsTable[0x10afbc0]=1;
+lockingDurationsTable[0x10a7060]=4314;
+lockingDurationsTable[0x10b0260]=1;
+lockingDurationsTable[0x10a7700]=22;
+lockingDurationsTable[0x10a7b80]=82;
+lockingDurationsTable[0x10afcc0]=87;
+lockingDurationsTable[0x10af1a0]=1;
+lockingDurationsTable[0x10b02a0]=94;
+lockingDurationsTable[0x10a77a0]=633;
+lockingDurationsTable[0x10a70a0]=15;
+lockingDurationsTable[0x10a7160]=5;
+lockingDurationsTable[0x10a7480]=1;
+lockingDurationsTable[0x10af900]=1;
+lockingDurationsTable[0x10b0b60]=1;
+lockingDurationsTable[0x10a75e0]=557;
+lockingDurationsTable[0x10b0dc0]=6881;
+lockingDurationsTable[0x10a7e40]=24;
+lockingDurationsTable[0x10b04a0]=1;
+lockingDurationsTable[0x10b1230]=1;
+lockingDurationsTable[0x10af260]=15;
+lockingDurationsTable[0x10b0de0]=4122;
+lockingDurationsTable[0x10b03c0]=1;
+lockingDurationsTable[0x10b0800]=1;
+lockingDurationsTable[0x10a7c50]=1;
+lockingDurationsTable[0x10b0840]=293;
+lockingDurationsTable[0x10b05c0]=1;
+lockingDurationsTable[0x10af190]=1;
+lockingDurationsTable[0x10a7260]=26;
+lockingDurationsTable[0x10a7920]=805;
+lockingDurationsTable[0x10af950]=1;
+lockingDurationsTable[0x10a7d70]=1;
+lockingDurationsTable[0x10a7c20]=221;
+lockingDurationsTable[0x10a70f0]=1;
+lockingDurationsTable[0x10b0670]=1;
+lockingDurationsTable[0x10a7df0]=1;
+lockingDurationsTable[0x10ae988]=369;
+lockingDurationsTable[0x10aeac0]=599;
+lockingDurationsTable[0x10aea68]=369;
+lockingDurationsTable[0x10aea78]=369;
+lockingDurationsTable[0x10aeb18]=599;
+lockingDurationsTable[0x10aeb74]=837;
+lockingDurationsTable[0x10aec50]=8;
+lockingDurationsTable[0x10aec58]=8;
+lockingDurationsTable[0x10aec88]=8;
+lockingDurationsTable[0x10aec80]=8;
+lockingDurationsTable[0x10aeb10]=377;
+lockingDurationsTable[0x6ebf0]=8;
+lockingDurationsTable[0x10aebf8]=8;
+lockingDurationsTable[0x10aebb8]=8;
+lockingDurationsTable[0x10aebb0]=8;
+lockingDurationsTable[0x10aec38]=8;
+lockingDurationsTable[0x10aec30]=8;
+lockingDurationsTable[0x78028]=8;
+lockingDurationsTable[0x31d530]=1;
+lockingDurationsTable[0x3254a8]=1;
+lockingDurationsTable[0x5e6320]=1;
+lockingDurationsTable[0x70390]=8;
+lockingDurationsTable[0x78020]=8;
+lockingDurationsTable[0x8b780]=1;
+lockingDurationsTable[0x146650]=29639;
+lockingDurationsTable[0x6e7d0]=23;
+lockingDurationsTable[0x44c1d8]=1;
+lockingDurationsTable[0x75dde]=1;
+lockingDurationsTable[0x67fc0]=1;
+lockingDurationsTable[0x78078]=31586;
+lockingDurationsTable[0x785c0]=481;
+lockingDurationsTable[0xb9dd40]=1;
+lockingDurationsTable[0x7a4698]=1;
+lockingDurationsTable[0xb9dd30]=1;
+lockingDurationsTable[0xb9dd38]=1;
+lockingDurationsTable[0x7a4690]=1;
+lockingDurationsTable[0x6ed34]=1;
+lockingDurationsTable[0x6d698]=2;
+lockingDurationsTable[0x473e28]=796;
+lockingDurationsTable[0x42e120]=796;
+lockingDurationsTable[0x71cf8]=796;
+lockingDurationsTable[0x76598]=1;
+lockingDurationsTable[0x78618]=16;
+lockingDurationsTable[0x78610]=8;
+lockingDurationsTable[0x78090]=8;
+lockingDurationsTable[0x7f1e8]=4964;
+lockingDurationsTable[0x740d8]=1;
+lockingDurationsTable[0x78098]=8;
+lockingDurationsTable[0x6d6bc]=1;
+lockingDurationsTable[0x701d0]=257;
+lockingDurationsTable[0x7f220]=4964;
+lockingDurationsTable[0x70258]=1;
+lockingDurationsTable[0x74238]=7601;
+lockingDurationsTable[0x67fd8]=1;
+lockingDurationsTable[0x6d648]=1;*/
+
+
+/*lockingDurationsTable[0x71a08]=9926;
+lockingDurationsTable[0x71560]=9926;
+lockingDurationsTable[0x71a10]=9926;
+lockingDurationsTable[0x755d0]=3081;
+lockingDurationsTable[0x71568]=9926;
+lockingDurationsTable[0x712f8]=2388;
+lockingDurationsTable[0x712f0]=2388;
+lockingDurationsTable[0x713f0]=3981;
+lockingDurationsTable[0x6e7c8]=3981;
+lockingDurationsTable[0x713c0]=2388;
+lockingDurationsTable[0x71580]=9926;
+lockingDurationsTable[0x72730]=2388;
+lockingDurationsTable[0x10aecd0]=10535;
+lockingDurationsTable[0x71378]=2388;
+lockingDurationsTable[0x75360]=796;
+lockingDurationsTable[0x719b8]=796;
+lockingDurationsTable[0x719b0]=796;
+lockingDurationsTable[0x71400]=2388;
+lockingDurationsTable[0x712b8]=2388;
+lockingDurationsTable[0x71581]=9928;
+lockingDurationsTable[0x71a88]=796;
+lockingDurationsTable[0x71b08]=796;
+lockingDurationsTable[0x71b00]=796;
+lockingDurationsTable[0x75444]=796;
+lockingDurationsTable[0x719d8]=796;
+lockingDurationsTable[0x719e8]=796;
+lockingDurationsTable[0x72720]=2388;
+lockingDurationsTable[0x10aecc0]=3081;
+lockingDurationsTable[0x75448]=796;
+lockingDurationsTable[0x6e948]=2388;
+lockingDurationsTable[0x4d97c]=2388;
+lockingDurationsTable[0x5df58]=2388;
+lockingDurationsTable[0x5df48]=2388;
+lockingDurationsTable[0x71a40]=1;
+lockingDurationsTable[0x71380]=796;
+lockingDurationsTable[0x713a0]=796;
+lockingDurationsTable[0x4cfc1]=1;
+lockingDurationsTable[0x4cfba]=1;
+lockingDurationsTable[0x4cfbf]=1;
+lockingDurationsTable[0x70410]=4964;
+lockingDurationsTable[0x71a68]=2;
+lockingDurationsTable[0x10ad020]=64;
+lockingDurationsTable[0x10ad030]=1;
+lockingDurationsTable[0x10aeef0]=6;
+lockingDurationsTable[0x10aeef8]=1;
+lockingDurationsTable[0x10ad068]=1;
+lockingDurationsTable[0x10aee78]=168;
+lockingDurationsTable[0x10aee70]=26;
+lockingDurationsTable[0x10ad080]=1;
+lockingDurationsTable[0x10aee88]=1;
+lockingDurationsTable[0x10ad120]=53;
+lockingDurationsTable[0x10ad840]=8;
+lockingDurationsTable[0x10aee38]=557;
+lockingDurationsTable[0x10aeea8]=3692;
+lockingDurationsTable[0x10aee00]=1;
+lockingDurationsTable[0x10aed00]=5;
+lockingDurationsTable[0x10ad888]=1;
+lockingDurationsTable[0x10a7480]=1;
+lockingDurationsTable[0x10af900]=1;
+lockingDurationsTable[0x10a75e0]=557;
+lockingDurationsTable[0x10b04a0]=1;
+lockingDurationsTable[0x10a70f0]=1;
+lockingDurationsTable[0x31d530]=1;
+lockingDurationsTable[0x740d8]=1;*/
+
+/*lockingDurationsTable[0x71a08]=9926;
+lockingDurationsTable[0x71560]=9926;
+lockingDurationsTable[0x71a10]=9926;
+lockingDurationsTable[0x755d0]=3081;
+lockingDurationsTable[0x71568]=9926;
+lockingDurationsTable[0x712f8]=2388;
+lockingDurationsTable[0x712f0]=2388;
+lockingDurationsTable[0x713f0]=3981;
+lockingDurationsTable[0x6e7c8]=3981;
+lockingDurationsTable[0x713c0]=2388;
+lockingDurationsTable[0x71580]=9926;
+lockingDurationsTable[0x72730]=2388;
+lockingDurationsTable[0x10aecd0]=10535;
+lockingDurationsTable[0x71378]=2388;
+lockingDurationsTable[0x75360]=796;
+lockingDurationsTable[0x719b8]=796;
+lockingDurationsTable[0x719b0]=796;
+lockingDurationsTable[0x71400]=2388;
+lockingDurationsTable[0x712b8]=2388;
+lockingDurationsTable[0x71581]=9928;
+lockingDurationsTable[0x71a88]=796;
+lockingDurationsTable[0x71b08]=796;
+lockingDurationsTable[0x71b00]=796;
+lockingDurationsTable[0x75444]=796;
+lockingDurationsTable[0x719d8]=796;
+lockingDurationsTable[0x719e8]=796;
+lockingDurationsTable[0x72720]=2388;
+lockingDurationsTable[0x10aecc0]=3081;
+lockingDurationsTable[0x75448]=796;
+lockingDurationsTable[0x6e948]=2388;
+lockingDurationsTable[0x4d97c]=2388;
+lockingDurationsTable[0x5df58]=2388;
+lockingDurationsTable[0x5df48]=2388;
+lockingDurationsTable[0x71380]=796;
+lockingDurationsTable[0x713a0]=796;
+lockingDurationsTable[0x70410]=4964;
+lockingDurationsTable[0x10ad020]=64;
+lockingDurationsTable[0x10aee78]=168;
+lockingDurationsTable[0x10aee70]=26;
+lockingDurationsTable[0x10ad120]=53;
+lockingDurationsTable[0x10ad840]=8;
+lockingDurationsTable[0x10aee38]=557;
+lockingDurationsTable[0x10aeea8]=3692;
+lockingDurationsTable[0x10a75e0]=557;*/
+
+lockingDurationsTable[0x6140]=3561;
+lockingDurationsTable[0xde00]=1;
+lockingDurationsTable[0x5800]=4246;
+lockingDurationsTable[0x12700]=439;
+lockingDurationsTable[0x14c00]=26;
+lockingDurationsTable[0x4b00]=59;
+lockingDurationsTable[0xdb80]=3150;
+lockingDurationsTable[0xd7c0]=1;
+lockingDurationsTable[0xde40]=1;
+lockingDurationsTable[0x20200]=3560;
+lockingDurationsTable[0x6180]=3013;
+lockingDurationsTable[0x12680]=440;
+lockingDurationsTable[0x5540]=2465;
+lockingDurationsTable[0x5580]=2876;
+lockingDurationsTable[0x15d80]=1;
+lockingDurationsTable[0x5700]=1780;
+lockingDurationsTable[0xd800]=1;
+lockingDurationsTable[0xdb40]=3972;
+lockingDurationsTable[0x55c0]=3561;
+lockingDurationsTable[0x5740]=1232;
+lockingDurationsTable[0x17880]=109;
+lockingDurationsTable[0x126c0]=547;
+lockingDurationsTable[0x56c0]=2191;
+lockingDurationsTable[0xddc0]=1;
+lockingDurationsTable[0x57c0]=3424;
+lockingDurationsTable[0xde80]=1;
+/*512B 4ways*/
+//120653600000
+//120665474000
+
+
+//118513878000
+    /******************** Locking logic ********************************************/ 
+
+        if (is_l1_cache_locking_full_context && !is_l1_cache_locking)
+        {
+            int mask = ~(0x3F);
+            if(blk)
+            {
+                //cache_accesses+=1;
+                //int set_number = blk->getSet();
+                //Addr phys_addr_blk = int(pkt->getAddr());
+               // if (interval_locked_map.find(cache_accesses) != interval_locked_map.end()) {
+                    //const auto& data = interval_locked_map[cache_accesses];
+                    //const auto& innerVector = std::get<0>(data);
+                 //   Addr phys_addr_blk = int(pkt->getAddr());
+
+                /*           if (std::find(innerVector.begin(), innerVector.end(), phys_addr_blk) != innerVector.end()) {
+                    printf("dadadad");
+                }*/
+                //auto it = interval_locked_map.find(cache_accesses);
+
+                if(cache_accesses == bottom_cache_accesses_interval)
+                {
+                    //printf("END OF INTERVAL FREEING ALL ADDRESSES!\n");
+                    for (auto const& block : locked_blocks)
+                    {
+                      //      printf("FREEING: 0x%x!\n",block.first);
+                            locked_blocks[block.first]->freeLock();
+                            locked_ways_per_set[locked_blocks[block.first]->getSet()] = 0;
+                            //locked_blocks.erase(block.first);
+                    }
+                    top_cache_accesses_interval = 0;
+                    bottom_cache_accesses_interval = 0;
+                }
+                
+                if (interval_locked_map.find(cache_accesses) != interval_locked_map.end())
+                {
+                    const auto& data = interval_locked_map[cache_accesses];
+                    bottom_cache_accesses_interval = std::get<1>(data);
+                    top_cache_accesses_interval = cache_accesses;
+                    
+
+                }
+
+                if (cache_accesses < bottom_cache_accesses_interval)
+                {
+                    
+                    const auto& data = interval_locked_map[top_cache_accesses_interval];
+                    const auto& innerVector = std::get<0>(data);
+                    const auto& end_address = std::get<1>(data);
+
+                    Addr phys_addr_blk = int(pkt->getAddr()&mask);
+                     
+                    if (std::find(innerVector.begin(), innerVector.end(), phys_addr_blk) != innerVector.end()) 
+                     {
+                        //printf("FOUND!!!\n");
+                        if(!blk->getLock())
+                        {   
+                            int set_number = blk->getSet();
+                            if ((locked_ways_per_set.find(set_number) == locked_ways_per_set.end()) || locked_ways_per_set[set_number]<2)
+                            {
+                                if (locked_ways_per_set.find(set_number) == locked_ways_per_set.end())
+                                    locked_ways_per_set[set_number] = 1;
+                                else
+                                    locked_ways_per_set[set_number] += 1;
+                                //printf("SIZE OF MAP IS: %x\n",locked_blocks.size());
+                                //printf("Locked addresses per set: %d\n",locked_ways_per_set[set_number]);
+                                blk->setLock();
+
+                                locked_blocks[phys_addr_blk] = blk;
+                            }
+                            
+                        }
+                     }
+
+                }
+                //printf("Bottom Accesses is: %d\n",bottom_cache_accesses_interval);
+                //printf("Cache Accesses is: %d\n",cache_accesses);
+                
+
+            cache_accesses+=1;
+            }
+
+        
+        }
+        /*if (is_l1_cache_locking_full_context && !is_l1_cache_locking)
+        {
+
+            printf("Memory access at PC: 0x%x\n",pkt->req->getPC());
+            printf("Cache Accesses: %d\n",cache_accesses);
+            if(blk)
+            {
+                //cache_accesses+=1;
+                int set_number = blk->getSet();
+                Addr phys_addr_blk = int(pkt->getAddr());
+
+                if (lockingDurationsTable.find(phys_addr_blk) != lockingDurationsTable.end())
+                {
+                    if(!blk->getLock())
+                    {
+                        blk->setLock();
+                        locked_blocks[phys_addr_blk] = blk;
+                        printf("SIZE OF MAP IS: %x\n",locked_blocks.size());
+                    }
+                }
+            }
+        }*/
+
+        if(is_l1_cache_locking)
+        {
+            if(blk)
+            {   
+                int set_number = blk->getSet();
+                unsigned int mask =  ~(0x3F);
+                //unsigned int mask =  -1;
+                Addr virt_addr_blk = int(pkt->getAddr());
+                //printf("Address is: 0x%x\n",virt_addr_blk);
+                for (auto const& block : lockingDurationCounters)
+                {
+                    // If block is not locked skip it
+                    if(lockingDurationCounters[block.first] == 0)
+                    {
+                        continue;
+                    }
+
+                    else
+                    {
+                        // Decrement locking counter 
+                        //printf("DECREMENTING LOCK! FOR 0x%x LOCK COUNTER IS AT %d\n",block.first,lockingDurationCounters[block.first]);   
+                        if(!is_l1_cache_locking_full_context)
+                        {
+                            if (locked_blocks[block.first]->getSet() == set_number)
+                            {
+                                lockingDurationCounters[block.first] = lockingDurationCounters[block.first] - 1;
+                                //printf("Decrementing Lock for 0x%x from %d to %d\n",block.first,lockingDurationCounters[block.first]+1,lockingDurationCounters[block.first]);
+                            }
+                            
+
+                            if(lockingDurationCounters[block.first] == 0)
+                            {
+                                // Free the lock
+                                printf("FREEING LOCK FOR ADDRESS 0x%x!\n",block.first);
+                                locked_blocks[block.first]->freeLock();
+                                //locked_blocks.erase(block.first);
+
+                                locked_ways_per_set[blk->getSet()] -= 1;
+                                printf("Number of ways locked per set is %d!\n",locked_ways_per_set[blk->getSet()]);
+                            }
+
+                            // If new incmoming page has a greater age old locked blocks can be evicted
+                            /*if (lockingDurationsTable[virt_addr_blk&mask]>lockingDurationCounters[block.first] && (locked_blocks[block.first]->getSet() == blk->getSet())&&((locked_ways_per_set[blk->getSet()] == 0)||locked_ways_per_set.find(blk->getSet())== locked_ways_per_set.end()))
+                            {
+                                locked_blocks[block.first]->freeLock();
+                                locked_ways_per_set[blk->getSet()] -= 1;
+                                //blk->setLock();
+
+                                // Add block to the locked list
+                                //locked_blocks[virt_addr_blk] = blk;
+                        
+                                // Update counters table to start counting the duration of locking
+                                //lockingDurationCounters[virt_addr_blk] = lockingDurationsTable[virt_addr_blk & mask];
+
+                            }*/
+                        }
+
+                    }
+
+
+                }
+            }
+            
+
+            if(blk)
+            {
+             
+                //Addr virt_addr_blk = int(pkt->req->getVaddr());
+                unsigned int mask =  ~(0x3F);
+                //Addr virt_addr_blk = int(pkt->getAddr()&mask);
+                //unsigned int mask = -1;
+                Addr virt_addr_blk = int(pkt->getAddr());
+
+                //if(locked_ways_per_set.find(blk->getSet()) != locked_ways_per_set.end())
+                //    printf("Number of locked ways: %d\n",locked_ways_per_set[blk->getSet()]);
+
+                //printf("Address is: 0x%x\n",virt_addr_blk);
+                //printf("Set is: %x\n",blk->getSet());
+
+                // Checking if block exists in dictionary and locking duration is greater than 0
+                if (lockingDurationsTable.find(virt_addr_blk & mask) != lockingDurationsTable.end() && lockingDurationsTable[virt_addr_blk & mask] >= 0)
+                {
+                    if(!blk->getLock())
+                    {
+                        
+                        //printf("ACQUIRING LOCK FOR ADDRESS 0x%x!\n",pkt->req->getVaddr());
+                        // Lock the block
+
+                        bool locked_set_flag = 0;
+                        int set_number = blk->getSet();
+                        /*for (const auto& page:locked_blocks)
+                        {
+                            if (locked_blocks[page.first]->getSet() == set_number)
+                            {
+                                //printf("MATCHEDDDD!!!!!!!!!!!\n");
+                                locked_set_flag = 1;
+                                break;
+                            }
+                            locked_set_flag = 0;
+                        }*/
+
+
+                        if ((locked_ways_per_set.find(set_number) == locked_ways_per_set.end()) || locked_ways_per_set[set_number]<3)
+                        {
+                            //printf("LIST EMPTY WE CAN LOCK!\n");
+                            //printf("SIZE OF MAP IS: %x\n",locked_blocks.size());
+
+                            if (locked_ways_per_set.find(set_number) == locked_ways_per_set.end())
+                                locked_ways_per_set[set_number] = 1;
+                            else
+                                locked_ways_per_set[set_number] += 1;
+                            
+                            if(locked_ways_per_set[set_number] ==2 || locked_ways_per_set[set_number] ==3)
+                            {
+                                printf("SET IS ALMOST FULL!!!!!\n");
+
+                            }
+
+                            
+                            blk->setLock();
+
+                            // Add block to the locked list
+                            locked_blocks[virt_addr_blk] = blk;
+                        
+                            // Update counters table to start counting the duration of locking
+                            printf("ACQUIRING LOCK FOR ADDRESS 0x%x!\n",pkt->getAddr());
+                            //printf("THIS IS HOW THE ADDRESS APPEARS TO BE: 0x%x\n",virt_addr_blk & mask);
+                            lockingDurationCounters[virt_addr_blk] = lockingDurationsTable[virt_addr_blk & mask];
+                        }    
+                            
+
+
+                    }    
+                    /*else
+                    {
+                        if(lockingDurationCounters[virt_addr_blk] > 0)
+                        {   
+                            printf("DECREMENTING DURATION!\n");
+                            // Decrement the counter
+                            lockingDurationCounters[virt_addr_blk] = lockingDurationCounters[virt_addr_blk] - 1;
+                        }
+                        else
+                        {
+                            printf("FREEING LOCK!\n");
+                            // If counter reaches zero unlock the cache line 
+                            blk->freeLock();
+                        }
+                        
+                    }*/      
+                }
+            }
+        }
+
+        /******************** Locking logic ********************************************/ 
+
+
+
+
     DPRINTF(Cache, "%s for %s %s\n", __func__, pkt->print(),
             blk ? "hit " + blk->print() : "miss");
 
@@ -1332,6 +2778,7 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
             blk = allocateBlock(pkt, writebacks);
             if (!blk) {
                 // no replaceable block available: give up, fwd to next level.
+                //cache_accesses+=1;
                 incMissCount(pkt);
                 return false;
             }
@@ -1366,6 +2813,8 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
 
         updateBlockData(blk, pkt, has_old_data);
         DPRINTF(Cache, "%s new state is %s\n", __func__, blk->print());
+        
+        //cache_accesses+=1;
         incHitCount(pkt);
 
         // When the packet metadata arrives, the tag lookup will be done while
@@ -1410,6 +2859,7 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
                 if (!blk) {
                     // no replaceable block available: give up, fwd to
                     // next level.
+                    //cache_accesses+=1;
                     incMissCount(pkt);
                     return false;
                 }
@@ -1441,7 +2891,8 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
 
         updateBlockData(blk, pkt, has_old_data);
         DPRINTF(Cache, "%s new state is %s\n", __func__, blk->print());
-
+        
+        //cache_accesses+=1;
         incHitCount(pkt);
 
         // When the packet metadata arrives, the tag lookup will be done while
@@ -1456,6 +2907,8 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
             blk->isSet(CacheBlk::WritableBit) :
             blk->isSet(CacheBlk::ReadableBit))) {
         // OK to satisfy access
+        //
+        //cache_accesses+=1;
         incHitCount(pkt);
 
         // Calculate access latency based on the need to access the data array
@@ -1471,6 +2924,10 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
             lat = calculateTagOnlyLatency(pkt->headerDelay, tag_latency);
         }
 
+        
+
+
+
         satisfyRequest(pkt, blk);
         maintainClusivity(pkt->fromCache(), blk);
 
@@ -1479,7 +2936,7 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
 
     // Can't satisfy access normally... either no block (blk == nullptr)
     // or have block but need writable
-
+    //cache_accesses+=1;
     incMissCount(pkt);
 
     lat = calculateAccessLatency(blk, pkt->headerDelay, tag_latency);

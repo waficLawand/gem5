@@ -30,91 +30,169 @@ X86 ISA). More detailed documentation can be found in `simple.py`.
 """
 
 import m5
+
 from m5.objects import *
 from caches import * 
+import argparse
 
-args = SimpleOpts.parse_args()
+import argparse
+import sys
+import os
 
-system = System()
+import m5
+from m5.defines import buildEnv
+from m5.objects import *
+from m5.params import NULL
+from m5.util import addToPath, fatal, warn
+from gem5.isas import ISA
+from gem5.runtime import get_runtime_isa
 
-system.clk_domain = SrcClockDomain()
-system.clk_domain.clock = "1GHz"
-system.clk_domain.voltage_domain = VoltageDomain()
+addToPath("../")
 
-system.mem_mode = "timing"
-system.mem_ranges = [AddrRange("512MB")]
-system.cpu = RiscvTimingSimpleCPU()
+from ruby import Ruby
 
-print(system.cpu.mmu.dtb.size)
-
-system.membus = SystemXBar()
-
-#system.cpu.icache_port = system.membus.cpu_side_ports
-#system.cpu.dcache_port = system.membus.cpu_side_ports
-
-itlb =L1ICache(args)
-dtlb =L1DCache(args)
-
-i_cache = L1ICache(args)
-d_cache = L1DCache(args)
-
-system.cpu.icache = i_cache
-system.cpu.dcache = d_cache
-
-system.cpu.icache = itlb
-system.cpu.dcache = dtlb
+from common import Options
+from common import Simulation
+from common import CacheConfig
+from common import CpuConfig
+from common import ObjectList
+from common import MemConfig
+from common.FileSystemConfig import config_filesystem
+from common.Caches import *
+from common.cpu2000 import *
 
 
+def run_simulation(options):
+    system = System()
 
-system.cpu.icache.connectCPU(system.cpu)
-system.cpu.dcache.connectCPU(system.cpu)
+    system.clk_domain = SrcClockDomain()
+    system.clk_domain.clock = "1GHz"
+    system.clk_domain.voltage_domain = VoltageDomain()
 
-#d_tlb = L1DCache(args)
-#i_tlb = L1ICache(args)
+    system.mem_mode = "timing"
+    system.mem_ranges = [AddrRange("512MB")]
+    system.cpu = RiscvTimingSimpleCPU()
 
-system.cpu.icache.connectBus(system.membus)
-system.cpu.dcache.connectBus(system.membus)
+    system.membus = SystemXBar()
+    
+    l1_data_cache_size = options.l1_data_cache_size
+    l1_data_assoc = options.l1_data_assoc
+    l1_data_locking = options.l1_data_locking
+    full_data_context_locking = options.full_data_context_locking
 
-#d_tlb = L1DCache(args)
-#i_tlb = L1ICache(args)
+    l1_insn_cache_size = options.l1_insn_cache_size
+    l1_insn_assoc = options.l1_insn_assoc
+    l1_insn_locking = options.l1_insn_locking
+    full_insn_context_locking = options.full_insn_context_locking
 
-#system.cpu.itlb = L1ICache(args)
-#system.cpu.dtlb = L1DCache(args)
+    i_cache = L1ICache(size=l1_insn_cache_size, assoc=l1_insn_assoc, is_l1_cache_locking=l1_insn_locking,is_l1_cache_locking_full_context=full_insn_context_locking)
+    d_cache = L1DCache(size=l1_data_cache_size, assoc=l1_data_assoc, is_l1_cache_locking=l1_data_locking,is_l1_cache_locking_full_context=full_data_context_locking)
+    #d_cache = L1DCache()
 
-#system.cpu.itlb.connectCPU(system.cpu)
-#system.cpu.dtlb.connectCPU(system.cpu)
+    system.cpu.icache = i_cache
+    system.cpu.dcache = d_cache
 
-#system.cpu.icache.connectBus(i_tlb)
-#system.cpu.dcache.connectBus(d_tlb)
+    system.cpu.icache.connectCPU(system.cpu)
+    system.cpu.dcache.connectCPU(system.cpu)
 
+    system.cpu.icache.connectBus(system.membus)
+    system.cpu.dcache.connectBus(system.membus)
 
+    system.cpu.createInterruptController()
 
-system.cpu.createInterruptController()
+    system.mem_ctrl = MemCtrl()
+    system.mem_ctrl.dram = DDR3_1600_8x8()
+    system.mem_ctrl.dram.range = system.mem_ranges[0]
+    system.mem_ctrl.port = system.membus.mem_side_ports
 
-system.mem_ctrl = MemCtrl()
-system.mem_ctrl.dram = DDR3_1600_8x8()
-system.mem_ctrl.dram.range = system.mem_ranges[0]
-system.mem_ctrl.port = system.membus.mem_side_ports
+    system.system_port = system.membus.cpu_side_ports
+#    print(system.cpu_type)
 
-system.system_port = system.membus.cpu_side_ports
+    #thispath = os.path.dirname(os.path.realpath(__file__))
+    #binary = os.path.join(
+    #    thispath,
+    #    "../../",
+    #    "tests/test-progs/hello/bin/riscv/linux/coremark.riscv",
+    #)
+    #thispath = os.path.dirname(os.path.realpath(__file__))
+    #binary = os.path.join(
+   #     thispath,
+  #      "../../../../",
+ #       "coremark-pro-main/builds/riscv64/riscv-gcc64/bin/cjpeg-rose7-preset.riscv",
+#)
 
-thispath = os.path.dirname(os.path.realpath(__file__))
-binary = os.path.join(
-    thispath,
-    "../../",
-    "tests/test-progs/hello/bin/riscv/linux/hello",
+    #path1= "san-diego-vision-benchmark/cortexsuite/cortex/clustering/kmeans/kmeans-small"
+    path1 = "tacle-bench-master/bench/sequential/epic/epic.riscv"
+    path2= "san-diego-vision-benchmark/cortexsuite/vision/benchmarks/disparity/data/sim/disparity"
+    path3 = "san-diego-vision-benchmark/cortexsuite/cortex/cnn/main"
+    path4 = "san-diego-vision-benchmark/cortexsuite/cortex/clustering/kmeans/kmeans-small"
+    path5 = "bubble_sort"
+    path6 = "spec2017/benchspec/CPU/505.mcf_r/build/build_base_mytest.0000/mcf_r"
+    path7 = "spec2017/benchspec/CPU/619.lbm_s/build/build_base_mytest.0000/lbm_s"
+    path8 = "mibench/telecomm/CRC32/crc"
+    path9 = "mibench/network/dijkstra/dijkstra_small"
+    path10 = "mibench/telecomm/FFT/fft"
+    path11 = "bubble_sort"
+    path12 = "spec2017/benchspec/CPU/541.leela_r/build/build_base_mytest.0000/leela_r"
+    path13 = "san-diego-vision-benchmark/cortexsuite/cortex/clustering/spectral/spc-small"
+    path14 = "mibench/security/sha/sha"
+
+    thispath = os.path.dirname(os.path.realpath(__file__))
+    binary = os.path.join(
+        thispath,
+        "../../../../",
+        path9,
 )
 
-system.workload = SEWorkload.init_compatible(binary)
 
-process = Process()
-process.cmd = [binary]
-system.cpu.workload = process
-system.cpu.createThreads()
+    (CPUClass, test_mem_mode, FutureClass) = Simulation.setCPUClass(options)
+    system.workload = SEWorkload.init_compatible(binary)
 
-root = Root(full_system=False, system=system)
-m5.instantiate()
+    process = Process()
+    #process.cmd = [binary,"../../san-diego-vision-benchmark/cortexsuite/vision/benchmarks/disparity/data/sim"]
+    #process.cmd = [binary,"../../san-diego-vision-benchmark/cortexsuite/cortex/clustering/datasets/yeast","1484","8","10"]
+    #process.cmd = [binary,"../../san-diego-vision-benchmark/cortexsuite/cortex/svd3/small.txt"]
+    #process.cmd = [binary,"../../san-diego-vision-benchmark/cortexsuite/cortex/clustering/datasets/R15","600","2","15","0.707","1"]
+    #process.cmd=[binary,"../../spec2017/benchspec/CPU/505.mcf_r/run/run_base_refrate_mytest.0000/inp.in"]
+    #process.cmd=[binary,"2000","../../spec2017/benchspec/CPU/619.lbm_s/run/run_base_refspeed_mytest.0000/reference.dat", "0", "0", "../../spec2017/benchspec/CPU/619.lbm_s/run/run_base_refspeed_mytest.0000/200_200_260_ldc.of"]
+    process.cmd=[binary,"../../mibench/network/dijkstra/input.dat"]
+    #process.cmd=[binary,"8", "4096"]
+    #process.cmd=[binary, "spec2017/benchspec/CPU/541.leela_r/run/run_base_refrate_mytest.0000/ref.sgf"]
+    system.cpu.workload = process
+    system.cpu.createThreads()
 
-print("Beginning simulation!")
-exit_event = m5.simulate()
-print("Exiting @ tick %i because %s" % (m5.curTick(), exit_event.getCause()))
+    root = Root(full_system=False, system=system)
+
+    #m5.instantiate()
+    
+
+    print("Beginning simulation!")
+    #exit_event = m5.simulate()
+    Simulation.run(options,root,system,FutureClass)
+    #print("Exiting @ tick %i because %s" % (m5.curTick(), exit_event.getCause()))
+
+
+
+
+#parser = argparse.ArgumentParser()
+parser = argparse.ArgumentParser()
+Options.addCommonOptions(parser)
+Options.addSEOptions(parser)
+#parser.add_argument("--maxinsts", type=int, default=10, help="Maximum number of instructions to simulate")
+parser.add_argument("--l1_data_cache_size", type=str, default="8kB", help="L1 cache size")
+parser.add_argument("--l1_data_assoc", type=int, default=16, help="L1 cache associativity")
+parser.add_argument("--l1_data_locking",type=bool,default=False, help="Enable L1 cache locking")
+parser.add_argument("--full_data_context_locking",type=bool,default=False, help="Enable L1 cache locking")
+#parser.add_argument("--maxinsts", type="int", default=1)
+parser.add_argument("--l1_insn_cache_size", type=str, default="8kB", help="L1 cache size")
+parser.add_argument("--l1_insn_assoc", type=int, default=16, help="L1 cache associativity")
+parser.add_argument("--l1_insn_locking",type=bool,default=False, help="Enable L1 cache locking")
+parser.add_argument("--full_insn_context_locking",type=bool,default=False, help="Enable L1 cache locking")
+options = parser.parse_args()
+
+#parser = argparse.ArgumentParser()
+
+
+#options=""
+run_simulation(options)
+#run_simulation("32kB", 16,False,"")

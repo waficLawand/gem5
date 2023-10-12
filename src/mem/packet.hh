@@ -389,6 +389,9 @@ class Packet : public Printable
     /// physical, depending on the system configuration.
     Addr addr;
 
+    // Virtual address updated in page table
+    Addr virt_addr;
+
     /// True if the request targets the secure memory space.
     bool _isSecure;
 
@@ -805,6 +808,10 @@ class Packet : public Printable
     void copyError(Packet *pkt) { assert(pkt->isError()); cmd = pkt->cmd; }
 
     Addr getAddr() const { assert(flags.isSet(VALID_ADDR)); return addr; }
+
+    Addr getVirtAddr() const {return virt_addr;}; 
+
+    void setVirtAddr(Addr _virt_addr) {virt_addr = _virt_addr;}
 
     bool getLock() {return _isLocked;}
 

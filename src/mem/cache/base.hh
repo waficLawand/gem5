@@ -49,6 +49,8 @@
 #include <cassert>
 #include <cstdint>
 #include <string>
+#include <map>
+#include <unordered_map>
 
 #include "base/addr_range.hh"
 #include "base/compiler.hh"
@@ -75,6 +77,11 @@
 #include "sim/serialize.hh"
 #include "sim/sim_exit.hh"
 #include "sim/system.hh"
+
+#include <iostream>
+#include <map>
+#include <vector>
+#include <tuple>
 
 namespace gem5
 {
@@ -340,6 +347,27 @@ class BaseCache : public ClockedObject
 
   protected:
 
+    /** Locking durations hash table*/
+    std::unordered_map<int,int> lockingDurationsTable;
+
+    /** Locking durations counters*/
+    std::unordered_map<int,int> lockingDurationCounters;
+
+    /** List of locked blocks*/
+    std::unordered_map<int,CacheBlk*> locked_blocks;
+
+    /** Keeps track of Number of locked ways per set*/
+    std::unordered_map<int,int> locked_ways_per_set;
+
+    /**List of locked blocks per iunterval*/
+    std::map<int, std::tuple<std::vector<int>, int>> interval_locked_map;
+
+    /**Bottom interval*/
+    unsigned long long bottom_cache_accesses_interval = 0; 
+    
+    /** Top interval*/
+    unsigned long long top_cache_accesses_interval = 0; 
+
     /** Miss status registers */
     MSHRQueue mshrQueue;
 
@@ -400,6 +428,7 @@ class BaseCache : public ClockedObject
      * hold it for deletion until a subsequent call
      */
     std::unique_ptr<Packet> pendingDelete;
+
 
     /**
      * Mark a request as in service (sent downstream in the memory
@@ -934,6 +963,7 @@ class BaseCache : public ClockedObject
      */
     const enums::Clusivity clusivity;
 
+
     /**
      * Is this cache read only, for example the instruction cache, or
      * table-walker cache. A cache that is read only should never see
@@ -941,6 +971,15 @@ class BaseCache : public ClockedObject
      * never have to do any writebacks).
      */
     const bool isReadOnly;
+
+        
+    // Is L1 and supports cache Locking
+    const bool is_l1_cache_locking;
+
+    // Is L1 and supports cache Locking for a full context
+    const bool is_l1_cache_locking_full_context;
+
+    unsigned long long cache_accesses = 0;
 
     /**
      * when a data expansion of a compressed block happens it will not be

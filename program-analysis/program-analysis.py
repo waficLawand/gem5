@@ -11,8 +11,8 @@ import math
 import pulp
 
 # File containing instructions trace
-insns_file = './basicmath/basicmath-exec.txt'
-mmu_file = './basicmath/basicmath-mmu.txt'
+insns_file = './gsm/gsm-exec.txt'
+mmu_file = './gsm/gsm-mmu.txt'
 
 
 # List including all conditional branch instructions
@@ -179,7 +179,7 @@ with open(insns_file) as f:
 
 
 
-            elif array_of_tokens[5] in ['jal','c_jalr']:
+            elif array_of_tokens[5] in ['jal','c_jalr'] or array_of_tokens[6] == 'c_j 1306':
                 node = hex(cfg_dict[curr_function][1])
                 cfg_dict[curr_function][0].add_node(node)
                 
@@ -472,14 +472,7 @@ for cfg in cfg_dict:
                 loop_exits_dict[loop_entry][0].append(find_loop_exit(cfg_dict[cfg][0],loop_entry,exit_node,[]))
 ################################################# Static Analysis Based on Loop entries and Exits ########################################################
 
-"""translation_dict={}
-with open(mmu_file, 'r') as file:
-    for line in file:
-        if "Translating:" in line:
-            parts = line.strip().split("Translating: ")
-            if len(parts) == 2:
-                address, value = parts[1].split("->")
-                translation_dict[address.strip()] = value.strip()"""
+
 
 
 #print(loop_entry_dict_all)
@@ -505,7 +498,7 @@ def find_called_functions(graph, function_name, visited=None):
 
 
 cache_line_size = 64
-cache_size = 4*1024
+cache_size = 1*1024
 number_of_ways = 4
 number_of_sets = int((cache_size)/(cache_line_size*number_of_ways))
 address_mask = ~(0x3F)

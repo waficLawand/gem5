@@ -122,6 +122,7 @@ BaseCache::BaseCache(const BaseCacheParams &p, unsigned blk_size)
       system(p.system),
       is_l1_cache_locking(p.is_l1_cache_locking),
       is_l1_cache_locking_full_context(p.is_l1_cache_locking_full_context),
+      print_addresses(p.print_addresses),
       stats(*this)
 {
     // the MSHR queue has no reserve entries as we check the MSHR
@@ -132,6 +133,55 @@ BaseCache::BaseCache(const BaseCacheParams &p, unsigned blk_size)
 
     // forward snoops is overridden in init() once we can query
     // whether the connected requestor is actually snooping or not
+
+
+
+    if(is_l1_cache_locking)
+    {
+        std::ifstream durationInputFile;
+        durationInputFile.open("duration_based_locking.txt");
+
+    if (durationInputFile.is_open()) {
+        std::string line;
+        while (std::getline(durationInputFile, line)) {
+            // Find the opening and closing brackets.
+            size_t openBracketPos = line.find('[');
+            size_t closeBracketPos = line.find(']');
+            
+            // Find the equal sign.
+            size_t equalSignPos = line.find('=');
+
+            if (openBracketPos != std::string::npos && closeBracketPos != std::string::npos &&
+                equalSignPos != std::string::npos && equalSignPos > closeBracketPos) {
+                // Extract the address and value as substrings.
+                std::string addressStr = line.substr(openBracketPos + 1, closeBracketPos - openBracketPos - 1);
+                std::string valueStr = line.substr(equalSignPos + 1);
+
+                // Convert the address from a hexadecimal string to an integer.
+                unsigned int address;
+                std::istringstream(addressStr) >> std::hex >> address;
+
+                // Convert the value string to an integer.
+                int value;
+                std::istringstream(valueStr) >> value;
+
+                lockingDurationsTable[address] = value;
+            }
+        }
+
+        durationInputFile.close();
+
+        // Print the contents of the map.
+        for (const auto& entry : lockingDurationsTable) {
+            std::cout << "Address: " << entry.first << " Value: " << entry.second << std::endl;
+        }
+    } else {
+        std::cerr << "Failed to open the input file." << std::endl;
+    }
+
+
+    }
+
     if (is_l1_cache_locking_full_context)
         {
 
@@ -139,8 +189,10 @@ BaseCache::BaseCache(const BaseCacheParams &p, unsigned blk_size)
         std::ifstream inputFile;
         inputFile.open("full_context_locking.txt");
 
-        std::string line;
 
+
+        
+        std::string line;
     if (!inputFile) {
             std::cerr << "Error opening the file." << std::endl;
         }
@@ -178,7 +230,19 @@ while (std::getline(inputFile, line)) {
 
 
         interval_locked_map[key] = std::make_tuple(addresses, lastValue);
-        //std::cout<<key<<","<<lastValue<<std::endl;
+        std::cout<<key<<","<<lastValue<<std::endl;
+    }
+
+    for (const auto& entry : interval_locked_map) {
+        int key = entry.first;
+        std::vector<int> vec = std::get<0>(entry.second);
+        int value = std::get<1>(entry.second);
+
+        std::cout << "Key: " << std::dec << key << " Values: [";
+        for (const int& v : vec) {
+            std::cout << v << " ";
+        }
+        std::cout << "] Value: " << std::dec << value << std::endl;
     }
 
     inputFile.close();
@@ -190,6 +254,21 @@ while (std::getline(inputFile, line)) {
 
     
         }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     tempBlock = new TempCacheBlk(blkSize);
 
@@ -2388,32 +2467,16 @@ lockingDurationsTable[0x10aee38]=557;
 lockingDurationsTable[0x10aeea8]=3692;
 lockingDurationsTable[0x10a75e0]=557;*/
 
-lockingDurationsTable[0x6140]=3561;
-lockingDurationsTable[0xde00]=1;
-lockingDurationsTable[0x5800]=4246;
-lockingDurationsTable[0x12700]=439;
-lockingDurationsTable[0x14c00]=26;
-lockingDurationsTable[0x4b00]=59;
-lockingDurationsTable[0xdb80]=3150;
-lockingDurationsTable[0xd7c0]=1;
-lockingDurationsTable[0xde40]=1;
-lockingDurationsTable[0x20200]=3560;
-lockingDurationsTable[0x6180]=3013;
-lockingDurationsTable[0x12680]=440;
-lockingDurationsTable[0x5540]=2465;
-lockingDurationsTable[0x5580]=2876;
-lockingDurationsTable[0x15d80]=1;
-lockingDurationsTable[0x5700]=1780;
-lockingDurationsTable[0xd800]=1;
-lockingDurationsTable[0xdb40]=3972;
-lockingDurationsTable[0x55c0]=3561;
-lockingDurationsTable[0x5740]=1232;
-lockingDurationsTable[0x17880]=109;
-lockingDurationsTable[0x126c0]=547;
-lockingDurationsTable[0x56c0]=2191;
-lockingDurationsTable[0xddc0]=1;
-lockingDurationsTable[0x57c0]=3424;
-lockingDurationsTable[0xde80]=1;
+
+
+
+
+
+
+
+
+
+
 /*512B 4ways*/
 //120653600000
 //120665474000
@@ -2422,27 +2485,19 @@ lockingDurationsTable[0xde80]=1;
 //118513878000
     /******************** Locking logic ********************************************/ 
 
-        if (is_l1_cache_locking_full_context && !is_l1_cache_locking)
+        if (print_addresses)
+    {   
+        printf("Address is: 0x%x\n",pkt->req->getVaddr());   
+    }
+
+         if (is_l1_cache_locking_full_context && !is_l1_cache_locking)
         {
             int mask = ~(0x3F);
-            if(blk)
-            {
-                //cache_accesses+=1;
-                //int set_number = blk->getSet();
-                //Addr phys_addr_blk = int(pkt->getAddr());
-               // if (interval_locked_map.find(cache_accesses) != interval_locked_map.end()) {
-                    //const auto& data = interval_locked_map[cache_accesses];
-                    //const auto& innerVector = std::get<0>(data);
-                 //   Addr phys_addr_blk = int(pkt->getAddr());
 
-                /*           if (std::find(innerVector.begin(), innerVector.end(), phys_addr_blk) != innerVector.end()) {
-                    printf("dadadad");
-                }*/
-                //auto it = interval_locked_map.find(cache_accesses);
 
                 if(cache_accesses == bottom_cache_accesses_interval)
                 {
-                    //printf("END OF INTERVAL FREEING ALL ADDRESSES!\n");
+                    printf("END OF INTERVAL FREEING ALL ADDRESSES! Cache Accesses: %d, Address: 0x%x\n",cache_accesses,pkt->req->getVaddr());
                     for (auto const& block : locked_blocks)
                     {
                       //      printf("FREEING: 0x%x!\n",block.first);
@@ -2456,6 +2511,7 @@ lockingDurationsTable[0xde80]=1;
                 
                 if (interval_locked_map.find(cache_accesses) != interval_locked_map.end())
                 {
+                    printf("WINDOW STARTED! Cache Access: %d, Address: 0x%x\n",cache_accesses,pkt->req->getVaddr());
                     const auto& data = interval_locked_map[cache_accesses];
                     bottom_cache_accesses_interval = std::get<1>(data);
                     top_cache_accesses_interval = cache_accesses;
@@ -2463,6 +2519,17 @@ lockingDurationsTable[0xde80]=1;
 
                 }
 
+                //printf("Bottom Accesses is: %d\n",bottom_cache_accesses_interval);
+                //printf("Cache Accesses is: %d\n",cache_accesses);
+                
+
+            cache_accesses+=1;
+
+
+
+            if(blk)
+            {
+                
                 if (cache_accesses < bottom_cache_accesses_interval)
                 {
                     
@@ -2478,7 +2545,7 @@ lockingDurationsTable[0xde80]=1;
                         if(!blk->getLock())
                         {   
                             int set_number = blk->getSet();
-                            if ((locked_ways_per_set.find(set_number) == locked_ways_per_set.end()) || locked_ways_per_set[set_number]<2)
+                            if ((locked_ways_per_set.find(set_number) == locked_ways_per_set.end()) || locked_ways_per_set[set_number]<3)
                             {
                                 if (locked_ways_per_set.find(set_number) == locked_ways_per_set.end())
                                     locked_ways_per_set[set_number] = 1;
@@ -2486,6 +2553,7 @@ lockingDurationsTable[0xde80]=1;
                                     locked_ways_per_set[set_number] += 1;
                                 //printf("SIZE OF MAP IS: %x\n",locked_blocks.size());
                                 //printf("Locked addresses per set: %d\n",locked_ways_per_set[set_number]);
+                                printf("Address locked: 0x%x\n",phys_addr_blk);
                                 blk->setLock();
 
                                 locked_blocks[phys_addr_blk] = blk;
@@ -2495,37 +2563,87 @@ lockingDurationsTable[0xde80]=1;
                      }
 
                 }
-                //printf("Bottom Accesses is: %d\n",bottom_cache_accesses_interval);
-                //printf("Cache Accesses is: %d\n",cache_accesses);
-                
-
-            cache_accesses+=1;
+            
             }
-
         
         }
+        //printf("Address is: %x and in decimal %d\n",pkt->getAddr(),pkt->getAddr());
         /*if (is_l1_cache_locking_full_context && !is_l1_cache_locking)
         {
+            int mask = ~(0x3F);
 
-            printf("Memory access at PC: 0x%x\n",pkt->req->getPC());
-            printf("Cache Accesses: %d\n",cache_accesses);
+                loop_entry = int(pkt->getAddr());
+                printf("Address Reached is: %x  Address in decimal: %d and Line accessed is: 0x%x\n",loop_entry,loop_entry,loop_entry&mask);
+                if(loop_entry == loop_exit)
+                {
+                    printf("END OF INTERVAL AT ADDRESS %d in hex 0x%x\n",loop_exit,loop_exit);
+                    for (auto const& block : locked_blocks)
+                    {
+                      //      printf("FREEING: 0x%x!\n",block.first);
+                            locked_blocks[block.first]->freeLock();
+                            locked_ways_per_set[locked_blocks[block.first]->getSet()] = 0;
+                            //locked_blocks.erase(block.first);
+                    }
+                    top_loop_entry_interval = 0;
+                    loop_exit = 0;
+                }
+
+                if (interval_locked_map.find(loop_entry) != interval_locked_map.end() && (top_loop_entry_interval == 0))
+                {
+                    printf("START OF INTERVAL AT ADDRESS %d in hex 0x%x!\n",loop_entry,loop_entry);
+                    const auto& data = interval_locked_map[loop_entry];
+                    loop_exit = std::get<1>(data);
+                    top_loop_entry_interval = loop_entry;
+
+                }
+                    
+
+
             if(blk)
             {
-                //cache_accesses+=1;
-                int set_number = blk->getSet();
-                Addr phys_addr_blk = int(pkt->getAddr());
-
-                if (lockingDurationsTable.find(phys_addr_blk) != lockingDurationsTable.end())
+              
+                if ((loop_entry != loop_exit) && (top_loop_entry_interval != 0))
+                //if (loop_entry < loop_exit)
                 {
-                    if(!blk->getLock())
-                    {
-                        blk->setLock();
-                        locked_blocks[phys_addr_blk] = blk;
-                        printf("SIZE OF MAP IS: %x\n",locked_blocks.size());
-                    }
+                    //printf("START OF INTERVAL!\n");
+                    //printf("Current Address: 0x%x\n",loop_entry);
+                    const auto& data = interval_locked_map[top_loop_entry_interval];
+                    const auto& innerVector = std::get<0>(data);
+                    const auto& end_address = std::get<1>(data);
+
+                    Addr phys_addr_blk = int(pkt->getAddr()&mask);
+                    //printf("Current Address: 0x%x\n",phys_addr_blk);
+                     
+                    if (std::find(innerVector.begin(), innerVector.end(), phys_addr_blk) != innerVector.end()) 
+                     {
+                        //printf("FOUND!!!\n");
+                        if(!blk->getLock())
+                        {   
+                            int set_number = blk->getSet();
+                            //if ((locked_ways_per_set.find(set_number) == locked_ways_per_set.end()) || locked_ways_per_set[set_number]<3)
+                            if ((locked_ways_per_set.find(set_number) == locked_ways_per_set.end()))
+                            {
+                                locked_ways_per_set[set_number] = 1;
+                            }
+                            else
+                            {
+                                    locked_ways_per_set[set_number] += 1;
+                            }    
+
+                            blk->setLock();
+                            printf("Locked Address: 0x%x\n",phys_addr_blk);
+                            locked_blocks[phys_addr_blk] = blk;
+                            
+                        }
+                     }
+
                 }
             }
+           
+
+        
         }*/
+        
 
         if(is_l1_cache_locking)
         {
@@ -2560,12 +2678,12 @@ lockingDurationsTable[0xde80]=1;
                             if(lockingDurationCounters[block.first] == 0)
                             {
                                 // Free the lock
-                                printf("FREEING LOCK FOR ADDRESS 0x%x!\n",block.first);
+                                //printf("FREEING LOCK FOR ADDRESS 0x%x!\n",block.first);
                                 locked_blocks[block.first]->freeLock();
                                 //locked_blocks.erase(block.first);
 
                                 locked_ways_per_set[blk->getSet()] -= 1;
-                                printf("Number of ways locked per set is %d!\n",locked_ways_per_set[blk->getSet()]);
+                                //printf("Number of ways locked per set is %d!\n",locked_ways_per_set[blk->getSet()]);
                             }
 
                             // If new incmoming page has a greater age old locked blocks can be evicted
@@ -2652,7 +2770,7 @@ lockingDurationsTable[0xde80]=1;
                             locked_blocks[virt_addr_blk] = blk;
                         
                             // Update counters table to start counting the duration of locking
-                            printf("ACQUIRING LOCK FOR ADDRESS 0x%x!\n",pkt->getAddr());
+                            //printf("ACQUIRING LOCK FOR ADDRESS 0x%x!\n",pkt->getAddr());
                             //printf("THIS IS HOW THE ADDRESS APPEARS TO BE: 0x%x\n",virt_addr_blk & mask);
                             lockingDurationCounters[virt_addr_blk] = lockingDurationsTable[virt_addr_blk & mask];
                         }    

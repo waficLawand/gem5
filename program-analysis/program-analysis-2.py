@@ -11,8 +11,8 @@ import math
 import pulp
 
 # File containing instructions trace
-insns_file = './bubble-sort/bubble-sort-exec.txt'
-mmu_file = './bubble-sort/bubble-sort-mmu.txt'
+insns_file = './sift/sift-exec.txt'
+mmu_file = './sift/sift-mmu.txt'
 
 
 # List including all conditional branch instructions
@@ -857,7 +857,7 @@ durations_dict = {}
 for loop in conflict_graph:
     #selected_nodes = new_ILP(conflict_graph[loop][0],conflict_graph[loop][2])
     selected_nodes = new_ILP(conflict_graph[loop][0],hotness_dict)
-
+    
     for node in selected_nodes:
         #durations_dict[node] = locked_lines_durations[node][0] // locked_lines_durations[node][1]
         if node not in durations_dict:

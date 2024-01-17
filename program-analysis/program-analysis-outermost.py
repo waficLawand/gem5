@@ -11,8 +11,8 @@ import math
 import pulp
 
 # File containing instructions trace
-insns_file = './qsort/qsort-exec.txt'
-mmu_file = './qsort/qsort-mmu.txt'
+insns_file = './sift/sift-exec.txt'
+mmu_file = './sift/sift-mmu.txt'
 
 
 # List including all conditional branch instructions
@@ -51,6 +51,7 @@ def new_ILP(conflict_window, weights):
     for cache_set in conflict_window:
         prob += pulp.lpSum([x[node] for node in conflict_window[cache_set]]) <= 2
 
+    #print(prob)
     # Solve ILP
     prob.solve()
 
@@ -63,16 +64,38 @@ def new_ILP(conflict_window, weights):
 
 
 
-def maximize_weight_with_conflict_sets(conflict_sets, weights):
+def maximize_weight_with_conflict_sets(conflict_sets, weights,sets):
     # Create the LP problem instance
+
+    conflict_across_loops={}
+
+
+
+
+    for set_number in range(sets):
+        conflict_across_loops[set_number] = []
+
+    #for set_number in range(sets):
+    #    for loop in conflict_sets:
+    #        conflict_across_loops[set_number][loop] = set()
+        
+
+
+    for loop in conflict_sets:
+        for set_number in conflict_sets[loop][0]:
+            conflict_across_loops[set_number].append(conflict_sets[loop][0][set_number]) 
+            
+    
     prob = pulp.LpProblem("Maximize_Weight", pulp.LpMaximize)
     
     # Create binary decision variables for each node
     nodes = set()
-    for conflict_set in conflict_sets:
-        for window in conflict_sets[conflict_set]:
+    for conflict_set in conflict_across_loops:
+        for window in conflict_across_loops[conflict_set]:
+            #print(window)
             nodes.update(window)
 
+    
     x = pulp.LpVariable.dicts("Node", nodes, cat=pulp.LpBinary)
 
     # Define the objective function: Maximize the total weight of selected nodes
@@ -84,18 +107,22 @@ def maximize_weight_with_conflict_sets(conflict_sets, weights):
     #        prob += pulp.lpSum([x[node] for window in conflict_sets[conflict_set] if node in window]) <= 1
 
     # Add constraints: Conflicting nodes cannot be picked together
-    for conflict_set in conflict_sets:
-        for window in conflict_sets[conflict_set]:
-            prob += pulp.lpSum([x[node] for node in window]) <= 2
 
+
+    for conflict_set in conflict_across_loops:
+        for window in conflict_across_loops[conflict_set]:
+            prob += pulp.lpSum([x[node] for node in window]) <= 2
+    #print(prob)
      # Solve the LP problem
     prob.solve()
 
     # Extract the selected nodes and their weights
     selected_nodes = {node: x[node].value() for node in nodes if x[node].value() == 1}
-    selected_weights = {node: weights[node] for conflict_set in conflict_sets for window in conflict_sets[conflict_set] for node in window if node in selected_nodes}
+    #selected_weights = {node: weights[node] for conflict_set in conflict_sets for window in conflict_sets[conflict_set] for node in window if node in selected_nodes}
 
-    return selected_nodes, selected_weights
+    return selected_nodes
+
+
 
 
 
@@ -670,6 +697,31 @@ with open(mmu_file, 'r') as file:
 
 
 
+def merge_sets_recursive(input_dict):
+    def merge_sets(key, current_set):
+        if key not in visited_keys:
+            visited_keys.add(key)
+            for node in input_dict.get(key, set()):
+                current_set.update(input_dict.get(node, set()))
+                merge_sets(node, current_set)
+
+    result_dict = {}
+    visited_keys = set()
+
+    for key in input_dict:
+        if key not in visited_keys:
+            current_set = input_dict[key].copy()
+            merge_sets(key, current_set)
+            result_dict[key] = current_set
+
+    return result_dict
+
+merged_loop_paths = merge_sets_recursive(loop_paths)
+
+for key, value in loop_paths.items():
+    if key not in merged_loop_paths:
+        merged_loop_paths[key] = value
+
 cache_line_size = 64
 cache_size = 4*1024
 number_of_ways = 4
@@ -755,7 +807,7 @@ for insn in program_insns:
 
     if outermost_loop in loop_exits_dict:
     #print("Hello IM HERE!")
-        if hex(insn_address) in loop_exits_dict[outermost_loop][0] or (hex(insn_address) not in loop_paths[outermost_loop]):
+        if (hex(insn_address) not in merged_loop_paths[outermost_loop]):
     #if hex(insn_address) in loop_exits_dict[outermost_loop][0] or (hex(insn_address) not in loop_paths[outermost_loop]):
     #if (hex(insn_address) not in loop_paths[outermost_loop]) or hex(insn_address) == outermost_loop:
             #print("WINDOW END!: ",hex(insn_address))
@@ -784,8 +836,119 @@ for insn in program_insns:
 
 
 
-for loop in conflict_graph:
-    print("Loop ",loop,": ",conflict_graph[loop])
+
+min_duration = {}
+
+
+conflict_graph_2 = {}
+for loop in loop_exits_dict:
+    conflict_graph_2[loop] = [{},[],{}]
+
+for loop in loop_exits_dict:
+    for set_nb in range(number_of_sets):
+        conflict_graph_2[loop][0][set_nb] = set()
+
+for insn in program_insns:
+    insn_address = int(insn[3],16)
+    #print(loop_stack)
+
+
+    #print(insn_address)
+    #if not opened_window:
+    if hex(insn_address) in loop_exits_dict:
+        if loop_exits_dict[hex(insn_address)][0] != None and loop_stack[-1] != hex(insn_address):
+                #print("WINDOW START!: ",hex(insn_address)) 
+                outermost_loop = hex(insn_address)
+
+                if loop_stack[-1] != 'start':
+                    for node in temp_window_counter:
+                        if node not in conflict_graph_2[loop_stack[-1]][2]:
+                            conflict_graph_2[loop_stack[-1]][2][node] = temp_window_counter[node]
+                        else:
+                            #if conflict_graph_2[loop_stack[-1]][2][node] < temp_window_counter[node]:
+                            conflict_graph_2[loop_stack[-1]][2][node] += temp_window_counter[node]
+                    
+                    temp_window_counter={}
+
+                if loop_stack[-1] != 'start' and hex(insn_address) not in conflict_graph_2[loop_stack[-1]][1]:
+                    conflict_graph_2[loop_stack[-1]][1].append(hex(insn_address))
+                    
+                
+                loop_stack.append(hex(insn_address))
+                opened_window = True
+
+    if len(loop_stack) != 0 and loop_stack[-1] != 'start':
+        translated_address = int(translation_dict[hex(insn_address & (~3))],16) &  address_mask
+        accessed_set = calculate_set(cache_size,number_of_ways,cache_line_size,translated_address)
+
+        #print(hex(translated_address))
+        #print(hex((insn_address&(~3))&address_mask))
+        #print(hex(insn_address))
+        #conflict_graph_2[accessed_set][-1].add(hex(translated_address))
+        conflict_graph_2[loop_stack[-1]][0][accessed_set].add(hex(translated_address))
+        #conflict_graph_2[loop_stack[-1]][0][accessed_set].add(hex((insn_address &(~3))&address_mask))
+        #if hex((insn_address &(~3))&address_mask) not in hotness_dict:
+        if hex(translated_address) not in hotness_dict:
+            hotness_dict[hex(translated_address)] = 1
+            #hotness_dict[hex((insn_address &(~3))&address_mask)] = 1
+        else:
+            hotness_dict[hex(translated_address)] = hotness_dict[hex(translated_address)]+1
+            #hotness_dict[hex((insn_address &(~3))&address_mask)] += 1
+
+        if hex(translated_address) not in locked_lines_durations:
+            #locked_pages_durations[hex(translated_page)] = 0
+            locked_lines_durations[hex(translated_address)] = [1,1]
+            #locked_lines_durations[hex(translated_address)] =[]
+
+        if hex(translated_address) not in temp_window_counter:
+        #if hex((insn_address &(~3))&address_mask) not in temp_window_counter: 
+            temp_window_counter[hex(translated_address)] = 1
+            #temp_window_counter[hex((insn_address &(~3))&address_mask)] = 1
+        else:
+            temp_window_counter[hex(translated_address)] = temp_window_counter[hex(translated_address)] +1
+            #temp_window_counter[hex((insn_address &(~3))&address_mask)] = temp_window_counter[hex((insn_address &(~3))&address_mask)] +1
+
+
+        
+    #if outermost_loop != '':
+    #    if (outermost_loop in loop_exits_dict):
+    if len(loop_stack) != 0:
+        if loop_stack[-1] is not None:
+            if loop_stack[-1] in loop_exits_dict:
+            #print("Hello IM HERE!")
+                if hex(insn_address) in loop_exits_dict[loop_stack[-1]][0] or (hex(insn_address) not in loop_paths[loop_stack[-1]]):
+            #if hex(insn_address) in loop_exits_dict[outermost_loop][0] or (hex(insn_address) not in loop_paths[outermost_loop]):
+            #if (hex(insn_address) not in loop_paths[outermost_loop]) or hex(insn_address) == outermost_loop:
+                    #print("WINDOW END!: ",hex(insn_address))
+
+                    for key in temp_window_counter.keys() | min_duration.keys():
+                        min_duration[key] = min(temp_window_counter.get(key, float('inf')), min_duration.get(key, float('inf')))
+
+                    for node in temp_window_counter:
+                        if node not in conflict_graph_2[loop_stack[-1]][2]:
+                            conflict_graph_2[loop_stack[-1]][2][node] = temp_window_counter[node]
+                        else:
+                            #if conflict_graph_2[loop_stack[-1]][2][node] < temp_window_counter[node]:
+                                conflict_graph_2[loop_stack[-1]][2][node] += temp_window_counter[node]
+                    #for index in range(0,number_of_sets):
+                        #conflict_graph_2[index].append(set())
+
+                    #for line in temp_window_counter.keys():
+                        #locked_lines_durations[line].append(temp_window_counter[line])
+#                            if temp_window_counter[line] != 0:
+ #                               locked_lines_durations[line][0] = temp_window_counter[line]+locked_lines_durations[line][0]
+  #                              locked_lines_durations[line][1] = locked_lines_durations[line][1] + 1 
+
+                    temp_window_counter = {}
+                    opened_window = False
+                    outermost_loop = ''
+                    loop_stack.pop()
+
+
+
+
+for loop in conflict_graph_2:
+    print("Loop ",loop,": ",conflict_graph_2[loop])
 
 
 for loop in loop_paths:
@@ -794,6 +957,20 @@ for loop in loop_paths:
 
 
 print(conflict_graph)
+
+
+
+
+for loop in conflict_graph_2:
+    print("Loop ",loop,": ",conflict_graph_2[loop])
+
+
+for loop in loop_paths:
+    print("Loop is ",loop," and the path includes: ",loop_paths[loop])
+#for loop in conflict_graph_2:
+
+
+print(conflict_graph_2)
 
 def compute_union(dictionary, entry_key):
     entry = dictionary.get(entry_key, None)
@@ -838,12 +1015,11 @@ def compute_access_counts_recursive(dictionary, entry_key):
     return access_counts
 
 
+
+
+selected_nodes = maximize_weight_with_conflict_sets(conflict_graph,hotness_dict,number_of_sets)
 durations_dict = {}
 for loop in conflict_graph:
-    if len(conflict_graph[loop][0]) > 0:
-    #selected_nodes = new_ILP(conflict_graph[loop][0],conflict_graph[loop][2])
-        selected_nodes = new_ILP(conflict_graph[loop][0],hotness_dict)
-
     for node in selected_nodes:
         if node not in durations_dict:
             durations_dict[node] = conflict_graph[loop][2][node]
@@ -854,12 +1030,22 @@ for loop in conflict_graph:
 
 
 
-print("LAST SET: ",durations_dict)
-for node in durations_dict.keys():
-    if durations_dict[node] == 1:
-        continue
-    print("lockingDurationsTable[" + node + "]=" + str(durations_dict[node]) + ";")
 
+durations_dict_2 = {}
+for loop in conflict_graph_2:
+    for node in selected_nodes:
+        if node in conflict_graph_2[loop][2]:
+            if node not in durations_dict_2:
+                durations_dict_2[node] = conflict_graph_2[loop][2][node]
+            else:
+                if durations_dict_2[node] > conflict_graph_2[loop][2][node]:
+                    durations_dict_2[node] = conflict_graph_2[loop][2][node]
+
+
+
+print("LAST SET: ",durations_dict_2)
+for node in selected_nodes.keys():
+    print("lockingDurationsTable[" + node + "]=" + str(durations_dict[node]) + ";")
 
 
 #print(selected_nodes)

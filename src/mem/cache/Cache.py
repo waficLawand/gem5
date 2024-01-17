@@ -180,6 +180,8 @@ class BaseCache(ClockedObject):
     # If cache is L1 and supports locking
     is_l1_cache_locking_full_context = Param.Bool(False,"L1 cache locking For Full Context")
 
+    print_addresses = Param.Bool(False,"Print Addresses")
+
 
 class Cache(BaseCache):
     type = "Cache"

@@ -363,10 +363,18 @@ class BaseCache : public ClockedObject
     std::map<int, std::tuple<std::vector<int>, int>> interval_locked_map;
 
     /**Bottom interval*/
+    unsigned long long loop_exit = 0; 
+    
+    /** Top interval*/
+    unsigned long long top_loop_entry_interval = 0; 
+
+    /**Bottom interval*/
     unsigned long long bottom_cache_accesses_interval = 0; 
     
     /** Top interval*/
     unsigned long long top_cache_accesses_interval = 0; 
+
+    unsigned long long cache_accesses = 0;
 
     /** Miss status registers */
     MSHRQueue mshrQueue;
@@ -979,7 +987,9 @@ class BaseCache : public ClockedObject
     // Is L1 and supports cache Locking for a full context
     const bool is_l1_cache_locking_full_context;
 
-    unsigned long long cache_accesses = 0;
+    const bool print_addresses;
+
+    unsigned long long loop_entry = 0;
 
     /**
      * when a data expansion of a compressed block happens it will not be

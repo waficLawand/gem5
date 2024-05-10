@@ -48,7 +48,7 @@
 #include "debug/LLSC.hh"
 #include "debug/MemoryAccess.hh"
 #include "mem/packet_access.hh"
-#include "sim/system.hh"
+//#include "sim/system.hh"
 
 namespace gem5
 {

@@ -935,6 +935,7 @@ BaseCache::getNextQueueEntry()
                 // allocate an MSHR and return it, note
                 // that we send the packet straight away, so do not
                 // schedule the send
+                pkt->setPrefetchPacket();
                 return allocateMissBuffer(pkt, curTick(), false);
             }
         }

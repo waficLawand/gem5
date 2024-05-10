@@ -376,6 +376,9 @@ class Packet : public Printable, public Extensible<Packet>
     /// A pointer to the original request.
     RequestPtr req;
 
+    // Is it a prefetch packet
+    bool is_prefetch_pkt = false;
+
   private:
    /**
     * A pointer to the data being transferred. It can be different
@@ -589,6 +592,9 @@ class Packet : public Printable, public Extensible<Packet>
 
     /// Return the index of this command.
     inline int cmdToIndex() const { return cmd.toInt(); }
+
+    bool isPrefetchPacket() const    { return is_prefetch_pkt;}
+    void setPrefetchPacket()         { is_prefetch_pkt = true;}
 
     bool isRead() const              { return cmd.isRead(); }
     bool isWrite() const             { return cmd.isWrite(); }

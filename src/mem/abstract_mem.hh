@@ -51,6 +51,7 @@
 #include "params/AbstractMemory.hh"
 #include "sim/clocked_object.hh"
 #include "sim/stats.hh"
+#include "sim/system.hh"
 
 namespace gem5
 {
@@ -219,6 +220,12 @@ class AbstractMemory : public ClockedObject
   public:
 
     PARAMS(AbstractMemory);
+    
+    void 
+    getRequestor(PacketPtr pkt)
+    {
+        std::cout<<"Requestor is: "<<_system->getRequestorName(pkt->req->requestorId()).c_str()<<std::endl;
+    }
 
     AbstractMemory(const Params &p);
     virtual ~AbstractMemory() {}

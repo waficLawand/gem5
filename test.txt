@@ -1,0 +1,2733 @@
+Global frequency set at 1000000000000 ticks per second
+gem5 Simulator System.  https://www.gem5.org
+gem5 is copyrighted software; use the --copyright option for details.
+
+gem5 version 23.1.0.0
+gem5 compiled May  9 2024 12:39:35
+gem5 started May  9 2024 12:42:19
+gem5 executing on rp09, pid 958827
+command line: build/RISCV/gem5.opt configs/bandwidth-testing/test-config.py
+
+Bandwidth is:  13743895347.2
+Beginning simulation!
+##################################################
+Current Regulation Tick is: 0
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 5000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 10000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 15000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 20000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+##################################################
+Current Regulation Tick is: 25000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+##################################################
+Current Regulation Tick is: 30000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+##################################################
+Current Regulation Tick is: 35000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 40000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+##################################################
+Current Regulation Tick is: 45000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+##################################################
+Current Regulation Tick is: 50000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+##################################################
+Current Regulation Tick is: 55000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+##################################################
+Current Regulation Tick is: 60000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 65000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 70000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+##################################################
+Current Regulation Tick is: 75000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+##################################################
+Current Regulation Tick is: 80000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 85000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+##################################################
+Current Regulation Tick is: 90000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 95000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 100000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 105000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 110000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 115000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 120000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 125000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 130000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 135000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 140000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 145000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 150000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+##################################################
+Current Regulation Tick is: 155000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+##################################################
+Current Regulation Tick is: 160000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+##################################################
+Current Regulation Tick is: 165000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 170000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+##################################################
+Current Regulation Tick is: 175000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 180000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+##################################################
+Current Regulation Tick is: 185000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+##################################################
+Current Regulation Tick is: 190000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 195000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+##################################################
+Current Regulation Tick is: 200000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+##################################################
+Current Regulation Tick is: 205000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 210000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 215000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+##################################################
+Current Regulation Tick is: 220000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+##################################################
+Current Regulation Tick is: 225000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+##################################################
+Current Regulation Tick is: 230000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+##################################################
+Current Regulation Tick is: 235000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+##################################################
+Current Regulation Tick is: 240000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 245000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+##################################################
+Current Regulation Tick is: 250000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 255000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 260000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+##################################################
+Current Regulation Tick is: 265000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 270000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+##################################################
+Current Regulation Tick is: 275000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+##################################################
+Current Regulation Tick is: 280000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+##################################################
+Current Regulation Tick is: 285000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+##################################################
+Current Regulation Tick is: 290000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 295000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 300000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 305000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+##################################################
+Current Regulation Tick is: 310000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 315000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+##################################################
+Current Regulation Tick is: 320000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+##################################################
+Current Regulation Tick is: 325000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 330000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+##################################################
+Current Regulation Tick is: 335000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+##################################################
+Current Regulation Tick is: 340000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+##################################################
+Current Regulation Tick is: 345000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+##################################################
+Current Regulation Tick is: 350000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+##################################################
+Current Regulation Tick is: 355000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 360000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 365000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 370000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 375000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 380000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 385000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 390000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 395000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 400000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 405000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 410000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 415000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 420000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 425000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 430000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 435000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 440000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 445000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 450000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 455000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 460000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 465000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 470000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 475000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 480000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 485000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 490000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 495000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 500000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 505000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 510000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 515000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 520000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 525000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 530000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 535000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 540000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 545000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 550000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 555000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 560000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 565000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 570000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 575000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 580000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+##################################################
+Current Regulation Tick is: 585000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 590000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+##################################################
+Current Regulation Tick is: 595000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+##################################################
+Current Regulation Tick is: 600000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 605000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 610000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 615000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 620000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 625000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 630000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 635000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 640000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 645000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 650000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 655000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 660000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 665000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 670000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 675000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 680000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 685000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 690000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 695000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 700000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 705000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 710000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 715000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 720000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: writebacks
+Requestor ID: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 725000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 730000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 735000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 740000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: writebacks
+Requestor ID: 0
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 745000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: writebacks
+Requestor ID: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: writebacks
+Requestor ID: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 750000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: writebacks
+Requestor ID: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: writebacks
+Requestor ID: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: writebacks
+Requestor ID: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 755000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: writebacks
+Requestor ID: 0
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 760000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: writebacks
+Requestor ID: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: writebacks
+Requestor ID: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: writebacks
+Requestor ID: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: writebacks
+Requestor ID: 0
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+##################################################
+Current Regulation Tick is: 765000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 0
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+##################################################
+Current Regulation Tick is: 770000000000
+Demand Bucket Tokens: 6
+Prefetch Bucket Tokens: 0
+##################################################
+Current Regulation Tick is: 775000000000
+Demand Bucket Tokens: 11
+Prefetch Bucket Tokens: 0
+##################################################
+Current Regulation Tick is: 780000000000
+Demand Bucket Tokens: 16
+Prefetch Bucket Tokens: 0
+##################################################
+Current Regulation Tick is: 785000000000
+Demand Bucket Tokens: 21
+Prefetch Bucket Tokens: 0
+##################################################
+Current Regulation Tick is: 790000000000
+Demand Bucket Tokens: 26
+Prefetch Bucket Tokens: 0
+##################################################
+Current Regulation Tick is: 795000000000
+Demand Bucket Tokens: 31
+Prefetch Bucket Tokens: 0
+##################################################
+Current Regulation Tick is: 800000000000
+Demand Bucket Tokens: 36
+Prefetch Bucket Tokens: 0
+##################################################
+Current Regulation Tick is: 805000000000
+Demand Bucket Tokens: 40
+Prefetch Bucket Tokens: 5
+##################################################
+Current Regulation Tick is: 810000000000
+Demand Bucket Tokens: 40
+Prefetch Bucket Tokens: 10
+##################################################
+Current Regulation Tick is: 815000000000
+Demand Bucket Tokens: 40
+Prefetch Bucket Tokens: 15
+##################################################
+Current Regulation Tick is: 820000000000
+Demand Bucket Tokens: 40
+Prefetch Bucket Tokens: 20
+##################################################
+Current Regulation Tick is: 825000000000
+Demand Bucket Tokens: 40
+Prefetch Bucket Tokens: 25
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: writebacks
+Requestor ID: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: writebacks
+Requestor ID: 0
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 830000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 25
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 835000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 25
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 840000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 25
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 845000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 25
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 850000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 25
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 855000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 25
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 860000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 25
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 865000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 25
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: writebacks
+Requestor ID: 0
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 870000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 25
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: writebacks
+Requestor ID: 0
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+##################################################
+Current Regulation Tick is: 875000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 25
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+##################################################
+Current Regulation Tick is: 880000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 25
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+##################################################
+Current Regulation Tick is: 885000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 25
+##################################################
+Current Regulation Tick is: 890000000000
+Demand Bucket Tokens: 9
+Prefetch Bucket Tokens: 25
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: writebacks
+Requestor ID: 0
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: writebacks
+Requestor ID: 0
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 895000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 25
+Requestor is: writebacks
+Requestor ID: 0
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+##################################################
+Current Regulation Tick is: 900000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 25
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+##################################################
+Current Regulation Tick is: 905000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 25
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+##################################################
+Current Regulation Tick is: 910000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 25
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+##################################################
+Current Regulation Tick is: 915000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 25
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+##################################################
+Current Regulation Tick is: 920000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 25
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+##################################################
+Current Regulation Tick is: 925000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 25
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+##################################################
+Current Regulation Tick is: 930000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 25
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+##################################################
+Current Regulation Tick is: 935000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 25
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+##################################################
+Current Regulation Tick is: 940000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 25
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+##################################################
+Current Regulation Tick is: 945000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 25
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 950000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 25
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 955000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 25
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.data
+Requestor ID: 6
+##################################################
+Current Regulation Tick is: 960000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 25
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+##################################################
+Current Regulation Tick is: 965000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 25
+Requestor is: cpu.data
+Requestor ID: 6
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+Requestor is: cpu.inst
+Requestor ID: 5
+##################################################
+Current Regulation Tick is: 970000000000
+Demand Bucket Tokens: 5
+Prefetch Bucket Tokens: 25
+Requestor is: cpu.inst
+Requestor ID: 5
+Exiting @ tick 972019517000 because exiting with last active thread context

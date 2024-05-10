@@ -38,11 +38,14 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "mem/simple_mem.hh"
+#include "mem/bw_regulated_simple_mem.hh"
 
 #include "base/random.hh"
 #include "base/trace.hh"
 #include "debug/Drain.hh"
+
+#include <thread>
+#include <chrono>
 
 namespace gem5
 {
@@ -50,19 +53,25 @@ namespace gem5
 namespace memory
 {
 
-SimpleMemory::SimpleMemory(const SimpleMemoryParams &p) :
+BwRegulatedSimpleMemory::BwRegulatedSimpleMemory(const BwRegulatedSimpleMemoryParams &p) :
     AbstractMemory(p),
     port(name() + ".port", *this), latency(p.latency),
     latency_var(p.latency_var), bandwidth(p.bandwidth), isBusy(false),
-    retryReq(false), retryResp(false),
+    retryReq(false), retryResp(false), 
+    demand_burstiness(p.demand_burstiness),
+    prefetch_burstiness(p.prefetch_burstiness),
+    refill_tokens(p.refill_tokens),
+    refill_period(p.refill_period),
     releaseEvent([this]{ release(); }, name()),
-    dequeueEvent([this]{ dequeue(); }, name())
+    dequeueEvent([this]{ dequeue(); }, name()),
+    monitoring_event([this]{bucket_refill();},name()),
+    consume_demand_token_event([this]{consume_demand_token();},name())
 {
-    
+
 }
 
 void
-SimpleMemory::init()
+BwRegulatedSimpleMemory::init()
 {
     AbstractMemory::init();
 
@@ -71,10 +80,46 @@ SimpleMemory::init()
     if (port.isConnected()) {
         port.sendRangeChange();
     }
+
+}
+void
+BwRegulatedSimpleMemory::startup()
+{
+    schedule(monitoring_event,curTick());
+}
+
+void
+BwRegulatedSimpleMemory::consume_demand_token()
+{
+    --demand_tokens;
+}
+
+void
+BwRegulatedSimpleMemory::bucket_refill()
+{
+    Tick curr_tick = curTick();
+
+    if(demand_burstiness - demand_tokens < refill_tokens)
+    {
+        demand_tokens = demand_burstiness;
+        prefetch_tokens = std::min(prefetch_burstiness,prefetch_tokens+(refill_tokens-(demand_burstiness - demand_tokens)));
+    }
+    else
+    {
+        demand_tokens = demand_tokens + refill_tokens;
+    }
+    printf("##################################################\n");
+    printf("Current Regulation Tick is: %lld\n",curr_tick);
+    printf("Demand Bucket Tokens: %d\n",demand_tokens);
+    printf("Prefetch Bucket Tokens: %d\n",prefetch_tokens);
+
+    schedule(monitoring_event, curTick() + refill_period);
+    
+
 }
 
 Tick
-SimpleMemory::recvAtomic(PacketPtr pkt)
+BwRegulatedSimpleMemory::recvAtomic(PacketPtr pkt)
 {
     panic_if(pkt->cacheResponding(), "Should not see packets where cache "
              "is responding");
@@ -84,7 +129,7 @@ SimpleMemory::recvAtomic(PacketPtr pkt)
 }
 
 Tick
-SimpleMemory::recvAtomicBackdoor(PacketPtr pkt, MemBackdoorPtr &_backdoor)
+BwRegulatedSimpleMemory::recvAtomicBackdoor(PacketPtr pkt, MemBackdoorPtr &_backdoor)
 {
     Tick latency = recvAtomic(pkt);
     getBackdoor(_backdoor);
@@ -92,7 +137,7 @@ SimpleMemory::recvAtomicBackdoor(PacketPtr pkt, MemBackdoorPtr &_backdoor)
 }
 
 void
-SimpleMemory::recvFunctional(PacketPtr pkt)
+BwRegulatedSimpleMemory::recvFunctional(PacketPtr pkt)
 {
     pkt->pushLabel(name());
 
@@ -110,14 +155,14 @@ SimpleMemory::recvFunctional(PacketPtr pkt)
 }
 
 void
-SimpleMemory::recvMemBackdoorReq(const MemBackdoorReq &req,
+BwRegulatedSimpleMemory::recvMemBackdoorReq(const MemBackdoorReq &req,
         MemBackdoorPtr &_backdoor)
 {
     getBackdoor(_backdoor);
 }
 
 bool
-SimpleMemory::recvTimingReq(PacketPtr pkt)
+BwRegulatedSimpleMemory::recvTimingReq(PacketPtr pkt)
 {
     panic_if(pkt->cacheResponding(), "Should not see packets where cache "
              "is responding");
@@ -144,7 +189,6 @@ SimpleMemory::recvTimingReq(PacketPtr pkt)
     // deserialise the payload before performing any write operation
     Tick receive_delay = pkt->headerDelay + pkt->payloadDelay;
     pkt->headerDelay = pkt->payloadDelay = 0;
-    
 
     // update the release time according to the bandwidth limit, and
     // do so with respect to the time it takes to finish this request
@@ -154,11 +198,16 @@ SimpleMemory::recvTimingReq(PacketPtr pkt)
     // calculate an appropriate tick to release to not exceed
     // the bandwidth limit
     Tick duration = pkt->getSize() * bandwidth;
-    //printf("Bandwidth inside is: %lld\n",bandwidth);
+    //printf("Duration is: %lld packet size is: %lld bandwidth is: %lld\n",duration,pkt->getSize(),bandwidth);
+    isConfReported();
+    getRequestor(pkt);
+    std::cout<<"Requestor ID: "<<pkt->requestorId()<<std::endl;
+
+
     // only consider ourselves busy if there is any need to wait
     // to avoid extra events being scheduled for (infinitely) fast
     // memories
-    if (duration != 0) {
+    if (duration != 0) {                   
         schedule(releaseEvent, curTick() + duration);
         isBusy = true;
     }
@@ -198,7 +247,26 @@ SimpleMemory::recvTimingReq(PacketPtr pkt)
         packetQueue.emplace(++i, pkt, when_to_send);
 
         if (!retryResp && !dequeueEvent.scheduled())
-            schedule(dequeueEvent, packetQueue.back().tick);
+        {
+            if(demand_tokens == 1)
+            {
+                last_empty = curTick();
+            }
+                
+            if(demand_tokens > 0)
+            {
+                --demand_tokens;             
+                schedule(dequeueEvent, packetQueue.back().tick);
+            }
+            else
+            {
+                Tick sched_next_packet = (last_empty+refill_period) - curTick();
+                schedule(consume_demand_token_event,packetQueue.back().tick + sched_next_packet);
+                schedule(dequeueEvent,packetQueue.back().tick + sched_next_packet);
+            }
+
+        }
+            
     } else {
         pendingDelete.reset(pkt);
     }
@@ -207,7 +275,7 @@ SimpleMemory::recvTimingReq(PacketPtr pkt)
 }
 
 void
-SimpleMemory::release()
+BwRegulatedSimpleMemory::release()
 {
     assert(isBusy);
     isBusy = false;
@@ -218,7 +286,7 @@ SimpleMemory::release()
 }
 
 void
-SimpleMemory::dequeue()
+BwRegulatedSimpleMemory::dequeue()
 {
     assert(!packetQueue.empty());
     DeferredPacket deferred_pkt = packetQueue.front();
@@ -236,21 +304,21 @@ SimpleMemory::dequeue()
             reschedule(dequeueEvent,
                        std::max(packetQueue.front().tick, curTick()), true);
         } else if (drainState() == DrainState::Draining) {
-            DPRINTF(Drain, "Draining of SimpleMemory complete\n");
+            DPRINTF(Drain, "Draining of BwRegulatedSimpleMemory complete\n");
             signalDrainDone();
         }
     }
 }
 
 Tick
-SimpleMemory::getLatency() const
+BwRegulatedSimpleMemory::getLatency() const
 {
     return latency +
         (latency_var ? random_mt.random<Tick>(0, latency_var) : 0);
 }
 
 void
-SimpleMemory::recvRespRetry()
+BwRegulatedSimpleMemory::recvRespRetry()
 {
     assert(retryResp);
 
@@ -258,7 +326,7 @@ SimpleMemory::recvRespRetry()
 }
 
 Port &
-SimpleMemory::getPort(const std::string &if_name, PortID idx)
+BwRegulatedSimpleMemory::getPort(const std::string &if_name, PortID idx)
 {
     if (if_name != "port") {
         return AbstractMemory::getPort(if_name, idx);
@@ -268,23 +336,23 @@ SimpleMemory::getPort(const std::string &if_name, PortID idx)
 }
 
 DrainState
-SimpleMemory::drain()
+BwRegulatedSimpleMemory::drain()
 {
     if (!packetQueue.empty()) {
-        DPRINTF(Drain, "SimpleMemory Queue has requests, waiting to drain\n");
+        DPRINTF(Drain, "BwRegulatedSimpleMemory Queue has requests, waiting to drain\n");
         return DrainState::Draining;
     } else {
         return DrainState::Drained;
     }
 }
 
-SimpleMemory::MemoryPort::MemoryPort(const std::string& _name,
-                                     SimpleMemory& _memory)
+BwRegulatedSimpleMemory::MemoryPort::MemoryPort(const std::string& _name,
+                                     BwRegulatedSimpleMemory& _memory)
     : ResponsePort(_name), mem(_memory)
 { }
 
 AddrRangeList
-SimpleMemory::MemoryPort::getAddrRanges() const
+BwRegulatedSimpleMemory::MemoryPort::getAddrRanges() const
 {
     AddrRangeList ranges;
     ranges.push_back(mem.getAddrRange());
@@ -292,39 +360,39 @@ SimpleMemory::MemoryPort::getAddrRanges() const
 }
 
 Tick
-SimpleMemory::MemoryPort::recvAtomic(PacketPtr pkt)
+BwRegulatedSimpleMemory::MemoryPort::recvAtomic(PacketPtr pkt)
 {
     return mem.recvAtomic(pkt);
 }
 
 Tick
-SimpleMemory::MemoryPort::recvAtomicBackdoor(
+BwRegulatedSimpleMemory::MemoryPort::recvAtomicBackdoor(
         PacketPtr pkt, MemBackdoorPtr &_backdoor)
 {
     return mem.recvAtomicBackdoor(pkt, _backdoor);
 }
 
 void
-SimpleMemory::MemoryPort::recvFunctional(PacketPtr pkt)
+BwRegulatedSimpleMemory::MemoryPort::recvFunctional(PacketPtr pkt)
 {
     mem.recvFunctional(pkt);
 }
 
 void
-SimpleMemory::MemoryPort::recvMemBackdoorReq(const MemBackdoorReq &req,
+BwRegulatedSimpleMemory::MemoryPort::recvMemBackdoorReq(const MemBackdoorReq &req,
         MemBackdoorPtr &backdoor)
 {
     mem.recvMemBackdoorReq(req, backdoor);
 }
 
 bool
-SimpleMemory::MemoryPort::recvTimingReq(PacketPtr pkt)
+BwRegulatedSimpleMemory::MemoryPort::recvTimingReq(PacketPtr pkt)
 {
     return mem.recvTimingReq(pkt);
 }
 
 void
-SimpleMemory::MemoryPort::recvRespRetry()
+BwRegulatedSimpleMemory::MemoryPort::recvRespRetry()
 {
     mem.recvRespRetry();
 }

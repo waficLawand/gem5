@@ -53,6 +53,8 @@
 #include "sim/stats.hh"
 #include "sim/system.hh"
 
+#include <string>
+
 namespace gem5
 {
 
@@ -221,10 +223,29 @@ class AbstractMemory : public ClockedObject
 
     PARAMS(AbstractMemory);
     
-    void 
+    int 
     getRequestor(PacketPtr pkt)
     {
-        std::cout<<"Requestor is: "<<_system->getRequestorName(pkt->req->requestorId()).c_str()<<std::endl;
+        std::string requestor = _system->getRequestorName(pkt->req->requestorId()).c_str();
+        size_t start = requestor.find("cpu") + 3; // Find the position of "cpu" and move 3 characters ahead to skip "cpu"
+        size_t end = requestor.find(".", start); // Find the position of the dot after the CPU number
+        
+        if (start == end)
+        {
+            return 0;
+        }
+        else
+        {
+            return std::stoi(requestor.substr(start, end - start)); // Convert the substring to integer and return
+        }
+        
+    }
+
+    bool
+    isPrefetch(PacketPtr pkt)
+    {
+        std::string requestor = _system->getRequestorName(pkt->req->requestorId()).c_str();
+        return requestor.find("prefetcher") != std::string::npos;
     }
 
     AbstractMemory(const Params &p);

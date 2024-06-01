@@ -48,6 +48,19 @@ class LatencyBwRegulatedSimpleMem(AbstractMemory):
     port = ResponsePort("This port sends responses and receives requests")
     latency = Param.Latency("30ns", "Request to response latency")
     latency_var = Param.Latency("0ns", "Request to response latency variance")
+    
+    ######################### Bandwidth Regulation Parameters ##########################
+    prefetch_burstiness = Param.Unsigned(100000,"Size of demand bucket") 
+    demand_burstiness = Param.Unsigned(5000,"Size of prefetch bucket")
+    refill_tokens = Param.Unsigned(5,"Tokens that get added to the demand bucket at every refill period")
+    refill_period = Param.Tick(10000000,"Period at which the bucket gets refilled in Ticks")
+    requestors = Param.Unsigned(4,"Number of memory requestors in the system")
+
+    demand_queue_size = Param.Unsigned(8,"Demand queue size")
+    prefetch_queue_size = Param.Unsigned(8,"Prefetch queue size")
+    requestor_queue_size = Param.Unsigned(8,"Requestor queue size")
+    ####################################################################################
+
     # The memory bandwidth limit default is set to 12.8GiB/s which is
     # representative of a x64 DDR3-1600 channel.
     bandwidth = Param.MemoryBandwidth(

@@ -1,3 +1,3 @@
 
 ../bin/x86/linux/threads: threads.cpp
-	g++ -o ../bin/x86/linux/threads threads.cpp -pthread -std=c++11
+	riscv64-unknown-linux-gnu-g++ -o ../bin/x86/linux/threads threads.cpp -pthread -static -std=c++11

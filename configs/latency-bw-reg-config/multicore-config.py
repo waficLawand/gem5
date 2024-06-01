@@ -39,7 +39,7 @@ from common.FileSystemConfig import config_filesystem
 system = System()
 
 system.clk_domain = SrcClockDomain()
-system.clk_domain.clock = "1GHz"
+system.clk_domain.clock = "3GHz"
 system.clk_domain.voltage_domain = VoltageDomain()
 
 system.mem_mode = "timing"
@@ -48,15 +48,16 @@ system.mem_ranges = [AddrRange("512MB")]
 # Instantiating CPUs
 system.cpu = [RiscvTimingSimpleCPU() for i in range(6)]
 
-# Create a DDR3 memory controller and connect it to the membus
-#system.mem_ctrl = MemCtrl()
-#system.mem_ctrl.dram = DDR3_1600_8x8()
-
-#system.mem_ctrl.dram.range = system.mem_ranges[0]
-
-system.mem_ctrl = SimpleMemory()
+#system.mem_ctrl = SimpleMemory()
+system.mem_ctrl = LatencyBwRegulatedSimpleMem()
+system.mem_ctrl.refill_tokens = 1
+system.mem_ctrl.refill_period = 80000
+system.mem_ctrl.requestors = 6
+system.mem_ctrl.demand_queue_size = 1
+system.mem_ctrl.prefetch_queue_size = 1
+system.mem_ctrl.requestor_queue_size = 1
+print("Queue size: ",system.mem_ctrl.demand_queue_size)
 system.l2bus = L2XBar()
-
 
 print(system.cache_line_size)
 # create the interrupt controller for the CPU and connect to the membus
@@ -71,15 +72,19 @@ for cpu in system.cpu:
     cpu.icache.connectBus(system.l2bus)
     cpu.dcache.connectBus(system.l2bus)
 
+    cpu.dcache.prefetcher = StridePrefetcher()
+    cpu.icache.prefetcher = StridePrefetcher()
+
 
 
 system.l2cache = L2Cache()
-system.l2cache.prefetcher = StridePrefetcher()
+#system.l2cache.prefetcher = StridePrefetcher()
 system.l2cache.connectCPUSideBus(system.l2bus)
 
 
 
 system.membus = SystemXBar()
+print("SystemXbar packet size: ",system.membus.width)
 
 system.l2cache.connectMemSideBus(system.membus)
 

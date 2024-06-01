@@ -47,11 +47,11 @@ from common import SimpleOpts
 class L1Cache(Cache):
     """Simple L1 Cache with default values"""
 
-    assoc = 2
+    assoc = 4
     tag_latency = 2
     data_latency = 2
     response_latency = 2
-    mshrs = 1
+    mshrs = 4
     tgts_per_mshr = 20
 
     def __init__(self, options=None):
@@ -72,7 +72,7 @@ class L1ICache(L1Cache):
     """Simple L1 instruction cache with default values"""
 
     # Set the default size
-    size = "16kB"
+    size = "32kB"
 
     SimpleOpts.add_option(
         "--l1i_size", help="L1 instruction cache size. Default: %s" % size

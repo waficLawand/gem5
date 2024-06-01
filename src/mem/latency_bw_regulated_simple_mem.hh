@@ -47,7 +47,7 @@
 #define __MEM_SIMPLE_MEMORY_HH__
 
 #include <list>
-
+#include <queue>
 #include "mem/abstract_mem.hh"
 #include "mem/port.hh"
 #include "params/LatencyBwRegulatedSimpleMem.hh"
@@ -180,6 +180,8 @@ class LatencyBwRegulatedSimpleMem : public AbstractMemory
     std::unique_ptr<Packet> pendingDelete;
 
   public:
+    
+    void startup() override;
 
     LatencyBwRegulatedSimpleMem(const LatencyBwRegulatedSimpleMemParams &p);
 
@@ -188,6 +190,62 @@ class LatencyBwRegulatedSimpleMem : public AbstractMemory
     Port &getPort(const std::string &if_name,
                   PortID idx=InvalidPortID) override;
     void init() override;
+
+    // #################################### Bandwidth regulation elements ########################################################
+    struct packet_queue_element
+    {
+      PacketPtr pkt;
+      Tick pkt_tick;
+      int requestor_id;
+    };
+    
+    int64_t requestors; // Total number of requestors in the system
+    int64_t demand_burstiness; // Demand bucket size
+    int64_t prefetch_burstiness; // Prefetch bucket size
+
+    int64_t refill_tokens; // Number of tokens that will be filled every refill period
+    Tick refill_period; // How often the demand bucket will be filled (per Tick)
+    Tick last_empty; // Last tick when the bucket got empty
+
+    int64_t * demand_tokens; // Tokens in the demand bucket
+    int64_t * prefetch_tokens; // Tokens in the prefetch bucket
+
+    std::queue<packet_queue_element> * demand_queues_pre_bucket; // Demand Queue for every requestor before the bucket
+    std::queue<packet_queue_element> * demand_queues_post_bucket; // Demand Queue for every requestor after the bucket
+
+    std::queue<packet_queue_element> * prefetch_queues_pre_bucket; // Prefetch Queue for every requestor before the bucket
+    std::queue<packet_queue_element> * prefetch_queues_post_bucket; // Prefetch Queue for every requestor after the bucket
+
+    std::queue<packet_queue_element> * requestor_queues; // Operate in an FCFS manner based on the arrival tick
+    
+    std::queue<packet_queue_element> * global_fcfs_queue; // Global FCFS queue
+    std::queue<packet_queue_element> * global_rr_queue; // Global Round Robin queue
+
+    // Round Robin Queue that keeps track of which requestor can push packets to the memory
+    std::queue<int> round_robin_sched_queue;
+
+
+    int64_t demand_queue_size;
+    int64_t prefetch_queue_size;
+    int64_t requestor_queue_size;
+
+    void consume_demand_token(int requestor);
+    EventFunctionWrapper consume_demand_token_event();
+
+    void bucket_refill();
+    EventFunctionWrapper monitoring_event;
+
+    // Function that loops over all prefetch and demand queues of requestors
+    void handle_pkts_in_req_queues();
+    void handle_pkts_in_queues();
+    EventFunctionWrapper check_requestor_queues;
+
+    bool fulfillReq(PacketPtr pkt,Tick tick);
+
+    void fill_global_fcfs_queue();
+    void fill_global_rr_queue();
+
+    // #################################### Bandwidth regulation elements ########################################################
 
   protected:
     Tick recvAtomic(PacketPtr pkt);

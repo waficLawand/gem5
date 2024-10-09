@@ -53,8 +53,9 @@ namespace memory
 LatencyBwRegulatedSimpleMem::LatencyBwRegulatedSimpleMem(const LatencyBwRegulatedSimpleMemParams &p) :
     AbstractMemory(p),
     port(name() + ".port", *this), latency(p.latency),
-    latency_var(p.latency_var), bandwidth(p.bandwidth), isBusy(false),
+    latency_var(p.latency_var), bandwidth(p.bandwidth), isBusy(false), 
     retryReq(false), retryResp(false), 
+    hpa_mode(true),
     demand_burstiness(p.demand_burstiness),
     prefetch_burstiness(p.prefetch_burstiness),
     refill_tokens(p.refill_tokens),
@@ -63,10 +64,20 @@ LatencyBwRegulatedSimpleMem::LatencyBwRegulatedSimpleMem(const LatencyBwRegulate
     demand_queue_size(p.demand_queue_size),
     prefetch_queue_size(p.prefetch_queue_size),
     requestor_queue_size(p.requestor_queue_size),
+    initial_slack(p.initial_slack),
+    ticks_per_cycle(p.ticks_per_cycle),
+    start_with_full_buckets(p.start_with_full_buckets),
+    enable_bw_regulation(p.enable_bw_regulation),
+    is_fcfs(p.is_fcfs),
     releaseEvent([this]{ release(); }, name()),
     dequeueEvent([this]{ dequeue(); }, name()),
-    check_requestor_queues([this]{ handle_pkts_in_req_queues(); }, name()),
-    monitoring_event([this]{bucket_refill();},name())
+    monitoring_event([this]{bucket_refill();},name()),
+    //arbiter_mode_event([this]{switch_arbiter_mode();},name()),
+    //update_resource_counters([this]{add_sub_counters();},name()),
+    handle_fcfs([this]{handle_global_fcfs();},name()),
+    fill_global_fcfs([this]{fill_global_fcfs_queue();},name()),
+    handle_pkts([this]{handle_pkts_in_queues();},name()),
+    rr_arbitration([this]{fill_global_rr_queue();},name())
 {
     demand_tokens = new int64_t[requestors];
     prefetch_tokens = new int64_t[requestors];
@@ -79,19 +90,27 @@ LatencyBwRegulatedSimpleMem::LatencyBwRegulatedSimpleMem(const LatencyBwRegulate
 
     requestor_queues = new std::queue<packet_queue_element>[requestors];
 
+    latency_counters = new int64_t[requestors];
+
     global_fcfs_queue = new std::queue<packet_queue_element>;
     global_rr_queue = new std::queue<packet_queue_element>;
-
-
-
-
 
     // Initializing demand and prefetch token buckets with zeros
     for(int i = 0; i < requestors; ++i)
     {
-        round_robin_sched_queue.push(i);
-        prefetch_tokens[i] = 0;
-        demand_tokens[i] = 0;
+        round_robin_sched_queue.push(i); // Initialize the round robin queue
+        latency_counters[i] = initial_slack; // Initialize all latency counters with the slack value
+        if(start_with_full_buckets)
+        {
+            prefetch_tokens[i] = prefetch_burstiness;
+            demand_tokens[i] = demand_burstiness;
+        }
+        else
+        {
+            prefetch_tokens[i] = 0;
+            demand_tokens[i] = 0;
+        }
+
     }
 
     std::queue<int> tempQueue = round_robin_sched_queue; // Make a copy of the queue
@@ -101,6 +120,8 @@ LatencyBwRegulatedSimpleMem::LatencyBwRegulatedSimpleMem(const LatencyBwRegulate
     }
     std::cout << std::endl;
 }
+
+
 
 void
 LatencyBwRegulatedSimpleMem::init()
@@ -118,8 +139,66 @@ void
 LatencyBwRegulatedSimpleMem::startup()
 {
     schedule(monitoring_event,curTick());
-    schedule(check_requestor_queues,curTick());
+    //schedule(arbiter_mode_event,curTick());
+    //schedule(update_resource_counters,curTick());
+    //schedule(handle_fcfs,curTick());
+    schedule(handle_pkts,curTick());
+    if(is_fcfs)
+    {
+        schedule(fill_global_fcfs,curTick());
+    }
+    else
+    {
+        //schedule(rr_arbitration,curTick());
+    }
+
+    
 }
+
+/*void
+LatencyBwRegulatedSimpleMem::add_sub_counters()
+{
+    // Iterate through the finished list and process each element
+    for (auto it = finished_list.begin(); it != finished_list.end(); ) 
+    {
+        // Add relative deadline to the requestor's latency counter
+        latency_counters[it->requestor_id] += it->relative_deadline;
+
+        // Erase the element and move to the next one
+        it = finished_list.erase(it);
+    }
+
+    // If there are outstanding requests, subtract one from the resources counter
+    for(int requestor = 0; requestor < requestors; ++requestor)
+    {  
+        if(demand_queues_post_bucket[requestor].size() > 0)
+        {
+            latency_counters[requestor] -= 1;    
+        }
+    }
+    
+    schedule(update_resource_counters, ticks_per_cycle + curTick());
+
+}*/
+
+/*void
+LatencyBwRegulatedSimpleMem::switch_arbiter_mode()
+{
+    for(int requestor = 0; requestor < requestors; ++requestor)
+    {   
+        // Switch to RTA
+        if(latency_counters[requestor] <= 0)
+        {
+            hpa_mode = false;
+            schedule(arbiter_mode_event,ticks_per_cycle + curTick());
+            return;
+        }
+    }
+    // Switch to HPA
+    hpa_mode = true;
+    schedule(arbiter_mode_event,ticks_per_cycle + curTick());
+}*/
+
 
 void
 LatencyBwRegulatedSimpleMem::consume_demand_token(int requestor)
@@ -147,15 +226,48 @@ LatencyBwRegulatedSimpleMem::bucket_refill()
             // Case with no token excess
             demand_tokens[requestor] = demand_tokens[requestor] + refill_tokens;
         }
-        printf("##################################################\n");
+        /*printf("##################################################\n");
         printf("Current Regulation Tick is: %lld\n",curr_tick);
         printf("Demand Bucket Tokens: %d\n",demand_tokens[requestor]);
         printf("Prefetch Bucket Tokens: %d\n",prefetch_tokens[requestor]);
+        */    
     }
 
 
-    schedule(monitoring_event, curTick() + refill_period);
+    schedule(monitoring_event, curTick() + refill_period*ticks_per_cycle);
     
+}
+
+void
+LatencyBwRegulatedSimpleMem::handle_global_fcfs()
+{
+    if(global_fcfs_queue->size() > 0)
+    {
+        PacketPtr next_packet = global_fcfs_queue->front().pkt;
+        
+        //std::cout<<"About to process packet from: "<<global_fcfs_queue->front().requestor_id<<std::endl;
+        //std::cout<<"Packet address is "<<global_fcfs_queue->front().pkt->getAddr()<<std::endl;
+
+        bool packet_processed = fulfillReq(next_packet);
+
+        //std::cout<<"Processed!\n";
+
+        // Check if packet was successfully delivered
+        if(packet_processed)
+        {
+            // If so pop the packet from the queue
+           
+            global_fcfs_queue->pop();
+        }
+        else
+        {
+            //std::cout<<"FAILED\n";
+        }
+    }
+
+
+    schedule(handle_fcfs,curTick()+ticks_per_cycle);
+
 }
 
 void
@@ -170,7 +282,7 @@ LatencyBwRegulatedSimpleMem::fill_global_fcfs_queue()
     for(int requestor = 0; requestor < requestors; ++requestor)
     {
         // Packets exist in prefetch and demand queues
-        if(demand_queues_post_bucket[requestor].size() > 0 && prefetch_queues_post_bucket[requestor].size()>0)
+        if(demand_queues_post_bucket[requestor].size() > 0 && prefetch_queues_post_bucket[requestor].size() > 0)
         {
             Tick most_recent_demand = demand_queues_post_bucket[requestor].front().pkt_tick ;
             Tick most_recent_prefetch = prefetch_queues_post_bucket[requestor].front().pkt_tick;
@@ -218,13 +330,33 @@ LatencyBwRegulatedSimpleMem::fill_global_fcfs_queue()
         
     }
 
-    if (most_recent_global != NULL)
+    if (most_recent_packet != NULL)
     {
+        //std::cout<<"Packet pushed is requested by: "<< most_recent_packet->requestor_id<<std::endl;
+
         // Push most recent packet to the global FCFS queue
-        global_fcfs_queue->push(*most_recent_packet);
+        //global_fcfs_queue->push(*most_recent_packet);
+
+        bool result = fulfillReq(most_recent_packet->pkt); 
+
+        if(result)
+        {
+            if(isPrefetch(most_recent_packet->pkt))
+            {
+                //std::cout<<"Prefetch Packet poped!"<<std::endl;
+                prefetch_queues_post_bucket[most_recent_packet->requestor_id].pop();
+            }
+            else
+            {
+                std::cout<<"Core "<<most_recent_packet->requestor_id<<" processed address: "<<demand_queues_post_bucket[most_recent_packet->requestor_id].front().pkt->getAddr()<<" at tick: "<<curTick()<<std::endl;
+                demand_queues_post_bucket[most_recent_packet->requestor_id].pop();
+                //std::cout<<"Demand Packet poped!"<<std::endl;
+            }
+        }
+
     }
 
-
+    schedule(fill_global_fcfs,curTick()+ticks_per_cycle);
 }
 
 void
@@ -236,144 +368,31 @@ LatencyBwRegulatedSimpleMem::fill_global_rr_queue()
     if(demand_queues_post_bucket[curr_turn].size() != 0)
     {
         // Push packet to the global Round Robin Queue
-        global_rr_queue->push(demand_queues_post_bucket[curr_turn].front());
+        //global_rr_queue->push(demand_queues_post_bucket[curr_turn].front());
+        PacketPtr packet = demand_queues_post_bucket[curr_turn].front().pkt;
+
+        bool result = fulfillReq(packet);
+
+        if(result)
+        {
+            std::cout<<"Core "<<curr_turn<<" processed address: "<<demand_queues_post_bucket[curr_turn].front().pkt->getAddr()<<" at tick: "<<curTick()<<std::endl;
+            demand_queues_post_bucket[curr_turn].pop();
+            
+        }
+        else
+        {
+            schedule(rr_arbitration,curTick()+ticks_per_cycle);
+            return;
+        }
     }
 
     // Pop curr turn from the queue and push it to the end of the RR queue
     round_robin_sched_queue.pop();
     round_robin_sched_queue.push(curr_turn);
 
+    schedule(rr_arbitration,curTick()+ticks_per_cycle);
+
 }
-
-/*void
-LatencyBwRegulatedSimpleMem::handle_pkts_in_req_queues()
-{
-    for(int requestor = 0; requestor < requestors; ++requestor)
-    {
-        packet_queue_element fcfs_pkt;
-        fcfs_pkt.pkt = NULL;
-        bool is_demand = true;
-
-        if(demand_queues[requestor].size() != 0 && prefetch_queues[requestor].size() != 0 )
-        {
-            if(demand_queues[requestor].front().pkt_tick < prefetch_queues[requestor].front().pkt_tick && demand_tokens[requestor] > 0)
-            {
-                fcfs_pkt = demand_queues[requestor].front();
-                is_demand = true;
-                std::cout<<"ONE\n";
-            }
-            else if (prefetch_tokens[requestor] > 0)
-            {
-                fcfs_pkt = prefetch_queues[requestor].front();
-                is_demand = false;
-                std::cout<<"TWO\n";
-            }
-        }
-        else if(demand_queues[requestor].size() != 0 && demand_tokens[requestor] > 0)
-        {
-            fcfs_pkt = demand_queues[requestor].front();
-            is_demand = true;
-            std::cout<<"THREE\n";
-        }
-        else if(prefetch_queues[requestor].size() != 0 && prefetch_tokens[requestor] > 0)
-        {
-            fcfs_pkt = prefetch_queues[requestor].front();
-            is_demand = false;
-            std::cout<<"FOUR\n";
-        }
-        else
-        {
-            fcfs_pkt.pkt = NULL;
-        }
-
-        if(fcfs_pkt.pkt != NULL && requestor_queues[requestor].size() != requestor_queue_size)
-        {
-
-            requestor_queues[requestor].push(fcfs_pkt);
-
-            if(is_demand)
-            {
-                --demand_tokens[requestor];
-                demand_queues[requestor].pop();
-                std::cout<<"SIX\n";
-            }
-            else
-            {
-                --prefetch_tokens[requestor];
-                prefetch_queues[requestor].pop();
-                std::cout<<"SEVEN\n";
-            }
-        }
-    }
-    if(retryReq)
-    {
-        retryReq = false;
-        port.sendRetryReq();
-    }
-    // Round Robin Arbitration
-    int curr_turn = round_robin_sched_queue.front();
-    
-
-    round_robin_sched_queue.pop();
-
-    if(requestor_queues[curr_turn].size() != 0)
-    {
-        std::cout<<"CURRENT REQUESTOR IS:"<<curr_turn<<std::endl;
-        std::cout<<"HERE\n";
-        PacketPtr pkt = requestor_queues[curr_turn].front().pkt;
-
-
-        //Tick pktTick = requestor_queues[curr_turn].front().pkt_tick;
-        Tick pktTick = curTick();
-        std::cout<<"HERE2\n";
-        bool packet_pushed = fulfillReq(pkt,pktTick);
-        std::cout<<"EIGHT\n";
-        if (packet_pushed)
-        {
-            requestor_queues[curr_turn].pop();
-            std::cout<<"NINE\n";
-                //std::cout<<"TEN\n";
-        std::queue<int> tempQueue = round_robin_sched_queue; // Make a copy of the queue
-    while (!tempQueue.empty()) {
-        std::cout << tempQueue.front() << " ";
-        tempQueue.pop();
-    }
-    std::cout << std::endl;
-        }
-    }
-
-
-
-    round_robin_sched_queue.push(curr_turn);
-
-
-
-
-    //std::cout<<"ELEVEN\n";
-
-
-
-    for(int requestor = 0; requestor < requestors; ++requestor)
-    {
-        if(demand_queues[requestor].size() != 0 && demand_tokens[requestor] > 0)
-        {
-
-            std::cout<<"CPU"<<requestor<<" releasing a demand request!"<<std::endl;
-            PacketPtr demand_pkt = demand_queues[requestor].front().pkt;
-            //Tick curTick = demand_queues[requestor].front().pkt_tick;
-            Tick tick = curTick();
-            bool packet_pushed = fulfillReq(demand_pkt,tick);
-
-            if (packet_pushed)
-            {
-                demand_queues[requestor].pop();
-                --demand_tokens[requestor];
-            }
-        }
-    }
-    // Check queues every tick
-    schedule(check_requestor_queues, curTick() + 1 );
-}*/
 
 void
 LatencyBwRegulatedSimpleMem::handle_pkts_in_queues()
@@ -386,13 +405,16 @@ LatencyBwRegulatedSimpleMem::handle_pkts_in_queues()
             if(demand_tokens[requestor] > 0)
             {
                 /*TODO Check for queue size if needed in the future. Right now, we assume that queues will not overflow*/
-                demand_tokens--;
+                if(enable_bw_regulation)
+                    demand_tokens[requestor]--;
 
                 // Extract the front element in the queue
                 packet_queue_element front_pkt = demand_queues_pre_bucket[requestor].front();
                 
                 // Push pkt to post bucket queue
-                demand_queues_post_bucket->push(front_pkt);
+                demand_queues_post_bucket[requestor].push(front_pkt);
+
+                std::cout<<"Core "<<requestor<<" requested address: "<<front_pkt.pkt->getAddr()<<" at tick: "<<curTick()<<std::endl;
                 
                 // Pop the element from the pre bucket queue
                 demand_queues_pre_bucket[requestor].pop();
@@ -405,7 +427,8 @@ LatencyBwRegulatedSimpleMem::handle_pkts_in_queues()
             if(prefetch_tokens[requestor] > 0)
             {
                 /*TODO Check for queue size if needed in the future. Right now, we assume that queues will not overflow*/
-                prefetch_tokens--;
+                if(enable_bw_regulation)
+                    prefetch_tokens[requestor]--;
                 
                 // Extract the front element in the queue
                 packet_queue_element front_pkt = prefetch_queues_pre_bucket[requestor].front();
@@ -418,6 +441,7 @@ LatencyBwRegulatedSimpleMem::handle_pkts_in_queues()
             }
         }
     }
+    schedule(handle_pkts,curTick()+ticks_per_cycle);
 }
 
 Tick
@@ -464,11 +488,10 @@ LatencyBwRegulatedSimpleMem::recvMemBackdoorReq(const MemBackdoorReq &req,
 }
 
 bool 
-LatencyBwRegulatedSimpleMem::fulfillReq(PacketPtr pkt,Tick tick)
+LatencyBwRegulatedSimpleMem::fulfillReq(PacketPtr pkt)
 {
     panic_if(pkt->cacheResponding(), "Should not see packets where cache "
              "is responding");
-
     panic_if(!(pkt->isRead() || pkt->isWrite()),
              "Should only see read and writes at memory controller, "
              "saw %s to %#llx\n", pkt->cmdString(), pkt->getAddr());
@@ -493,7 +516,6 @@ LatencyBwRegulatedSimpleMem::fulfillReq(PacketPtr pkt,Tick tick)
     // deserialise the payload before performing any write operation
     Tick receive_delay = pkt->headerDelay + pkt->payloadDelay;
     pkt->headerDelay = pkt->payloadDelay = 0;
-    
 
     // update the release time according to the bandwidth limit, and
     // do so with respect to the time it takes to finish this request
@@ -509,10 +531,9 @@ LatencyBwRegulatedSimpleMem::fulfillReq(PacketPtr pkt,Tick tick)
     // to avoid extra events being scheduled for (infinitely) fast
     // memories
     if (duration != 0) {
-        schedule(releaseEvent, tick + duration);
+        schedule(releaseEvent, curTick() + duration);
         isBusy = true;
     }
-
     // go ahead and deal with the packet and put the response in the
     // queue if there is one
     bool needsResponse = pkt->needsResponse();
@@ -525,22 +546,32 @@ LatencyBwRegulatedSimpleMem::fulfillReq(PacketPtr pkt,Tick tick)
         // atomic response
         assert(pkt->isResponse());
 
-        Tick when_to_send = tick + receive_delay + getLatency();
-
-        // typically this should be added at the end, so start the
-        // insertion sort with the last element, also make sure not to
-        // re-order in front of some existing packet with the same
-        // address, the latter is important as this memory effectively
-        // hands out exclusive copies (shared is not asserted)
-        auto i = packetQueue.end();
-        --i;
-        while (i != packetQueue.begin() && when_to_send < i->tick &&
-               !i->pkt->matchAddr(pkt))
+        Tick when_to_send = curTick() + receive_delay + getLatency();
+        if(is_fcfs)
+        {
+            // typically this should be added at the end, so start the
+            // insertion sort with the last element, also make sure not to
+            // re-order in front of some existing packet with the same
+            // address, the latter is important as this memory effectively
+            // hands out exclusive copies (shared is not asserted)
+            auto i = packetQueue.end();
             --i;
+            while (i != packetQueue.begin() && when_to_send < i->tick &&
+                !i->pkt->matchAddr(pkt))
+                --i;
 
-        // emplace inserts the element before the position pointed to by
-        // the iterator, so advance it one step
-        packetQueue.emplace(++i, pkt, when_to_send);
+            // emplace inserts the element before the position pointed to by
+            // the iterator, so advance it one step
+            packetQueue.emplace(++i, pkt, when_to_send);
+        }
+
+        else
+        {
+            auto i = packetQueue.end();
+            packetQueue.emplace(i, pkt, when_to_send);
+
+        }
+
 
         if (!retryResp && !dequeueEvent.scheduled())
             schedule(dequeueEvent, packetQueue.back().tick);
@@ -560,16 +591,21 @@ LatencyBwRegulatedSimpleMem::recvTimingReq(PacketPtr pkt)
     panic_if(!(pkt->isRead() || pkt->isWrite()),
              "Should only see read and writes at memory controller, "
              "saw %s to %#llx\n", pkt->cmdString(), pkt->getAddr());
-
+    
+    //std::cout<<"Requestor is "<<_system->getRequestorName(pkt->req->requestorId()).c_str()<<std::endl;
+    
     if(isPrefetch(pkt))
     {
         if(prefetch_queues_pre_bucket[getRequestor(pkt)].size() < prefetch_queue_size)
         {
-            std::cout<<"PREFETCH PACKET PUSHED!"<<std::endl;
+            //std::cout<<"PREFETCH PACKET PUSHED!"<<std::endl;
+            
             // Create a queue element 
-            packet_queue_element queue_element{pkt,curTick(),getRequestor(pkt)};
+            packet_queue_element queue_element{pkt,curTick(),getRequestor(pkt),10};
+            
             // Push the element into the prefetch queue
             prefetch_queues_pre_bucket[getRequestor(pkt)].push(queue_element);
+            
             return true;
         }
         else
@@ -583,11 +619,14 @@ LatencyBwRegulatedSimpleMem::recvTimingReq(PacketPtr pkt)
     {
         if(demand_queues_pre_bucket[getRequestor(pkt)].size() < demand_queue_size)
         {
-            std::cout<<"DEMAND PACKET PUSHED! from requestor: "<<getRequestor(pkt)<<" queue size is: "<<demand_queues_pre_bucket[getRequestor(pkt)].size() << "ACTUAL LIMIT: "<<demand_queue_size<<std::endl;
+            //std::cout<<"DEMAND PACKET PUSHED! from requestor: "<<getRequestor(pkt)<<" queue size is: "<<demand_queues_pre_bucket[getRequestor(pkt)].size() << "ACTUAL LIMIT: "<<demand_queue_size<<std::endl;
+            
             // Create a queue element 
-            packet_queue_element queue_element{pkt,curTick(),getRequestor(pkt)};
+            packet_queue_element queue_element{pkt,curTick(),getRequestor(pkt),10};
+            
             // Push the element into the demand queue
             demand_queues_pre_bucket[getRequestor(pkt)].push(queue_element);
+            
             return true;
         }        
            

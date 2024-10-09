@@ -49,6 +49,8 @@
 #include <cassert>
 #include <cstdint>
 #include <string>
+#include <map>
+#include <vector>
 
 #include "base/addr_range.hh"
 #include "base/compiler.hh"
@@ -115,6 +117,12 @@ class BaseCache : public ClockedObject
         Blocked_NoTargets,
         NUM_BLOCKED_CAUSES
     };
+
+    // Way based partitioning policy mask
+    std::map<int, std::vector<int>> way_mask;
+
+
+
 
   protected:
 

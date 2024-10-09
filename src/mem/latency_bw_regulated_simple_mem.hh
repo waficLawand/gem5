@@ -52,6 +52,7 @@
 #include "mem/port.hh"
 #include "params/LatencyBwRegulatedSimpleMem.hh"
 
+
 namespace gem5
 {
 
@@ -197,6 +198,7 @@ class LatencyBwRegulatedSimpleMem : public AbstractMemory
       PacketPtr pkt;
       Tick pkt_tick;
       int requestor_id;
+      int relative_deadline;
     };
     
     int64_t requestors; // Total number of requestors in the system
@@ -209,6 +211,14 @@ class LatencyBwRegulatedSimpleMem : public AbstractMemory
 
     int64_t * demand_tokens; // Tokens in the demand bucket
     int64_t * prefetch_tokens; // Tokens in the prefetch bucket
+
+    int64_t * latency_counters; // Array of counters that keep track of the suffered latency by each requestor
+
+    int64_t initial_slack; // Initial slack that all the counters are initialized with
+
+    int64_t ticks_per_cycle; // Number of ticks per cycle
+
+    bool hpa_mode; // High performance arbiter mode, when this is true we are in HPA mode when this is false we are in RTA mode
 
     std::queue<packet_queue_element> * demand_queues_pre_bucket; // Demand Queue for every requestor before the bucket
     std::queue<packet_queue_element> * demand_queues_post_bucket; // Demand Queue for every requestor after the bucket
@@ -224,6 +234,9 @@ class LatencyBwRegulatedSimpleMem : public AbstractMemory
     // Round Robin Queue that keeps track of which requestor can push packets to the memory
     std::queue<int> round_robin_sched_queue;
 
+    // List for finished requests, this list is used to add to the counters the deadline of memory requests when they finish
+    std::list<packet_queue_element> finished_list;
+
 
     int64_t demand_queue_size;
     int64_t prefetch_queue_size;
@@ -235,15 +248,37 @@ class LatencyBwRegulatedSimpleMem : public AbstractMemory
     void bucket_refill();
     EventFunctionWrapper monitoring_event;
 
-    // Function that loops over all prefetch and demand queues of requestors
-    void handle_pkts_in_req_queues();
     void handle_pkts_in_queues();
-    EventFunctionWrapper check_requestor_queues;
+    EventFunctionWrapper handle_pkts;
 
-    bool fulfillReq(PacketPtr pkt,Tick tick);
+    bool fulfillReq(PacketPtr pkt);
 
+    // Functions that fill the global queues based of FCFS and RR
     void fill_global_fcfs_queue();
+    EventFunctionWrapper fill_global_fcfs;
+
     void fill_global_rr_queue();
+    EventFunctionWrapper rr_arbitration;
+
+    // Event that will switch from HPA to RTA or vice versa
+    //EventFunctionWrapper arbiter_mode_event;
+    void switch_arbiter_mode();
+
+    // Event to update resource counters, add on finish and subtract when the request is still being processed
+    //EventFunctionWrapper update_resource_counters;
+    void add_sub_counters();
+
+    EventFunctionWrapper handle_fcfs;
+    void handle_global_fcfs();
+
+    bool start_with_full_buckets; // Start with full buckets
+
+    bool enable_bw_regulation;
+    
+    // TODO Requires a cleaner solution this is just for testing
+    bool is_fcfs;
+
+    //
 
     // #################################### Bandwidth regulation elements ########################################################
 

@@ -175,7 +175,7 @@ class SectorTags : public BaseTags
      */
     CacheBlk* findVictim(Addr addr, const bool is_secure,
                          const std::size_t size,
-                         std::vector<CacheBlk*>& evict_blks) override;
+                         std::vector<CacheBlk*>& evict_blks, std::map<int, std::vector<int>> way_mask, int requestor) override;
 
     /**
      * Calculate a block's offset in a sector from the address.

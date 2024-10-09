@@ -47,6 +47,7 @@
 #define __MEM_SIMPLE_MEMORY_HH__
 
 #include <list>
+#include <queue>
 
 #include "mem/abstract_mem.hh"
 #include "mem/port.hh"
@@ -194,9 +195,19 @@ class BwRegulatedSimpleMemory : public AbstractMemory
 
     // #################################### Bandwidth regulation elements ########################################################
     
-    int64_t demand_tokens = 0; // Tokens in the demand bucket
-    int64_t prefetch_tokens = 0; // Tokens in the prefetch bucket
+    struct packet_queue_element
+    {
+      PacketPtr pkt;
+      Tick pkt_tick;
+      int requestor_id;
+      int relative_deadline;
+    };
     
+    int64_t demand_queue_size;
+    int64_t prefetch_queue_size;
+    //int64_t ticks_per_cycle;
+
+    int64_t requestors; // Total number of requestors in the system
     int64_t demand_burstiness; // Demand bucket size
     int64_t prefetch_burstiness; // Prefetch bucket size
 
@@ -204,12 +215,32 @@ class BwRegulatedSimpleMemory : public AbstractMemory
     Tick refill_period; // How often the demand bucket will be filled (per Tick)
     Tick last_empty; // Last tick when the bucket got empty
 
+    int64_t * demand_tokens; // Tokens in the demand bucket
+    int64_t * prefetch_tokens; // Tokens in the prefetch bucket
+
+    //int64_t * latency_counters; // Array of counters that keep track of the suffered latency by each requestor
+
+    //int64_t initial_slack; // Initial slack that all the counters are initialized with
+
+    //int64_t ticks_per_cycle; // Number of ticks per cycle
+
+
     void consume_demand_token();
     EventFunctionWrapper consume_demand_token_event;
 
     void bucket_refill();
     EventFunctionWrapper monitoring_event;
 
+    bool fulfillRequest(PacketPtr pkt);
+
+    std::queue<packet_queue_element> * demand_queues_pre_bucket; // Demand Queue for every requestor before the bucket
+    std::queue<packet_queue_element> * demand_queues_post_bucket; // Demand Queue for every requestor after the bucket
+
+    std::queue<packet_queue_element> * prefetch_queues_pre_bucket; // Prefetch Queue for every requestor before the bucket
+    std::queue<packet_queue_element> * prefetch_queues_post_bucket; // Prefetch Queue for every requestor after the bucket
+
+    void handle_pkts_in_queues();
+    EventFunctionWrapper handle_pkts;
     // #################################### Bandwidth regulation elements ########################################################
 
   protected:

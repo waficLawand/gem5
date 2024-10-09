@@ -34,6 +34,7 @@ line options from each individual class.
 
 import m5
 from m5.objects import Cache
+from m5.objects import *
 
 # Add the common scripts to our path
 m5.util.addToPath("../")
@@ -51,8 +52,9 @@ class L1Cache(Cache):
     tag_latency = 2
     data_latency = 2
     response_latency = 2
-    mshrs = 4
+    mshrs = 32
     tgts_per_mshr = 20
+    #demand_mshr_reserve = 20
 
     def __init__(self, options=None):
         super(L1Cache, self).__init__()
@@ -93,7 +95,7 @@ class L1DCache(L1Cache):
     """Simple L1 data cache with default values"""
 
     # Set the default size
-    size = "64kB"
+    size = "32kB"
 
     SimpleOpts.add_option(
         "--l1d_size", help="L1 data cache size. Default: %s" % size
@@ -115,12 +117,14 @@ class L2Cache(Cache):
 
     # Default parameters
     size = "256kB"
-    assoc = 8
+    assoc = 16
     tag_latency = 20
     data_latency = 20
     response_latency = 20
-    mshrs = 20
+    mshrs =64
+    #demand_mshr_reserve = 32
     tgts_per_mshr = 12
+    tags = WayBasedSetAssoc()
 
     SimpleOpts.add_option(
         "--l2_size", help="L2 cache size. Default: %s" % size

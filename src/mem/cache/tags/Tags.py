@@ -95,6 +95,20 @@ class BaseSetAssoc(BaseTags):
     )
 
 
+class WayBasedSetAssoc(BaseTags):
+    type = "WayBasedSetAssoc"
+    cxx_header = "mem/cache/tags/way_based_set_assoc.hh"
+    cxx_class = "gem5::WayBasedSetAssoc"
+
+    # Get the cache associativity
+    assoc = Param.Int(Parent.assoc, "associativity")
+
+    # Get replacement policy from the parent (cache)
+    replacement_policy = Param.BaseReplacementPolicy(
+        Parent.replacement_policy, "Replacement policy"
+    )
+
+
 class SectorTags(BaseTags):
     type = "SectorTags"
     cxx_header = "mem/cache/tags/sector_tags.hh"

@@ -50,6 +50,8 @@
 #include <cstdint>
 #include <functional>
 #include <string>
+#include <map>
+#include <vector>
 
 #include "base/callback.hh"
 #include "base/logging.hh"
@@ -280,7 +282,7 @@ class BaseTags : public ClockedObject
      */
     virtual CacheBlk* findVictim(Addr addr, const bool is_secure,
                                  const std::size_t size,
-                                 std::vector<CacheBlk*>& evict_blks) = 0;
+                                 std::vector<CacheBlk*>& evict_blks, std::map<int, std::vector<int>> way_mask, int requestor) = 0;
 
     /**
      * Access block and update replacement data. May not succeed, in which case

@@ -53,6 +53,7 @@
 #include "debug/CacheRepl.hh"
 #include "debug/CacheVerbose.hh"
 #include "debug/HWPrefetch.hh"
+#include "mem/abstract_mem.hh"
 #include "mem/cache/compressors/base.hh"
 #include "mem/cache/mshr.hh"
 #include "mem/cache/prefetch/base.hh"
@@ -136,6 +137,17 @@ BaseCache::BaseCache(const BaseCacheParams &p, unsigned blk_size)
         "Compressed cache %s does not have a compression algorithm", name());
     if (compressor)
         compressor->setCache(this);
+    
+    // TODO make it more modular
+    // Fill the way mask based on the cache architecture, we assume 16 ways, 8 cores, 2 ways per core
+    way_mask[0] = {0,1};
+    way_mask[1] = {2,3};
+    way_mask[2] = {4,5};
+    way_mask[3] = {6,7};
+    way_mask[4] = {8,9};
+    way_mask[5] = {10,11};
+    way_mask[6] = {12,13};
+    way_mask[7] = {14,15};
 }
 
 BaseCache::~BaseCache()
@@ -1030,8 +1042,29 @@ BaseCache::updateCompressionData(CacheBlk *&blk, const uint64_t* data,
         bool victim_itself = false;
         CacheBlk *victim = nullptr;
         if (replaceExpansions || is_data_contraction) {
+            std::string requestor = system->getRequestorName(blk->getSrcRequestorId()).c_str();
+            size_t start = requestor.find("cpu") + 3; // Find the position of "cpu" and move 3 characters ahead to skip "cpu"
+            size_t end = requestor.find(".", start); // Find the position of the dot after the CPU number
+    
+            int requestor_int;
+
+            if (requestor == "writebacks")
+            {
+                requestor_int = 0;
+            }
+            
+            if (start == end)
+            {
+                requestor_int = 0;
+            }
+            else
+            {
+                std::cout<<"Block!\n";
+                requestor_int = std::stoi(requestor.substr(start, end - start)); // Convert the substring to integer and return
+            }
+
             victim = tags->findVictim(regenerateBlkAddr(blk),
-                blk->isSecure(), compression_size, evict_blks);
+                blk->isSecure(), compression_size, evict_blks,way_mask,requestor_int);
 
             // It is valid to return nullptr if there is no victim
             if (!victim) {
@@ -1642,8 +1675,34 @@ BaseCache::allocateBlock(const PacketPtr pkt, PacketList &writebacks)
 
     // Find replacement victim
     std::vector<CacheBlk*> evict_blks;
+    std::map<int, std::vector<int>> myMap;
+    
+    std::string requestor = system->getRequestorName(pkt->req->requestorId()).c_str();
+    //std::cout<<requestor<<std::endl;
+    size_t start = requestor.find("cpu") + 3; // Find the position of "cpu" and move 3 characters ahead to skip "cpu"
+    size_t end = requestor.find(".", start); // Find the position of the dot after the CPU number
+    
+    int requestor_int;
+
+    if (requestor == "writebacks")
+    {
+        requestor_int = 0;
+    }
+    
+    else if (start == end)
+    {
+        requestor_int = 0;
+    }
+    else
+    {
+        //std::cout<<"Packet!\n";
+        requestor_int = std::stoi(requestor.substr(start, end - start)); // Convert the substring to integer and return
+    }
+
+    //std::cout<<requestor_int<<std::endl;
+
     CacheBlk *victim = tags->findVictim(addr, is_secure, blk_size_bits,
-                                        evict_blks);
+                                        evict_blks,way_mask,requestor_int);
 
     // It is valid to return nullptr if there is no victim
     if (!victim)

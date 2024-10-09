@@ -50,6 +50,8 @@
 #include <functional>
 #include <string>
 #include <vector>
+#include <map>
+
 
 #include "base/logging.hh"
 #include "base/types.hh"
@@ -167,7 +169,7 @@ class BaseSetAssoc : public BaseTags
      */
     CacheBlk* findVictim(Addr addr, const bool is_secure,
                          const std::size_t size,
-                         std::vector<CacheBlk*>& evict_blks) override
+                         std::vector<CacheBlk*>& evict_blks, std::map<int, std::vector<int>> way_mask, int requestor) override
     {
         // Get possible entries to be victimized
         const std::vector<ReplaceableEntry*> entries =

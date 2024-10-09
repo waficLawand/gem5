@@ -62,12 +62,32 @@ BwRegulatedSimpleMemory::BwRegulatedSimpleMemory(const BwRegulatedSimpleMemoryPa
     prefetch_burstiness(p.prefetch_burstiness),
     refill_tokens(p.refill_tokens),
     refill_period(p.refill_period),
+    requestors(p.requestors),
+    demand_queue_size(p.demand_queue_size),
+    prefetch_queue_size(p.prefetch_queue_size),
+    //ticks_per_cycle(p.ticks_per_cycle),
     releaseEvent([this]{ release(); }, name()),
     dequeueEvent([this]{ dequeue(); }, name()),
     monitoring_event([this]{bucket_refill();},name()),
-    consume_demand_token_event([this]{consume_demand_token();},name())
+    consume_demand_token_event([this]{consume_demand_token();},name()),
+    handle_pkts([this]{handle_pkts_in_queues();},name())
 {
+    demand_tokens = new int64_t[requestors];
+    prefetch_tokens = new int64_t[requestors];
 
+    demand_queues_pre_bucket = new std::queue<packet_queue_element>[requestors];
+    demand_queues_post_bucket = new std::queue<packet_queue_element>[requestors];
+
+    prefetch_queues_pre_bucket = new std::queue<packet_queue_element>[requestors];
+    prefetch_queues_post_bucket = new std::queue<packet_queue_element>[requestors];
+
+    // Initializing demand and prefetch token buckets with zeros
+    for(int i = 0; i < requestors; ++i)
+    {
+        //latency_counters[i] = initial_slack; // Initialize all latency counters with the slack value
+        prefetch_tokens[i] = 0;
+        demand_tokens[i] = 0;
+    }
 }
 
 void
@@ -86,6 +106,7 @@ void
 BwRegulatedSimpleMemory::startup()
 {
     schedule(monitoring_event,curTick());
+    schedule(handle_pkts,curTick());
 }
 
 void
@@ -95,27 +116,80 @@ BwRegulatedSimpleMemory::consume_demand_token()
 }
 
 void
+BwRegulatedSimpleMemory::handle_pkts_in_queues()
+{
+    for(int requestor = 0; requestor < requestors; ++requestor)
+    {
+        // Check if requests exist in the queues before the token bucket
+        if(demand_queues_pre_bucket[requestor].size() != 0)
+        {
+            if(demand_tokens[requestor] > 0)
+            {
+                /*TODO Check for queue size if needed in the future. Right now, we assume that queues will not overflow*/
+                demand_tokens[requestor]--;
+
+                // Extract the front element in the queue
+                packet_queue_element front_pkt = demand_queues_pre_bucket[requestor].front();
+                
+                // Push pkt to post bucket queue
+                demand_queues_post_bucket->push(front_pkt);
+                
+                // Pop the element from the pre bucket queue
+                demand_queues_pre_bucket[requestor].pop();
+            }
+        }
+
+        // Check if requests exist in the queues before the token bucket
+        if(prefetch_queues_pre_bucket[requestor].size() != 0)
+        {
+            if(prefetch_tokens[requestor] > 0)
+            {
+                /*TODO Check for queue size if needed in the future. Right now, we assume that queues will not overflow*/
+                prefetch_tokens[requestor]--;
+                
+                // Extract the front element in the queue
+                packet_queue_element front_pkt = prefetch_queues_pre_bucket[requestor].front();
+                
+                // Push pkt to post bucket queue
+                prefetch_queues_post_bucket[requestor].push(front_pkt);
+                
+                // Pop the element from the pre bucket queue
+                prefetch_queues_pre_bucket[requestor].pop();
+            }
+        }
+    }
+    schedule(handle_pkts,curTick()+1);
+}
+
+void
 BwRegulatedSimpleMemory::bucket_refill()
 {
     Tick curr_tick = curTick();
+    for(int requestor = 0; requestor < requestors; ++requestor)
+    {
+        // Check if added tokens will lead to excess
+        if(demand_burstiness - demand_tokens[requestor] < refill_tokens)
+        {   
+            // Fill the demand bucket to its burstiness
+            demand_tokens[requestor] = demand_burstiness;
 
-    if(demand_burstiness - demand_tokens < refill_tokens)
-    {
-        demand_tokens = demand_burstiness;
-        prefetch_tokens = std::min(prefetch_burstiness,prefetch_tokens+(refill_tokens-(demand_burstiness - demand_tokens)));
+            // Add the excess to the prefetch bucket and cap at prefetch burstiness
+            prefetch_tokens[requestor] = std::min(prefetch_burstiness,prefetch_tokens[requestor]+(refill_tokens-(demand_burstiness - demand_tokens[requestor])));
+        }
+        else
+        {
+            // Case with no token excess
+            demand_tokens[requestor] = demand_tokens[requestor] + refill_tokens;
+        }
+        /*printf("##################################################\n");
+        printf("Current Regulation Tick is: %lld\n",curr_tick);
+        printf("Demand Bucket Tokens: %d\n",demand_tokens[requestor]);
+        printf("Prefetch Bucket Tokens: %d\n",prefetch_tokens[requestor]);
+        */    
     }
-    else
-    {
-        demand_tokens = demand_tokens + refill_tokens;
-    }
-    printf("##################################################\n");
-    printf("Current Regulation Tick is: %lld\n",curr_tick);
-    printf("Demand Bucket Tokens: %d\n",demand_tokens);
-    printf("Prefetch Bucket Tokens: %d\n",prefetch_tokens);
+
 
     schedule(monitoring_event, curTick() + refill_period);
-    
-
 }
 
 Tick
@@ -161,8 +235,9 @@ BwRegulatedSimpleMemory::recvMemBackdoorReq(const MemBackdoorReq &req,
     getBackdoor(_backdoor);
 }
 
+
 bool
-BwRegulatedSimpleMemory::recvTimingReq(PacketPtr pkt)
+BwRegulatedSimpleMemory::fulfillRequest(PacketPtr pkt)
 {
     panic_if(pkt->cacheResponding(), "Should not see packets where cache "
              "is responding");
@@ -189,6 +264,7 @@ BwRegulatedSimpleMemory::recvTimingReq(PacketPtr pkt)
     // deserialise the payload before performing any write operation
     Tick receive_delay = pkt->headerDelay + pkt->payloadDelay;
     pkt->headerDelay = pkt->payloadDelay = 0;
+    
 
     // update the release time according to the bandwidth limit, and
     // do so with respect to the time it takes to finish this request
@@ -197,17 +273,13 @@ BwRegulatedSimpleMemory::recvTimingReq(PacketPtr pkt)
 
     // calculate an appropriate tick to release to not exceed
     // the bandwidth limit
-    Tick duration = pkt->getSize() * bandwidth;
-    //printf("Duration is: %lld packet size is: %lld bandwidth is: %lld\n",duration,pkt->getSize(),bandwidth);
-    isConfReported();
-    getRequestor(pkt);
-    std::cout<<"Requestor ID: "<<pkt->requestorId()<<std::endl;
-
-
+    //Tick duration = pkt->getSize() * bandwidth;
+    Tick duration = 0;
+    //printf("Bandwidth inside is: %lld\n",bandwidth);
     // only consider ourselves busy if there is any need to wait
     // to avoid extra events being scheduled for (infinitely) fast
     // memories
-    if (duration != 0) {                   
+    if (duration != 0) {
         schedule(releaseEvent, curTick() + duration);
         isBusy = true;
     }
@@ -247,31 +319,32 @@ BwRegulatedSimpleMemory::recvTimingReq(PacketPtr pkt)
         packetQueue.emplace(++i, pkt, when_to_send);
 
         if (!retryResp && !dequeueEvent.scheduled())
-        {
-            if(demand_tokens == 1)
-            {
-                last_empty = curTick();
-            }
-                
-            if(demand_tokens > 0)
-            {
-                --demand_tokens;             
-                schedule(dequeueEvent, packetQueue.back().tick);
-            }
-            else
-            {
-                Tick sched_next_packet = (last_empty+refill_period) - curTick();
-                schedule(consume_demand_token_event,packetQueue.back().tick + sched_next_packet);
-                schedule(dequeueEvent,packetQueue.back().tick + sched_next_packet);
-            }
-
-        }
-            
+            schedule(dequeueEvent, packetQueue.back().tick);
     } else {
         pendingDelete.reset(pkt);
     }
 
     return true;
+}
+bool
+BwRegulatedSimpleMemory::recvTimingReq(PacketPtr pkt)
+{
+    if(!isPrefetch(pkt))
+    {
+        if(demand_queues_pre_bucket[getRequestor(pkt)].size() < demand_queue_size)
+        {
+            std::cout<<"DEMAND PACKET PUSHED! from requestor: "<<getRequestor(pkt)<<" queue size is: "<<demand_queues_pre_bucket[getRequestor(pkt)].size() << "ACTUAL LIMIT: "<<demand_queue_size<<std::endl;
+            
+            // Create a queue element 
+            packet_queue_element queue_element{pkt,curTick(),getRequestor(pkt),10};
+            
+            // Push the element into the demand queue
+            demand_queues_pre_bucket[getRequestor(pkt)].push(queue_element);
+            
+            //return true;
+        }        
+    }
+    return fulfillRequest(pkt);
 }
 
 void

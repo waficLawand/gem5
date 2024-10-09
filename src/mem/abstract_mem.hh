@@ -229,6 +229,10 @@ class AbstractMemory : public ClockedObject
         std::string requestor = _system->getRequestorName(pkt->req->requestorId()).c_str();
         size_t start = requestor.find("cpu") + 3; // Find the position of "cpu" and move 3 characters ahead to skip "cpu"
         size_t end = requestor.find(".", start); // Find the position of the dot after the CPU number
+        if (requestor == "writebacks")
+        {
+            return 0;
+        }
         
         if (start == end)
         {

@@ -58,7 +58,6 @@ SimpleMemory::SimpleMemory(const SimpleMemoryParams &p) :
     releaseEvent([this]{ release(); }, name()),
     dequeueEvent([this]{ dequeue(); }, name())
 {
-    
 }
 
 void
@@ -144,7 +143,6 @@ SimpleMemory::recvTimingReq(PacketPtr pkt)
     // deserialise the payload before performing any write operation
     Tick receive_delay = pkt->headerDelay + pkt->payloadDelay;
     pkt->headerDelay = pkt->payloadDelay = 0;
-    
 
     // update the release time according to the bandwidth limit, and
     // do so with respect to the time it takes to finish this request
@@ -154,7 +152,7 @@ SimpleMemory::recvTimingReq(PacketPtr pkt)
     // calculate an appropriate tick to release to not exceed
     // the bandwidth limit
     Tick duration = pkt->getSize() * bandwidth;
-    //printf("Bandwidth inside is: %lld\n",bandwidth);
+
     // only consider ourselves busy if there is any need to wait
     // to avoid extra events being scheduled for (infinitely) fast
     // memories
@@ -167,13 +165,6 @@ SimpleMemory::recvTimingReq(PacketPtr pkt)
     // queue if there is one
     bool needsResponse = pkt->needsResponse();
     recvAtomic(pkt);
-
-    //printf("Is prefetch:%d!, Duration: %d\n",pkt->cmd.isPrefetch(),duration);
-    if(pkt->isPrefetchPacket())
-    {
-        printf("Prefetch Request Detected!, Duration: %d\n",duration);
-    }
-    
     // turn packet around to go back to requestor if response expected
     if (needsResponse) {
         // recvAtomic() should already have turned packet into

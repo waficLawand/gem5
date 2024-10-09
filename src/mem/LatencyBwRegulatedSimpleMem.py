@@ -50,15 +50,23 @@ class LatencyBwRegulatedSimpleMem(AbstractMemory):
     latency_var = Param.Latency("0ns", "Request to response latency variance")
     
     ######################### Bandwidth Regulation Parameters ##########################
-    prefetch_burstiness = Param.Unsigned(100000,"Size of demand bucket") 
-    demand_burstiness = Param.Unsigned(5000,"Size of prefetch bucket")
-    refill_tokens = Param.Unsigned(5,"Tokens that get added to the demand bucket at every refill period")
-    refill_period = Param.Tick(10000000,"Period at which the bucket gets refilled in Ticks")
+    prefetch_burstiness = Param.Unsigned(5,"Size of demand bucket") 
+    demand_burstiness = Param.Unsigned(10,"Size of prefetch bucket")
+    refill_tokens = Param.Unsigned(1,"Tokens that get added to the demand bucket at every refill period")
+    refill_period = Param.Tick(10,"Period at which the bucket gets refilled in Ticks")
     requestors = Param.Unsigned(4,"Number of memory requestors in the system")
 
     demand_queue_size = Param.Unsigned(8,"Demand queue size")
     prefetch_queue_size = Param.Unsigned(8,"Prefetch queue size")
     requestor_queue_size = Param.Unsigned(8,"Requestor queue size")
+
+    initial_slack = Param.Unsigned(10,"Initital slack in cycles")
+    ticks_per_cycle = Param.Unsigned(1000,"Ticks per cycle")
+    start_with_full_buckets = Param.Bool(True,"Buckets are initially full")
+    enable_bw_regulation = Param.Bool(True,"Parameter to enable and disable bw regulation")
+    
+    # TODO Requires a cleaner solution this is just for testing
+    is_fcfs = Param.Bool(True, "Arbitration scheme is FCFS")
     ####################################################################################
 
     # The memory bandwidth limit default is set to 12.8GiB/s which is

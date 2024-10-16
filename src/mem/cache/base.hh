@@ -78,6 +78,7 @@
 #include "sim/serialize.hh"
 #include "sim/sim_exit.hh"
 #include "sim/system.hh"
+#include "tags/base.hh"
 
 namespace gem5
 {
@@ -110,6 +111,36 @@ class BaseCache : public ClockedObject
     /**
      * Reasons for caches to be blocked.
      */
+
+    int 
+    getRequestor(PacketPtr pkt)
+    {
+        std::string requestor = system->getRequestorName(pkt->req->requestorId()).c_str();
+        size_t start = requestor.find("cpu") + 3; // Find the position of "cpu" and move 3 characters ahead to skip "cpu"
+        size_t end = requestor.find(".", start); // Find the position of the dot after the CPU number
+        if (requestor == "writebacks")
+        {
+            return 0;
+        }
+        
+        if (start == end)
+        {
+            return 0;
+        }
+        else
+        {
+            return std::stoi(requestor.substr(start, end - start)); // Convert the substring to integer and return
+        }
+        
+    }
+
+    bool
+    isPrefetch(PacketPtr pkt)
+    {
+        std::string requestor = system->getRequestorName(pkt->req->requestorId()).c_str();
+        return requestor.find("prefetcher") != std::string::npos;
+    }
+
     enum BlockedCause
     {
         Blocked_NoMSHRs = MSHRQueue_MSHRs,
@@ -991,6 +1022,7 @@ class BaseCache : public ClockedObject
   public:
     /** System we are currently operating in. */
     System *system;
+    
 
     struct CacheCmdStats : public statistics::Group
     {

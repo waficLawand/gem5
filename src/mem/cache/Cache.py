@@ -97,7 +97,7 @@ class BaseCache(ClockedObject):
     max_miss_count = Param.Counter(
         0, "Number of misses to handle before calling exit"
     )
-
+    predictable_prefetcher = Param.Bool(False,"This adds a buffer for prefetch requests so that the state of the cache is not modified")
     mshrs = Param.Unsigned("Number of MSHRs (max outstanding requests)")
     demand_mshr_reserve = Param.Unsigned(1, "MSHRs reserved for demand access")
     tgts_per_mshr = Param.Unsigned("Max number of accesses per MSHR")

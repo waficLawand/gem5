@@ -171,6 +171,8 @@ SimpleMemory::recvTimingReq(PacketPtr pkt)
         // atomic response
         assert(pkt->isResponse());
 
+
+        std::cout<<"Address "<<pkt->getAddr()<<" requested by Core "<<getRequestor(pkt)<<" entered the resource! at tick "<<curTick()<<std::endl;
         Tick when_to_send = curTick() + receive_delay + getLatency();
 
         // typically this should be added at the end, so start the

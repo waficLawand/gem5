@@ -568,9 +568,26 @@ BaseCache::recvTimingResp(PacketPtr pkt)
 
         const bool allocate = (writeAllocator && mshr->wasWholeLineWrite) ?
             writeAllocator->allocate() : mshr->allocOnFill();
+        /*if(!isPrefetch(pkt))
+        {
+            std::cout<<"Prefetch request requested from Core "<< getRequestor(pkt) <<" at tick "<<curTick()<<std::endl;
+            blk = handleFill(pkt, blk, writebacks, allocate);
+            assert(blk != nullptr);
+            ppFill->notify(CacheAccessProbeArg(pkt, accessor));
+        }
+        else
+        {
+            //ppFill->notify(CacheAccessProbeArg(pkt, accessor));
+        }*/
+
+       if(isPrefetch(pkt))
+       {
+        //std::cout<<"Prefetch request requested from Core "<< getRequestor(pkt) <<" at tick "<<curTick()<<std::endl;
+       }
         blk = handleFill(pkt, blk, writebacks, allocate);
         assert(blk != nullptr);
         ppFill->notify(CacheAccessProbeArg(pkt, accessor));
+
     }
 
     // Don't want to promote the Locked RMW Read until
@@ -596,8 +613,17 @@ BaseCache::recvTimingResp(PacketPtr pkt)
             mshr->promoteWritable();
         }
     }
+    if(!isPrefetch(pkt))
+    {
+        serviceMSHRTargets(mshr, pkt, blk);
+    }
+    else
+    {
+        serviceMSHRTargets(mshr, pkt, blk);
+        //mshrQueue.deallocate(mshr);
+        //clearBlocked(Blocked_NoMSHRs);
+    }
 
-    serviceMSHRTargets(mshr, pkt, blk);
     // We are stopping servicing targets early for the Locked RMW Read until
     // the write comes.
     if (!mshr->hasLockedRMWReadTarget()) {
@@ -1590,6 +1616,9 @@ BaseCache::handleFill(PacketPtr pkt, CacheBlk *blk, PacketList &writebacks,
     // Block is guaranteed to be valid at this point
     assert(blk->isValid());
     assert(blk->isSecure() == is_secure);
+    
+    //std::cout<<"New address is from handlefill: "<<regenerateBlkAddr(blk)<<std::endl;
+    //std::cout<<"Address for packet is from handlefill: "<<pkt->getAddr()<<std::endl;
     assert(regenerateBlkAddr(blk) == addr);
 
     blk->setCoherenceBits(CacheBlk::ReadableBit);
@@ -1715,9 +1744,29 @@ BaseCache::allocateBlock(const PacketPtr pkt, PacketList &writebacks)
     if (!handleEvictions(evict_blks, writebacks)) {
         return nullptr;
     }
-
     // Insert new block at victimized entry
+    /*if(!isPrefetch(pkt))
+    {
+        
+        //return victim;
+    }
+    
+    else
+    {
+        std::cout<<"Address is: "<<regenerateBlkAddr(victim)<<std::endl;
+
+        CacheBlk * new_blk = new CacheBlk();
+        //new_blk->insert(extractTag(pkt->getAddr()), pkt->isSecure());
+        new_blk->insert(tags->extractTag(pkt->getAddr()),pkt->isSecure(),pkt->req->requestorId(),pkt->req->taskId());
+        
+        std::cout<<"New address is: "<<regenerateBlkAddr(new_blk)<<std::endl;
+        std::cout<<"Address for packet is: "<<pkt->getAddr()<<std::endl;
+        std::cout<<"Exiting from here!\n";
+        return new_blk;
+    }*/
+
     tags->insertBlock(pkt, victim);
+    
 
     // If using a compressor, set compression data. This must be done after
     // insertion, as the compression bit may be set.
@@ -1727,6 +1776,7 @@ BaseCache::allocateBlock(const PacketPtr pkt, PacketList &writebacks)
     }
 
     return victim;
+    
 }
 
 void

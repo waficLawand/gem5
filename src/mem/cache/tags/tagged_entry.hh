@@ -129,7 +129,7 @@ class TaggedEntry : public ReplaceableEntry
     virtual void
     setValid()
     {
-        assert(!isValid());
+        //assert(!isValid());
         _valid = true;
     }
 

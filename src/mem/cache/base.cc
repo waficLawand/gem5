@@ -113,6 +113,7 @@ BaseCache::BaseCache(const BaseCacheParams &p, unsigned blk_size)
       missCount(p.max_miss_count),
       addrRanges(p.addr_ranges.begin(), p.addr_ranges.end()),
       system(p.system),
+      is_predictable_prefetcher(p.is_predictable_prefetcher),
       stats(*this)
 {
     // the MSHR queue has no reserve entries as we check the MSHR
@@ -568,23 +569,28 @@ BaseCache::recvTimingResp(PacketPtr pkt)
 
         const bool allocate = (writeAllocator && mshr->wasWholeLineWrite) ?
             writeAllocator->allocate() : mshr->allocOnFill();
-        /*if(!isPrefetch(pkt))
+        if(is_predictable_prefetcher)
         {
-            std::cout<<"Prefetch request requested from Core "<< getRequestor(pkt) <<" at tick "<<curTick()<<std::endl;
-            blk = handleFill(pkt, blk, writebacks, allocate);
-            assert(blk != nullptr);
-            ppFill->notify(CacheAccessProbeArg(pkt, accessor));
+            if(is_predictable_prefetcher && outstanding_prefetch_addr[pkt->getAddr() & (~0 << 6)] == 1)
+            {
+                blk = handleFill(pkt, blk, writebacks, 1);
+                outstanding_prefetch_addr.erase(pkt->getAddr() &(~0 <<6));
+                std::cout<<"WILL FILL ON PF!\n";
+            }
+            else
+            {
+                blk = handleFill(pkt, blk, writebacks, allocate);
+                outstanding_prefetch_addr.erase(pkt->getAddr() &(~0 <<6));
+                std::cout<<"WILL NOT FILL ON PF!\n";
+            }
         }
         else
         {
-            //ppFill->notify(CacheAccessProbeArg(pkt, accessor));
-        }*/
+            blk = handleFill(pkt, blk, writebacks, allocate);
+        }
 
-       if(isPrefetch(pkt))
-       {
-        //std::cout<<"Prefetch request requested from Core "<< getRequestor(pkt) <<" at tick "<<curTick()<<std::endl;
-       }
-        blk = handleFill(pkt, blk, writebacks, allocate);
+
+        
         assert(blk != nullptr);
         ppFill->notify(CacheAccessProbeArg(pkt, accessor));
 
@@ -613,16 +619,8 @@ BaseCache::recvTimingResp(PacketPtr pkt)
             mshr->promoteWritable();
         }
     }
-    if(!isPrefetch(pkt))
-    {
-        serviceMSHRTargets(mshr, pkt, blk);
-    }
-    else
-    {
-        serviceMSHRTargets(mshr, pkt, blk);
-        //mshrQueue.deallocate(mshr);
-        //clearBlocked(Blocked_NoMSHRs);
-    }
+
+    serviceMSHRTargets(mshr, pkt, blk);
 
     // We are stopping servicing targets early for the Locked RMW Read until
     // the write comes.
@@ -657,6 +655,10 @@ BaseCache::recvTimingResp(PacketPtr pkt)
 
         // if we used temp block, check to see if its valid and then clear it
         if (blk == tempBlock && tempBlock->isValid()) {
+            if(isPrefetch(pkt) && is_predictable_prefetcher)
+            {
+                printPacketMap(prefetch_side_buffer);
+            }
             evictBlock(blk, writebacks);
         }
     }
@@ -666,7 +668,11 @@ BaseCache::recvTimingResp(PacketPtr pkt)
     doWritebacks(writebacks, forward_time);
 
     DPRINTF(CacheVerbose, "%s: Leaving with %s\n", __func__, pkt->print());
-    delete pkt;
+    if(!(isPrefetch(pkt) && is_predictable_prefetcher))
+    {
+        delete pkt;
+    }
+    
 }
 
 
@@ -1306,6 +1312,32 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
                 "Should never see a write in a read-only cache %s\n",
                 name());
 
+    if(is_predictable_prefetcher)
+    {
+        Addr masked_addr = pkt->getAddr() & Addr(~0 << 6);
+        if(outstanding_prefetch_addr.find(masked_addr) != outstanding_prefetch_addr.end() && (prefetch_side_buffer.find(masked_addr) == prefetch_side_buffer.end()))
+        {
+            outstanding_prefetch_addr[masked_addr] = 1;
+            std::cout<<"Set outstanding PF to one! on block "<<masked_addr<<"\n";
+        }
+        if(prefetch_side_buffer.find(masked_addr) != prefetch_side_buffer.end())
+        {
+            std::cout<<"Handling fill from access for address:"<<std::hex<<pkt->getAddr()<<" and blk address is: "<< std::hex<<((pkt->getAddr()) & Addr(~0 << 6))<<" at tick: " <<std::dec<<curTick()<<"!\n";
+            PacketList writebacks;
+            CacheBlk * temp = handleFill(prefetch_side_buffer[masked_addr],blk,writebacks,true);
+            
+            temp->setPrefetched();
+            
+            prefetch_side_buffer.erase(masked_addr);
+
+            ppFill->notify(CacheAccessProbeArg(pkt, accessor));
+            const Tick forward_time = clockEdge(forwardLatency) + pkt->headerDelay;
+            // copy writebacks to write buffer
+            doWritebacks(writebacks, forward_time);
+
+
+        }
+    }
     // Access block in the tags
     Cycles tag_latency(0);
     blk = tags->accessBlock(pkt, tag_latency);
@@ -1604,6 +1636,12 @@ BaseCache::handleFill(PacketPtr pkt, CacheBlk *blk, PacketList &writebacks,
             // current request and then get rid of it
             blk = tempBlock;
             tempBlock->insert(addr, is_secure);
+
+            if(isPrefetch(pkt) && is_predictable_prefetcher && prefetch_side_buffer.find(pkt->getAddr()) == prefetch_side_buffer.end())
+            {
+                prefetch_side_buffer[pkt->getAddr() & Addr(~0 << 6)] = pkt;
+                DPRINTF(Cache, "Packet pushed to prefetch side buffer!\n");
+            }
             DPRINTF(Cache, "using temp block for %#llx (%s)\n", addr,
                     is_secure ? "s" : "ns");
         }
@@ -1804,7 +1842,15 @@ BaseCache::evictBlock(CacheBlk *blk, PacketList &writebacks)
 {
     PacketPtr pkt = evictBlock(blk);
     if (pkt) {
-        writebacks.push_back(pkt);
+        if(blk == tempBlock && is_predictable_prefetcher)
+        {
+            std::cout<<"Not pushing to writeback\n";
+        }
+        else
+        {
+            writebacks.push_back(pkt);
+        }
+        
     }
 }
 
@@ -2102,8 +2148,13 @@ BaseCache::sendWriteQueuePacket(WriteQueueEntry* wq_entry)
         // doing anything), and this is so even if we do not
         // care about this packet and might override it before
         // it gets retried
+
+        //DPRINTF(Cache,"SEND TIMING REQ!\n");
+        
         return true;
     } else {
+
+        //DPRINTF(Cache,"RETRYING TO SEND CLEAN EVICT!\n");
         markInService(wq_entry);
         return false;
     }

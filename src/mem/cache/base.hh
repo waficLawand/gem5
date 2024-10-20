@@ -51,6 +51,7 @@
 #include <string>
 #include <map>
 #include <vector>
+#include <unordered_map>
 
 #include "base/addr_range.hh"
 #include "base/compiler.hh"
@@ -151,6 +152,10 @@ class BaseCache : public ClockedObject
 
     // Way based partitioning policy mask
     std::map<int, std::vector<int>> way_mask;
+
+
+    // If the attached prefetcher is predictable dont allocate in cache unless its a hit
+    bool is_predictable_prefetcher;
 
 
 
@@ -432,6 +437,31 @@ class BaseCache : public ClockedObject
      * when we want to avoid allocation (e.g., exclusive caches)
      */
     TempCacheBlk *tempBlock;
+    
+    // Vector of tempblocks that store the cache prefetch side buffer
+    std::unordered_map<Addr, PacketPtr> prefetch_side_buffer;
+    
+    std::unordered_map<Addr, bool> outstanding_prefetch_addr;
+    //std::vector<TempCacheBlk*> prefetch_side_buffer;
+    TempCacheBlk *prefetch_blk;
+
+    void printPacketMap(const std::unordered_map<Addr, PacketPtr>& packet_map) {
+    for (const auto& entry : packet_map) {
+        Addr addr = entry.first;
+        PacketPtr packet = entry.second;
+
+        // Print the address
+        std::cout << "Address: " << std::hex << addr << std::dec << std::endl;
+
+        if (packet != nullptr) {
+            // Print some basic information from the packet
+            std::cout << "  Command: " << packet->cmdString() << std::endl;
+            std::cout << "  Size: " << packet->getSize() << std::endl;
+        } else {
+            std::cout << "  Packet is null" << std::endl;
+        }
+    }
+}
 
     /**
      * Upstream caches need this packet until true is returned, so
@@ -478,12 +508,27 @@ class BaseCache : public ClockedObject
      */
     inline bool allocOnFill(MemCmd cmd) const
     {
-        return clusivity == enums::mostly_incl ||
+        if(is_predictable_prefetcher)
+        {
+            //std::cout<<"IM HERE!\n";
+            //std::cout << "WriteLineReq: " << (cmd == MemCmd::WriteLineReq) << " , ReadReq: " << (cmd == MemCmd::ReadReq) << " , isPrefetch: " << cmd.isPrefetch() <<" Clusivity: "<< (clusivity == enums::mostly_incl)<<" Is LLSC: "<<cmd.isLLSC()<< std::endl;
+
+            return cmd == MemCmd::WriteLineReq ||
+            cmd == MemCmd::ReadReq ||
+            cmd == MemCmd::WriteReq ||
+            cmd.isLLSC();
+        }
+        else
+        {
+            return clusivity == enums::mostly_incl ||
             cmd == MemCmd::WriteLineReq ||
             cmd == MemCmd::ReadReq ||
             cmd == MemCmd::WriteReq ||
             cmd.isPrefetch() ||
             cmd.isLLSC();
+        }
+
+
     }
 
     /**
@@ -727,6 +772,7 @@ class BaseCache : public ClockedObject
      * fact the tempBlock, and now needs to be written back.
      */
     void writebackTempBlockAtomic() {
+        std::cout<<"FROM WRITEBACK ATOMOIC!!\n";
         assert(tempBlockWriteback != nullptr);
         PacketList writebacks{tempBlockWriteback};
         doWritebacksAtomic(writebacks);
@@ -1211,6 +1257,7 @@ class BaseCache : public ClockedObject
 
     MSHR *allocateMissBuffer(PacketPtr pkt, Tick time, bool sched_send = true)
     {
+        std::cout<<"Allocating PF from here!\n";
         MSHR *mshr = mshrQueue.allocate(pkt->getBlockAddr(blkSize), blkSize,
                                         pkt, time, order++,
                                         allocOnFill(pkt->cmd));

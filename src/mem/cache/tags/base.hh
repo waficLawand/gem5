@@ -257,9 +257,7 @@ class BaseTags : public ClockedObject
     {
         assert(blk);
         assert(blk->isValid());
-        std::cout<<"BEFORE OCC!\n";
         stats.occupancies[blk->getSrcRequestorId()]--;
-        std::cout<<"AFTER OCC!\n";
         stats.totalRefs += blk->getRefCount();
         stats.sampledRefs++;
 

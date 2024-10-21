@@ -52,6 +52,7 @@
 #include <map>
 #include <vector>
 #include <unordered_map>
+#include<queue>
 
 #include "base/addr_range.hh"
 #include "base/compiler.hh"
@@ -438,8 +439,13 @@ class BaseCache : public ClockedObject
      */
     TempCacheBlk *tempBlock;
     
+    // Prefetch side buffer size
+    int prefetch_side_buffer_size;
+
     // Vector of tempblocks that store the cache prefetch side buffer
     std::unordered_map<Addr, PacketPtr> prefetch_side_buffer;
+
+    std::deque<Addr> prefetch_eviction_queue;
     
     std::unordered_map<Addr, bool> outstanding_prefetch_addr;
     //std::vector<TempCacheBlk*> prefetch_side_buffer;
@@ -772,7 +778,6 @@ class BaseCache : public ClockedObject
      * fact the tempBlock, and now needs to be written back.
      */
     void writebackTempBlockAtomic() {
-        std::cout<<"FROM WRITEBACK ATOMOIC!!\n";
         assert(tempBlockWriteback != nullptr);
         PacketList writebacks{tempBlockWriteback};
         doWritebacksAtomic(writebacks);
@@ -1257,7 +1262,7 @@ class BaseCache : public ClockedObject
 
     MSHR *allocateMissBuffer(PacketPtr pkt, Tick time, bool sched_send = true)
     {
-        std::cout<<"Allocating PF from here!\n";
+        
         MSHR *mshr = mshrQueue.allocate(pkt->getBlockAddr(blkSize), blkSize,
                                         pkt, time, order++,
                                         allocOnFill(pkt->cmd));

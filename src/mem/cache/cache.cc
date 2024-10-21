@@ -222,7 +222,6 @@ Cache::doWritebacks(PacketList& writebacks, Tick forward_time)
             // CleanEvict and Writeback with BLOCK_CACHED flag cleared will
             // reset the bit corresponding to this address in the snoop filter
             // below.
-            std::cout<<"ALLOCATING WRITE BUFFER FOR CLEAN EVICT!\n";
             allocateWriteBuffer(wbPkt, forward_time);
         }
         writebacks.pop_front();
@@ -909,7 +908,6 @@ Cache::serviceMSHRTargets(MSHR *mshr, const PacketPtr pkt, CacheBlk *blk)
           case MSHR::Target::FromPrefetcher:
             assert(tgt_pkt->cmd == MemCmd::HardPFReq);
             from_pref = true;
-            //std::cout<<"From Prefetcher!\n";
 
             delete tgt_pkt;
             break;
@@ -1429,8 +1427,14 @@ Cache::sendMSHRQueuePacket(MSHR* mshr)
     if (tgt_pkt->cmd == MemCmd::HardPFReq && forwardSnoops) {
         DPRINTF(Cache, "%s: MSHR %s\n", __func__, tgt_pkt->print());
 
-        outstanding_prefetch_addr[tgt_pkt->getAddr() & (~0 << 6)] = 0;
-        std::cout<<"Pushed "<<std::hex<<(tgt_pkt->getAddr() & (~0 << 6))<<" to outstanding prefetches list!\n";
+        if(outstanding_prefetch_addr.find(tgt_pkt->getAddr() & (~0 << 6)) == outstanding_prefetch_addr.end())
+        {
+            outstanding_prefetch_addr[tgt_pkt->getAddr() & (~0 << 6)] = 0;
+            #ifdef PRINT_DEBUG
+            std::cout<<"Pushed "<<std::hex<<(tgt_pkt->getAddr() & (~0 << 6))<<" to outstanding prefetches list!\n";
+            #endif
+        }
+        
         // we should never have hardware prefetches to allocated
         // blocks
         assert(!tags->findBlock(mshr->blkAddr, mshr->isSecure));

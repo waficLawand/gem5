@@ -633,12 +633,21 @@ BaseCache::recvTimingResp(PacketPtr pkt)
             }
             mshrQueue.markPending(mshr);
             schedMemSideSendEvent(clockEdge() + pkt->payloadDelay);
+            if(is_predictable_prefetcher)
+            {
+                std::cout<<"PF REQUEST FROM DEFFERED TARGETS! WARNING!\n";
+            }
         } else {
             // while we deallocate an mshr from the queue we still have to
             // check the isFull condition before and after as we might
             // have been using the reserved entries already
             const bool was_full = mshrQueue.isFull();
             mshrQueue.deallocate(mshr);
+
+            if(is_predictable_prefetcher)
+            {
+                std::cout<<"PF REQUEST DEALLOCATED FROM MSHR!\n";
+            }
             if (was_full && !mshrQueue.isFull()) {
                 clearBlocked(Blocked_NoMSHRs);
             }
@@ -655,10 +664,10 @@ BaseCache::recvTimingResp(PacketPtr pkt)
 
         // if we used temp block, check to see if its valid and then clear it
         if (blk == tempBlock && tempBlock->isValid()) {
-            if(isPrefetch(pkt) && is_predictable_prefetcher)
+            /*if(isPrefetch(pkt) && is_predictable_prefetcher)
             {
                 printPacketMap(prefetch_side_buffer);
-            }
+            }*/
             evictBlock(blk, writebacks);
         }
     }
@@ -668,7 +677,11 @@ BaseCache::recvTimingResp(PacketPtr pkt)
     doWritebacks(writebacks, forward_time);
 
     DPRINTF(CacheVerbose, "%s: Leaving with %s\n", __func__, pkt->print());
-    if(!(isPrefetch(pkt) && is_predictable_prefetcher))
+    if((isPrefetch(pkt) && is_predictable_prefetcher))
+    {
+        
+    }
+    else
     {
         delete pkt;
     }
@@ -952,12 +965,13 @@ BaseCache::getNextQueueEntry()
         PacketPtr pkt = prefetcher->getPacket();
         if (pkt) {
             Addr pf_addr = pkt->getBlockAddr(blkSize);
-            if (tags->findBlock(pf_addr, pkt->isSecure())) {
+            if (tags->findBlock(pf_addr, pkt->isSecure()) || (prefetch_side_buffer.find(pkt->getAddr() &(~0<<6)) != prefetch_side_buffer.end())) {
                 DPRINTF(HWPrefetch, "Prefetch %#x has hit in cache, "
                         "dropped.\n", pf_addr);
                 prefetcher->pfHitInCache();
                 // free the request and packet
                 delete pkt;
+                
             } else if (mshrQueue.findMatch(pf_addr, pkt->isSecure())) {
                 DPRINTF(HWPrefetch, "Prefetch %#x has hit in a MSHR, "
                         "dropped.\n", pf_addr);
@@ -971,6 +985,7 @@ BaseCache::getNextQueueEntry()
                 // free the request and packet
                 delete pkt;
             } else {
+                std::cout<<"ALLOCATING NEW MSHR FOR THIS ADDRESS!!\n";
                 // Update statistic on number of prefetches issued
                 // (hwpf_mshr_misses)
                 assert(pkt->req->requestorId() < system->maxRequestors());
@@ -981,6 +996,7 @@ BaseCache::getNextQueueEntry()
                 // schedule the send
                 pkt->setPrefetchPacket();
                 return allocateMissBuffer(pkt, curTick(), false);
+                
             }
         }
     }
@@ -1328,9 +1344,10 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
             
             temp->setPrefetched();
             
+            ppFill->notify(CacheAccessProbeArg(prefetch_side_buffer[masked_addr], accessor));
             prefetch_side_buffer.erase(masked_addr);
 
-            ppFill->notify(CacheAccessProbeArg(pkt, accessor));
+
             const Tick forward_time = clockEdge(forwardLatency) + pkt->headerDelay;
             // copy writebacks to write buffer
             doWritebacks(writebacks, forward_time);
@@ -1845,6 +1862,7 @@ BaseCache::evictBlock(CacheBlk *blk, PacketList &writebacks)
         if(blk == tempBlock && is_predictable_prefetcher)
         {
             std::cout<<"Not pushing to writeback\n";
+            //writebacks.push_back(pkt);
         }
         else
         {

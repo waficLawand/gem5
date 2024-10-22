@@ -114,6 +114,7 @@ BaseCache::BaseCache(const BaseCacheParams &p, unsigned blk_size)
       addrRanges(p.addr_ranges.begin(), p.addr_ranges.end()),
       system(p.system),
       is_predictable_prefetcher(p.is_predictable_prefetcher),
+      prefetch_side_buffer_size(p.prefetch_side_buffer_size),
       stats(*this)
 {
     // the MSHR queue has no reserve entries as we check the MSHR
@@ -1345,8 +1346,14 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
             temp->setPrefetched();
             
             ppFill->notify(CacheAccessProbeArg(prefetch_side_buffer[masked_addr], accessor));
+            
             prefetch_side_buffer.erase(masked_addr);
+            auto it = std::find(prefetch_eviction_queue.begin(), prefetch_eviction_queue.end(), masked_addr);
+            prefetch_eviction_queue.erase(it);
+            outstanding_prefetch_addr.erase(masked_addr);
 
+            std::cout<<"FROM HANDLE FILL:\n";
+            printAddresses(prefetch_side_buffer,prefetch_eviction_queue);
 
             const Tick forward_time = clockEdge(forwardLatency) + pkt->headerDelay;
             // copy writebacks to write buffer
@@ -1656,7 +1663,40 @@ BaseCache::handleFill(PacketPtr pkt, CacheBlk *blk, PacketList &writebacks,
 
             if(isPrefetch(pkt) && is_predictable_prefetcher && prefetch_side_buffer.find(pkt->getAddr()) == prefetch_side_buffer.end())
             {
-                prefetch_side_buffer[pkt->getAddr() & Addr(~0 << 6)] = pkt;
+                if(prefetch_side_buffer.size() >= prefetch_side_buffer_size)
+                {
+                    Addr temp_addr = prefetch_eviction_queue.front();
+                    std::cout<<"##################################################1\n";
+                    std::cout<<"WITH KICKING OUT FROM PF SIDE BUFFER:\n";
+                    printAddresses(prefetch_side_buffer,prefetch_eviction_queue);
+                    std::cout<<"##################################################2\n";
+                    prefetch_side_buffer.erase(temp_addr);
+                    prefetch_eviction_queue.pop_front();
+                    
+                    std::cout<<"##################################################3\n";
+                    std::cout<<"WITH KICKING OUT FROM PF SIDE BUFFER:\n";
+                    printAddresses(prefetch_side_buffer,prefetch_eviction_queue);
+                    std::cout<<"##################################################4\n";
+                    
+                    prefetch_side_buffer[pkt->getAddr() & Addr(~0 << 6)] = pkt;
+                    prefetch_eviction_queue.push_back(pkt->getAddr() & Addr(~0 << 6));
+                    std::cout<<"##################################################5\n";
+                    std::cout<<"WITH KICKING OUT FROM PF SIDE BUFFER:\n";
+                    printAddresses(prefetch_side_buffer,prefetch_eviction_queue);
+                    std::cout<<"##################################################6\n";
+                }
+                else
+                {
+                    prefetch_side_buffer[pkt->getAddr() & Addr(~0 << 6)] = pkt;
+                    prefetch_eviction_queue.push_back(pkt->getAddr() & Addr(~0 << 6));
+
+                    std::cout<<"WITHOUT KICKING OUT FROM PF SIDE BUFFER:\n";
+                    printAddresses(prefetch_side_buffer,prefetch_eviction_queue);
+                }
+                
+                
+
+
                 DPRINTF(Cache, "Packet pushed to prefetch side buffer!\n");
             }
             DPRINTF(Cache, "using temp block for %#llx (%s)\n", addr,

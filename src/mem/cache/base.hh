@@ -469,6 +469,24 @@ class BaseCache : public ClockedObject
     }
 }
 
+void printAddresses(const std::unordered_map<Addr, PacketPtr>& prefetch_side_buffer,
+                    const std::deque<Addr>& prefetch_eviction_queue) 
+{
+    // Print addresses from the unordered_map (keys)
+    std::cout << "Prefetch Side Buffer Addresses: ";
+    for (const auto& entry : prefetch_side_buffer) {
+        std::cout << "0x" << std::hex << entry.first << ", ";  // Print key in hex
+    }
+    std::cout << std::endl;
+
+    // Print addresses from the deque
+    std::cout << "Prefetch Eviction Queue Addresses: ";
+    for (const Addr& addr : prefetch_eviction_queue) {
+        std::cout << "0x" << std::hex << addr << ", ";  // Print address in hex
+    }
+    std::cout << std::endl;
+}
+
     /**
      * Upstream caches need this packet until true is returned, so
      * hold it for deletion until a subsequent call

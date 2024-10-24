@@ -69,6 +69,7 @@
 #include "mem/cache/tags/base.hh"
 #include "mem/cache/write_queue.hh"
 #include "mem/cache/write_queue_entry.hh"
+#include "mem/duetto_simple_mem.hh"
 #include "mem/packet.hh"
 #include "mem/packet_queue.hh"
 #include "mem/qport.hh"
@@ -81,6 +82,7 @@
 #include "sim/sim_exit.hh"
 #include "sim/system.hh"
 #include "tags/base.hh"
+
 
 namespace gem5
 {
@@ -450,6 +452,28 @@ class BaseCache : public ClockedObject
     std::unordered_map<Addr, bool> outstanding_prefetch_addr;
     //std::vector<TempCacheBlk*> prefetch_side_buffer;
     TempCacheBlk *prefetch_blk;
+    
+    struct packet_queue_element {
+    PacketPtr pkt;   // Assuming PacketPtr is defined somewhere
+    Tick arrival_tick;
+    Tick pkt_tick;
+    Tick fcfs_tick;
+    bool is_prefetch;
+};
+    gem5::memory::DuettoSimpleMem *duetto_mem;
+void printQueueDetails(const std::deque<packet_queue_element> queue)
+{
+    // Check if the queue is not empty
+    if (!queue.empty())
+    {
+        const packet_queue_element& element = queue.front(); // Get the first element
+        std::cout << "Address: " << &element << ", Arrival Tick: " << element.arrival_tick << std::endl;
+    }
+    else
+    {
+        std::cout << "Queue is empty." << std::endl;
+    }
+}
 
     void printPacketMap(const std::unordered_map<Addr, PacketPtr>& packet_map) {
     for (const auto& entry : packet_map) {

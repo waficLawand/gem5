@@ -115,6 +115,7 @@ class BackingStoreEntry
       * of this backing store in the share memory. Otherwise, the value is 0.
       */
      off_t shmOffset;
+     
 };
 
 /**
@@ -183,7 +184,10 @@ class PhysicalMemory : public Serializable
                             bool in_addr_map, bool kvm_map);
 
   public:
-
+    
+    const std::vector<AbstractMemory *> &getMemories() const {
+        return memories;
+    }
     /**
      * Create a physical memory object, wrapping a number of memories.
      */

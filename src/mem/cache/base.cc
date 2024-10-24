@@ -125,6 +125,15 @@ BaseCache::BaseCache(const BaseCacheParams &p, unsigned blk_size)
 
     // forward snoops is overridden in init() once we can query
     // whether the connected requestor is actually snooping or not
+    std::vector<gem5::memory::AbstractMemory*> memories = system->getPhysMem().getMemories();
+    for (gem5::memory::AbstractMemory *mem : memories) {
+        if (gem5::memory::DuettoSimpleMem *duetto = dynamic_cast<gem5::memory::DuettoSimpleMem *>(mem))
+        {
+            duetto_mem = dynamic_cast<gem5::memory::DuettoSimpleMem *>(mem);
+            std::cout<<"SLACK IS: "<<duetto_mem->latency_slack<<std::endl;
+        }    
+            
+        }
 
     tempBlock = new TempCacheBlk(blkSize);
 
@@ -150,6 +159,8 @@ BaseCache::BaseCache(const BaseCacheParams &p, unsigned blk_size)
     way_mask[5] = {10,11};
     way_mask[6] = {12,13};
     way_mask[7] = {14,15};
+    
+
 }
 
 BaseCache::~BaseCache()
@@ -372,6 +383,62 @@ BaseCache::handleTimingReqMiss(PacketPtr pkt, MSHR *mshr, CacheBlk *blk,
                     // move it ahead of mshrs that are ready
                     // mshrQueue.moveToFront(mshr);
                 }
+
+
+               if(!isPrefetch(pkt))
+               {
+                    bool found = false;
+                    // Iterate through pre_bucket_demand_queues
+                    for (auto it = duetto_mem->pre_bucket_prefetch_queues[getRequestor(pkt)].begin(); it != duetto_mem->pre_bucket_prefetch_queues[getRequestor(pkt)].end(); ) 
+                    {
+                        if(it->pkt->getAddr() == pkt->getAddr())
+                        {
+                            found = true;
+                            std::cout<<"BEFORE PROMOTION!\n";
+                            duetto_mem->printQueueDetails(duetto_mem->pre_bucket_prefetch_queues[getRequestor(pkt)]);
+                            duetto_mem->printQueueDetails(duetto_mem->pre_bucket_demand_queues[getRequestor(pkt)]);
+                            
+                            duetto_mem->promote_prefetch(it,1,getRequestor(pkt));
+                            
+                            duetto_mem->printQueueDetails(duetto_mem->pre_bucket_prefetch_queues[getRequestor(pkt)]);
+                            duetto_mem->printQueueDetails(duetto_mem->pre_bucket_demand_queues[getRequestor(pkt)]);
+                            std::cout<<"AFTER PROMOTION!\n";
+                            break;
+                        }
+                        else
+                        {
+                            ++it;
+                        }
+                    }
+
+                    if(!found)
+                    {
+                        bool found = false;
+                        // Iterate through pre_bucket_demand_queues
+                        for (auto it = duetto_mem->post_bucket_prefetch_queues[getRequestor(pkt)].begin(); it != duetto_mem->post_bucket_prefetch_queues[getRequestor(pkt)].end(); ) 
+                        {
+                            if(it->pkt->getAddr() == pkt->getAddr())
+                            {
+                                found = true;
+                                std::cout<<"BEFORE PROMOTION!\n";
+                                //duetto_mem->printQueueDetails(duetto_mem->post_bucket_prefetch_queues[getRequestor(pkt)]);
+                                //duetto_mem->printQueueDetails(duetto_mem->post_bucket_demand_queues[getRequestor(pkt)]);
+                                
+                                duetto_mem->promote_prefetch(it,0,getRequestor(pkt));
+                                
+                                //duetto_mem->printQueueDetails(duetto_mem->post_bucket_prefetch_queues[getRequestor(pkt)]);
+                                //duetto_mem->printQueueDetails(duetto_mem->post_bucket_demand_queues[getRequestor(pkt)]);
+                                std::cout<<"AFTER PROMOTION!\n";
+                                break;
+                            }
+                            else
+                            {
+                                ++it;
+                            }
+                        }
+                    }
+               }
+
             }
         }
     } else {
@@ -1331,6 +1398,16 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
 
     if(is_predictable_prefetcher)
     {
+        /*if(system->isDeviceMemAddr(pkt))
+        {
+            gem5::memory::DuettoSimpleMem *mem = dynamic_cast<gem5::memory::DuettoSimpleMem*>(system->getDeviceMemory(pkt));
+            std::cout<<"LATENCY SLACK FROM WITHIN THE CACHE: "<<mem->latency_slack;
+        }*/
+    
+
+
+    
+
         Addr masked_addr = pkt->getAddr() & Addr(~0 << 6);
         if(outstanding_prefetch_addr.find(masked_addr) != outstanding_prefetch_addr.end() && (prefetch_side_buffer.find(masked_addr) == prefetch_side_buffer.end()))
         {
@@ -1339,6 +1416,15 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
         }
         if(prefetch_side_buffer.find(masked_addr) != prefetch_side_buffer.end())
         {
+            // If we encounter a hit by a demand request in the side buffer, add the slack value to the counter of the requestor
+            if(!isPrefetch(pkt))
+            {
+                std::cout<<"Demand address "<<std::hex<<pkt->getAddr()<<" hitting in the prefetch side buffer!\n";
+                int requestor = getRequestor(pkt);
+
+                // Access requestor counter and add to it min (slack, delta)
+                duetto_mem->refill_counter(requestor);
+            }
             std::cout<<"Handling fill from access for address:"<<std::hex<<pkt->getAddr()<<" and blk address is: "<< std::hex<<((pkt->getAddr()) & Addr(~0 << 6))<<" at tick: " <<std::dec<<curTick()<<"!\n";
             PacketList writebacks;
             CacheBlk * temp = handleFill(prefetch_side_buffer[masked_addr],blk,writebacks,true);

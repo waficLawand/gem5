@@ -47,8 +47,8 @@
 #define __MEM_SIMPLE_MEMORY_HH__
 
 #include <list>
+#include<deque>
 #include<queue>
-
 #include "mem/abstract_mem.hh"
 #include "mem/port.hh"
 #include "params/DuettoSimpleMem.hh"
@@ -200,6 +200,7 @@ class DuettoSimpleMem : public AbstractMemory
       Tick pkt_tick;
       Tick fcfs_tick;
       bool is_prefetch;
+      bool scheduled;
     };
 
     // Number of requestors
@@ -212,17 +213,101 @@ class DuettoSimpleMem : public AbstractMemory
     Tick latency_in_ticks;
 
     // Queue that precedes the demand token bucket for every requestor
-    std::queue<packet_queue_element> * pre_bucket_demand_queues;
-    std::queue<packet_queue_element> * pre_bucket_prefetch_queues;
+    std::deque<packet_queue_element> * pre_bucket_demand_queues;
+    std::deque<packet_queue_element> * pre_bucket_prefetch_queues;
 
     // RR and FCFS picks packets from this queue that comes after the demand token bucket
-    std::queue<packet_queue_element> * post_bucket_demand_queues;
-    std::queue<packet_queue_element> * post_bucket_prefetch_queues;
+    std::deque<packet_queue_element> * post_bucket_demand_queues;
+    std::deque<packet_queue_element> * post_bucket_prefetch_queues;
 
     // Round robin queue that keeps track of the next requestor
     std::queue<int> round_robin_queue;
 
     Tick remaining_ticks;
+    
+    // Function that refills the requestors latency counter
+    void refill_counter(int requestor)
+    {
+      requestor_latency_counters[requestor] = std::min(latency_slack, requestor_latency_counters[requestor]+int64_t(request_delta)); 
+    }
+    
+    // Function to promote prefetch based on the queue type
+    void promote_prefetch(std::deque<packet_queue_element>::iterator it, bool is_pre_queue, int requestor)
+    {
+        if (is_pre_queue)
+        {
+            // Promoting from pre bucket demand queues
+            std::cout << "Promoting prefetch from pre queue to demand for address: " << it->pkt->getAddr() << "\n";
+
+            // Insert the element at the correct position in the post demand queue
+            auto insert_position = post_bucket_demand_queues[requestor].begin();
+
+            // Find the correct spot based on arrival_tick
+            while (insert_position != post_bucket_demand_queues[requestor].end() &&
+                  insert_position->arrival_tick <= it->arrival_tick)
+            {
+                ++insert_position;
+            }
+
+            // Insert the element at the found position
+            post_bucket_demand_queues[requestor].insert(insert_position, *it);
+
+            // Erase the element from the pre bucket demand queue
+            pre_bucket_demand_queues[requestor].erase(it);
+        }
+        else
+        {
+            // Promoting from post bucket prefetch queues
+            std::cout << "Promoting prefetch from post queue to demand for address: " << it->pkt->getAddr() << "\n";
+
+            // Ensure that the address does not match the front of the post bucket prefetch queue
+            if (it->pkt->getAddr() != post_bucket_prefetch_queues[requestor].front().pkt->getAddr() || (it->pkt->getAddr() == post_bucket_prefetch_queues[requestor].front().pkt->getAddr() && (post_bucket_prefetch_queues[requestor].front().scheduled ==false)))
+            {
+                // Insert the element at the correct position in the post demand queue
+                auto insert_position = post_bucket_demand_queues[requestor].begin();
+                
+                // Find the correct spot based on arrival_tick
+                while (insert_position != post_bucket_demand_queues[requestor].end() &&
+                      insert_position->arrival_tick <= it->arrival_tick)
+                {
+                    ++insert_position;
+                }
+
+                // Insert the element at the found position
+                post_bucket_demand_queues[requestor].insert(insert_position, *it);
+
+                // Erase the element from the post bucket prefetch queue
+                post_bucket_prefetch_queues[requestor].erase(it);
+            }
+        }
+
+        // Additional logic to promote the prefetch if needed
+    }
+
+    void printQueueDetails(const std::deque<packet_queue_element>& queue)
+    {
+        if (queue.empty())
+        {
+            std::cout << "Queue is empty." << std::endl;
+            return;
+        }
+
+        std::cout << "Queue details (size: " << queue.size() << "):\n";
+
+        for (auto it = queue.begin(); it != queue.end(); ++it)
+        {
+            if (it == queue.begin())
+            {
+                std::cout << "Front -> ";
+            }
+            else if (std::next(it) == queue.end())
+            {
+                std::cout << "Back -> ";
+            }
+
+            std::cout << "Address: " << std::hex<< it->pkt->getAddr() << ", Arrival Tick: " << std::dec <<it->arrival_tick << std::endl;
+        }
+    }
 
     // Event that moves request from pre-bucket to post bucket and schedules requests
     EventFunctionWrapper dispatchMemoryRequest;

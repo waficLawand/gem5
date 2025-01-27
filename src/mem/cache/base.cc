@@ -134,6 +134,7 @@ BaseCache::BaseCache(const BaseCacheParams &p, unsigned blk_size)
         }    
             
         }
+        
 
     tempBlock = new TempCacheBlk(blkSize);
 
@@ -394,15 +395,15 @@ BaseCache::handleTimingReqMiss(PacketPtr pkt, MSHR *mshr, CacheBlk *blk,
                         if(it->pkt->getAddr() == pkt->getAddr())
                         {
                             found = true;
-                            std::cout<<"BEFORE PROMOTION!\n";
-                            duetto_mem->printQueueDetails(duetto_mem->pre_bucket_prefetch_queues[getRequestor(pkt)]);
-                            duetto_mem->printQueueDetails(duetto_mem->pre_bucket_demand_queues[getRequestor(pkt)]);
+                            //std::cout<<"BEFORE PROMOTION!\n";
+                            //duetto_mem->printQueueDetails(duetto_mem->pre_bucket_prefetch_queues[getRequestor(pkt)]);
+                            //duetto_mem->printQueueDetails(duetto_mem->pre_bucket_demand_queues[getRequestor(pkt)]);
                             
                             duetto_mem->promote_prefetch(it,1,getRequestor(pkt));
                             
-                            duetto_mem->printQueueDetails(duetto_mem->pre_bucket_prefetch_queues[getRequestor(pkt)]);
-                            duetto_mem->printQueueDetails(duetto_mem->pre_bucket_demand_queues[getRequestor(pkt)]);
-                            std::cout<<"AFTER PROMOTION!\n";
+                            //duetto_mem->printQueueDetails(duetto_mem->pre_bucket_prefetch_queues[getRequestor(pkt)]);
+                            //duetto_mem->printQueueDetails(duetto_mem->pre_bucket_demand_queues[getRequestor(pkt)]);
+                            //std::cout<<"AFTER PROMOTION!\n";
                             break;
                         }
                         else
@@ -420,7 +421,7 @@ BaseCache::handleTimingReqMiss(PacketPtr pkt, MSHR *mshr, CacheBlk *blk,
                             if(it->pkt->getAddr() == pkt->getAddr())
                             {
                                 found = true;
-                                std::cout<<"BEFORE PROMOTION!\n";
+                                //std::cout<<"BEFORE PROMOTION!\n";
                                 //duetto_mem->printQueueDetails(duetto_mem->post_bucket_prefetch_queues[getRequestor(pkt)]);
                                 //duetto_mem->printQueueDetails(duetto_mem->post_bucket_demand_queues[getRequestor(pkt)]);
                                 
@@ -428,7 +429,7 @@ BaseCache::handleTimingReqMiss(PacketPtr pkt, MSHR *mshr, CacheBlk *blk,
                                 
                                 //duetto_mem->printQueueDetails(duetto_mem->post_bucket_prefetch_queues[getRequestor(pkt)]);
                                 //duetto_mem->printQueueDetails(duetto_mem->post_bucket_demand_queues[getRequestor(pkt)]);
-                                std::cout<<"AFTER PROMOTION!\n";
+                                //std::cout<<"AFTER PROMOTION!\n";
                                 break;
                             }
                             else
@@ -1419,13 +1420,13 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
             // If we encounter a hit by a demand request in the side buffer, add the slack value to the counter of the requestor
             if(!isPrefetch(pkt))
             {
-                std::cout<<"Demand address "<<std::hex<<pkt->getAddr()<<" hitting in the prefetch side buffer!\n";
+                std::cout<<"Demand address "<<pkt->getAddr()<<" hitting in the prefetch side buffer!\n";
                 int requestor = getRequestor(pkt);
 
                 // Access requestor counter and add to it min (slack, delta)
                 duetto_mem->refill_counter(requestor);
             }
-            std::cout<<"Handling fill from access for address:"<<std::hex<<pkt->getAddr()<<" and blk address is: "<< std::hex<<((pkt->getAddr()) & Addr(~0 << 6))<<" at tick: " <<std::dec<<curTick()<<"!\n";
+            std::cout<<"Handling fill from access for address:"<<pkt->getAddr()<<" and blk address is: "<<((pkt->getAddr()) & Addr(~0 << 6))<<" at tick: " <<curTick()<<"!\n";
             PacketList writebacks;
             CacheBlk * temp = handleFill(prefetch_side_buffer[masked_addr],blk,writebacks,true);
             

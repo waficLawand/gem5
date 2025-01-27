@@ -70,6 +70,7 @@
 #include "mem/cache/write_queue.hh"
 #include "mem/cache/write_queue_entry.hh"
 #include "mem/duetto_simple_mem.hh"
+#include "mem/round_robin_with_pf.hh"
 #include "mem/packet.hh"
 #include "mem/packet_queue.hh"
 #include "mem/qport.hh"
@@ -461,6 +462,7 @@ class BaseCache : public ClockedObject
     bool is_prefetch;
 };
     gem5::memory::DuettoSimpleMem *duetto_mem;
+    
 void printQueueDetails(const std::deque<packet_queue_element> queue)
 {
     // Check if the queue is not empty
@@ -481,7 +483,7 @@ void printQueueDetails(const std::deque<packet_queue_element> queue)
         PacketPtr packet = entry.second;
 
         // Print the address
-        std::cout << "Address: " << std::hex << addr << std::dec << std::endl;
+        std::cout << "Address: " << addr << std::dec << std::endl;
 
         if (packet != nullptr) {
             // Print some basic information from the packet
@@ -499,14 +501,14 @@ void printAddresses(const std::unordered_map<Addr, PacketPtr>& prefetch_side_buf
     // Print addresses from the unordered_map (keys)
     std::cout << "Prefetch Side Buffer Addresses: ";
     for (const auto& entry : prefetch_side_buffer) {
-        std::cout << "0x" << std::hex << entry.first << ", ";  // Print key in hex
+        std::cout << "0x" << entry.first << ", ";  // Print key in hex
     }
     std::cout << std::endl;
 
     // Print addresses from the deque
     std::cout << "Prefetch Eviction Queue Addresses: ";
     for (const Addr& addr : prefetch_eviction_queue) {
-        std::cout << "0x" << std::hex << addr << ", ";  // Print address in hex
+        std::cout << "0x" << addr << ", ";  // Print address in hex
     }
     std::cout << std::endl;
 }

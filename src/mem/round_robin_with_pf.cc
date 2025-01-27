@@ -38,7 +38,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "mem/duetto_simple_mem.hh"
+#include "mem/round_robin_with_pf.hh"
 
 #include "base/random.hh"
 #include "base/trace.hh"
@@ -50,12 +50,12 @@ namespace gem5
 namespace memory
 {
 
-DuettoSimpleMem::DuettoSimpleMem(const DuettoSimpleMemParams &p) :
+RoundRobinWithPF::RoundRobinWithPF(const RoundRobinWithPFParams &p) :
     AbstractMemory(p),
     port(name() + ".port", *this), latency(p.latency),
     latency_var(p.latency_var), bandwidth(p.bandwidth), isBusy(false),
     retryReq(false), retryResp(false),
-    is_fcfs(p.is_fcfs),
+    is_fcfs(false),
     latency_in_ticks(p.latency_in_ticks),
     num_requestors(p.num_requestors),
     request_delta(p.request_delta),
@@ -85,13 +85,13 @@ DuettoSimpleMem::DuettoSimpleMem(const DuettoSimpleMemParams &p) :
 }
 
 void
-DuettoSimpleMem::startup()
+RoundRobinWithPF::startup()
 {
     schedule(dispatchMemoryRequest,curTick());
 }
 
 void
-DuettoSimpleMem::init()
+RoundRobinWithPF::init()
 {
     AbstractMemory::init();
 
@@ -103,7 +103,7 @@ DuettoSimpleMem::init()
 }
 
 void
-DuettoSimpleMem::dispatch_memory_requests()
+RoundRobinWithPF::dispatch_memory_requests()
 {
     // If the post demand bucket has requests deceremrent the latency counters 
     for(int i = 0; i < num_requestors; i++)
@@ -154,7 +154,7 @@ DuettoSimpleMem::dispatch_memory_requests()
                 post_bucket_prefetch_queues[i].front().fcfs_tick = curTick() + latency_in_ticks;
 
                 
-                //std::cout<<"Core "<<getRequestor(pkt)<<" requested address: "<<pkt->getAddr()<<" at tick: "<<curTick()<<" FCFS MODE: "<<is_fcfs<<std::endl;
+                std::cout<<"Core "<<getRequestor(pkt)<<" requested address: "<<pkt->getAddr()<<" at tick: "<<curTick()<<" FCFS MODE: "<<is_fcfs<<std::endl;
             }
         }
     }
@@ -162,26 +162,32 @@ DuettoSimpleMem::dispatch_memory_requests()
     bool more_to_process = false;
     for(int i =0; i < num_requestors; i++)
     {
-        if(is_fcfs)
-        {
-            if(post_bucket_demand_queues[i].size()>0 || post_bucket_prefetch_queues[i].size()>0)
+        if(post_bucket_demand_queues[i].size()>0)
             {
+                //std::cout<<"Processing a demand request!\n";
                 more_to_process = true;
                 break;
             }
-        }
-        else
+    }
+    
+    if(more_to_process == false && (curCycle()%60 == 0))
+    {
+        
+        for(int i =0; i < num_requestors; i++)
         {
-            if(post_bucket_demand_queues[i].size()>0)
-            {
-                more_to_process = true;
-                break;
-            }
+            
+            if(post_bucket_prefetch_queues[i].size()>0)
+                {
+                    //std::cout<<"Processing a prefetch request!\n";
+                    more_to_process = true;
+                    break;
+                }
         }
-
     }
 
-    int curr_requestor = -1;
+
+
+    /*int curr_requestor = -1;
     bool is_prefetch = false;
     if(is_fcfs && more_to_process)
     {
@@ -223,47 +229,23 @@ DuettoSimpleMem::dispatch_memory_requests()
             round_robin_queue.push(curr_requestor);
             curr_requestor = round_robin_queue.front();
         } 
-    }
+    }*/
 
     // schedule the memory requests
     if (!retryResp && !dequeueEvent.scheduled() && more_to_process)
     {
-        if(!is_prefetch)
-        {
-            post_bucket_demand_queues[curr_requestor].front().scheduled = true;
-        }
-        else
-        {
-            post_bucket_prefetch_queues[curr_requestor].front().scheduled = true;
-        }
         std::cout<<"Scheduled!\n";
         remaining_ticks = 0;
         schedule(dequeueEvent, curTick()+latency_in_ticks);
     }
 
-    for(int i = 0; i < num_requestors; i++)
-    {
-        if(requestor_latency_counters[i] <= 0)
-        {
-            //std::cout<<"OPERATING IN RTA MODE\n";
-            // Swtich to RTA
-            is_fcfs = false;
-            break;
-        }
-        else
-        {
-            //std::cout<<"OPERATING IN HPA MODE\n";
-            // Switch to HPA
-            is_fcfs = true;
-        }
-    }
 
     schedule(dispatchMemoryRequest,cyclesToTicks(Cycles(curCycle()+1)));
 
 }
 
 Tick
-DuettoSimpleMem::recvAtomic(PacketPtr pkt)
+RoundRobinWithPF::recvAtomic(PacketPtr pkt)
 {
     panic_if(pkt->cacheResponding(), "Should not see packets where cache "
              "is responding");
@@ -273,7 +255,7 @@ DuettoSimpleMem::recvAtomic(PacketPtr pkt)
 }
 
 Tick
-DuettoSimpleMem::recvAtomicBackdoor(PacketPtr pkt, MemBackdoorPtr &_backdoor)
+RoundRobinWithPF::recvAtomicBackdoor(PacketPtr pkt, MemBackdoorPtr &_backdoor)
 {
     Tick latency = recvAtomic(pkt);
     getBackdoor(_backdoor);
@@ -281,7 +263,7 @@ DuettoSimpleMem::recvAtomicBackdoor(PacketPtr pkt, MemBackdoorPtr &_backdoor)
 }
 
 void
-DuettoSimpleMem::recvFunctional(PacketPtr pkt)
+RoundRobinWithPF::recvFunctional(PacketPtr pkt)
 {
     pkt->pushLabel(name());
 
@@ -299,14 +281,14 @@ DuettoSimpleMem::recvFunctional(PacketPtr pkt)
 }
 
 void
-DuettoSimpleMem::recvMemBackdoorReq(const MemBackdoorReq &req,
+RoundRobinWithPF::recvMemBackdoorReq(const MemBackdoorReq &req,
         MemBackdoorPtr &_backdoor)
 {
     getBackdoor(_backdoor);
 }
 
 bool
-DuettoSimpleMem::recvTimingReq(PacketPtr pkt)
+RoundRobinWithPF::recvTimingReq(PacketPtr pkt)
 {
     panic_if(pkt->cacheResponding(), "Should not see packets where cache "
              "is responding");
@@ -412,7 +394,7 @@ DuettoSimpleMem::recvTimingReq(PacketPtr pkt)
 }
 
 void
-DuettoSimpleMem::release()
+RoundRobinWithPF::release()
 {
     assert(isBusy);
     isBusy = false;
@@ -423,281 +405,288 @@ DuettoSimpleMem::release()
 }
 
 void
-DuettoSimpleMem::dequeue()
+RoundRobinWithPF::dequeue()
 {
-
-    if(is_fcfs)
+    std::cout<<"DEQUEUING!!!\n";
+    if(true)
     {
-        // Looking for the next requestor in all the queues in FCFS order  
-        int curr_requestor = -1;
-        bool is_prefetch = false;
-
-        for (int i = 0; i < num_requestors; i++) 
-        {
-            // Check if the current demand queue is not empty
-            if (!post_bucket_demand_queues[i].empty()) 
-            {
-                if (curr_requestor == -1 || post_bucket_demand_queues[i].front().arrival_tick < (is_prefetch ? post_bucket_prefetch_queues[curr_requestor].front().arrival_tick : post_bucket_demand_queues[curr_requestor].front().arrival_tick)) 
-                {
-                    curr_requestor = i;
-                    is_prefetch = false; // Mark that the current selected requestor is from the demand queue
-                }
-            }
-            
-            // Check if the current prefetch queue is not empty
-            if (!post_bucket_prefetch_queues[i].empty()) 
-            {
-                if (curr_requestor == -1 || post_bucket_prefetch_queues[i].front().arrival_tick < (is_prefetch ? post_bucket_prefetch_queues[curr_requestor].front().arrival_tick : post_bucket_demand_queues[curr_requestor].front().arrival_tick)) 
-                {
-                    curr_requestor = i;
-                    is_prefetch = true; // Mark that the current selected requestor is from the prefetch queue
-                }
-            }
-        }
-
-        PacketPtr pkt;
         bool more_to_process = false;
-        
-        // Take packet from demand if its not prefetch and from prefetch otherwise
-        if(!is_prefetch)
-        {
-            pkt = post_bucket_demand_queues[curr_requestor].front().pkt;
-            
-        }
-        else
-        {
-            pkt = post_bucket_prefetch_queues[curr_requestor].front().pkt;
-        }
-                    
-        // Try sending out the request
-        retryResp = !port.sendTimingResp(pkt);
+        bool is_pf = false;
 
-        if(!retryResp)
+        for(int i =0; i < num_requestors; i++)
         {
-            if(!is_prefetch)
-            {
-                std::cout<<"Core "<<getRequestor(pkt)<<" processed address: "<<pkt->getAddr()<<" at tick: "<<curTick()<<std::endl;
-                post_bucket_demand_queues[curr_requestor].pop_front();
-                requestor_latency_counters[curr_requestor] = std::min(latency_slack, requestor_latency_counters[curr_requestor]+int64_t(request_delta)); 
-                
-                if( post_bucket_demand_queues[curr_requestor].size() > 0)
-                {   
-                        std::cout<<"Core "<<curr_requestor<<" requested address: "<<post_bucket_demand_queues[curr_requestor].front().pkt->getAddr()<<" at tick: "<<curTick()<<" FCFS MODE: "<<is_fcfs<<std::endl;
-                        post_bucket_demand_queues[curr_requestor].front().fcfs_tick = curTick() + latency_in_ticks;
-                        post_bucket_demand_queues[curr_requestor].front().pkt_tick = curTick();
-                }
-                
-                // Check if there are more demand requests to process
-                more_to_process = false;
-                for(int i =0; i < num_requestors; i++)
+            if(post_bucket_demand_queues[i].size()>0)
                 {
-                    if(post_bucket_demand_queues[i].size()>0)
+                    more_to_process = true;
+                    is_pf = false;
+                    break;
+                }
+        }
+        if(more_to_process == false)
+        {
+            std::cout<<"Processing a prefetch request!\n";
+            for(int i =0; i < num_requestors; i++)
+            {
+                
+                if(post_bucket_prefetch_queues[i].size()>0)
                     {
                         more_to_process = true;
+                        is_pf=true;
                         break;
                     }
-                }
             }
-            else
-            {
-                //std::cout<<"Core "<<getRequestor(pkt)<<" processed address: "<<pkt->getAddr()<<" at tick: "<<curTick()<<std::endl;
-                post_bucket_prefetch_queues[curr_requestor].pop_front();
-                requestor_latency_counters[curr_requestor] = std::min(latency_slack, requestor_latency_counters[curr_requestor]+int64_t(request_delta)); 
-                
-                if( post_bucket_prefetch_queues[curr_requestor].size() > 0)
-                {   
-                        //std::cout<<"Core "<<curr_requestor<<" requested address: "<<post_bucket_prefetch_queues[curr_requestor].front().pkt->getAddr()<<" at tick: "<<curTick()<<" FCFS MODE: "<<is_fcfs<<std::endl;
-                        post_bucket_prefetch_queues[curr_requestor].front().fcfs_tick = curTick() + latency_in_ticks;
-                        post_bucket_prefetch_queues[curr_requestor].front().pkt_tick = curTick();
-                }
-                
-                // Check if there are more demand requests to process
-                more_to_process = false;
-                for(int i =0; i < num_requestors; i++)
-                {
-                    if(post_bucket_prefetch_queues[i].size()>0)
-                    {
-                        more_to_process = true;
-                        break;
-                    }
-                }
-            }
-
-            // Schedule the remaining requests
-            if (more_to_process) 
-            {
-                std::cout<<"More to process!\n";
-                int curr_requestor = -1;
-                bool is_prefetch = false;
-
-                for (int i = 0; i < num_requestors; i++) 
-                {
-                    // Check if the current demand queue is not empty
-                    if (!post_bucket_demand_queues[i].empty()) 
-                    {
-                        if (curr_requestor == -1 || post_bucket_demand_queues[i].front().arrival_tick < (is_prefetch ? post_bucket_prefetch_queues[curr_requestor].front().arrival_tick : post_bucket_demand_queues[curr_requestor].front().arrival_tick)) 
-                        {
-                            curr_requestor = i;
-                            is_prefetch = false; // Mark that the current selected requestor is from the demand queue
-                        }
-                    }
-                    
-                    // Check if the current prefetch queue is not empty
-                    if (!post_bucket_prefetch_queues[i].empty()) 
-                    {
-                        if (curr_requestor == -1 || post_bucket_prefetch_queues[i].front().arrival_tick < (is_prefetch ? post_bucket_prefetch_queues[curr_requestor].front().arrival_tick : post_bucket_demand_queues[curr_requestor].front().arrival_tick)) 
-                        {
-                            curr_requestor = i;
-                            is_prefetch = true; // Mark that the current selected requestor is from the prefetch queue
-                        }
-                    }
-                }
-                
-                if(!is_prefetch)
-                {
-                    post_bucket_demand_queues[curr_requestor].front().scheduled = true;
-                }
-                else
-                {
-                    post_bucket_prefetch_queues[curr_requestor].front().scheduled = true;
-                }
-
-                if(is_prefetch && is_fcfs)
-                {
-                    reschedule(dequeueEvent,std::max(curTick(),post_bucket_prefetch_queues[curr_requestor].front().fcfs_tick), true);
-                }
-                else
-                {
-                    reschedule(dequeueEvent,std::max(curTick(),post_bucket_demand_queues[curr_requestor].front().fcfs_tick), true);
-                }
-
-            } 
-            else if (drainState() == DrainState::Draining) {
-                DPRINTF(Drain, "Draining of LatencyRegulatedSimpleMem complete\n");
-                signalDrainDone();
-            }
-
         }
-        else
-        {
-            std::cout<<"RETRYING!\n";
-        }
-    }
-    else
-    {
         int curr_requestor = round_robin_queue.front();
         
 
-        while (post_bucket_demand_queues[curr_requestor].size() == 0)
+        if(!is_pf)
         {
-            std::cout<<"We poppin!\n";
-            round_robin_queue.pop();
-            round_robin_queue.push(curr_requestor);
-            curr_requestor = round_robin_queue.front();
-        }
-
-        PacketPtr pkt = post_bucket_demand_queues[curr_requestor].front().pkt;
-        if(curTick() == post_bucket_demand_queues[curr_requestor].front().pkt_tick)
-        {
-            remaining_ticks = latency_in_ticks;
-            std::cout<<"RESCHEDULING CORE " <<curr_requestor<<" : Remaining ticks: "<<latency_in_ticks<<" at tick: "<<curTick()<<std::endl;
-            reschedule(dequeueEvent,curTick()+latency_in_ticks, true);
-        }
-        else if((curTick() - post_bucket_demand_queues[curr_requestor].front().pkt_tick < latency_in_ticks))
-        {
-
-            remaining_ticks = latency_in_ticks-(curTick()- post_bucket_demand_queues[curr_requestor].front().pkt_tick);
-            std::cout<<"RESCHEDULING CORE "<<curr_requestor<<" : Remaining ticks: "<<remaining_ticks<<" At tick: "<<curTick()<<"\n";
-            reschedule(dequeueEvent,curTick()+remaining_ticks, true);
+            while (post_bucket_demand_queues[curr_requestor].size() == 0)
+            {
+                std::cout<<"We poppin!\n";
+                round_robin_queue.pop();
+                round_robin_queue.push(curr_requestor);
+                curr_requestor = round_robin_queue.front();
+            }
         }
         else
         {
-            retryResp = !port.sendTimingResp(pkt);
-            if(!retryResp)
+            while (post_bucket_prefetch_queues[curr_requestor].size() == 0)
             {
-                std::cout<<"Core "<<curr_requestor<<" processed address: "<<post_bucket_demand_queues[curr_requestor].front().pkt->getAddr()<<" at tick: "<<curTick()<<std::endl;
-                
-                Tick last_processed = curTick();
-                
-                post_bucket_demand_queues[curr_requestor].pop_front();
-                
-                // Increment the latency counter of the requestor with the minimum between the slack and relative_deadline + old counter value
-                std::cout<<"For Core "<<curr_requestor<<" Curr Latency counter: "<<requestor_latency_counters[curr_requestor]<<" curr+latency = "<<int64_t(requestor_latency_counters[curr_requestor]+ticksToCycles(latency_in_ticks))<<std::endl;
-                requestor_latency_counters[curr_requestor] = std::min(latency_slack, requestor_latency_counters[curr_requestor]+int64_t(request_delta)); 
-                std::cout<<"LATENCY IS: "<<requestor_latency_counters[curr_requestor]<<std::endl; 
-
-                if( post_bucket_demand_queues[curr_requestor].size() > 0)
-                {
-                    std::cout<<"Core "<<curr_requestor<<" requested address: "<<post_bucket_demand_queues[curr_requestor].front().pkt->getAddr()<<" at tick: "<<curTick()<<" FCFS MODE: "<<is_fcfs<<std::endl;
-                    post_bucket_demand_queues[curr_requestor].front().pkt_tick = curTick();
-                    post_bucket_demand_queues[curr_requestor].front().fcfs_tick = curTick() + latency_in_ticks;
-                }
-                
+                std::cout<<"We poppin!\n";
                 round_robin_queue.pop();
                 round_robin_queue.push(curr_requestor);
-                
+                curr_requestor = round_robin_queue.front();
+            }
+        }
 
-                bool more_to_process = false;
-                for(int i =0; i < num_requestors; i++)
-                {
-                    if(post_bucket_demand_queues[i].size()>0)
-                    {
-                        more_to_process = true;
-                        break;
-                    }
-                }
-                if(more_to_process)
-                {
-                    std::cout<<"More to process!\n";
-                    std::cout<<"Last processed: "<<last_processed<<std::endl;
-                    
+        if(!is_pf)
+        {
+            std::cout<<"HEREEE!!!!\n";
+            PacketPtr pkt = post_bucket_demand_queues[curr_requestor].front().pkt;
+            if(curTick() == post_bucket_demand_queues[curr_requestor].front().pkt_tick)
+            {
+                remaining_ticks = latency_in_ticks;
+                std::cout<<"RESCHEDULING CORE " <<curr_requestor<<" : Remaining ticks: "<<latency_in_ticks<<" at tick: "<<curTick()<<std::endl;
+                reschedule(dequeueEvent,curTick()+latency_in_ticks, true);
+            }
+            else if((curTick() - post_bucket_demand_queues[curr_requestor].front().pkt_tick < latency_in_ticks))
+            {
 
-                    if(remaining_ticks == 0)
-                    {
-                        reschedule(dequeueEvent,curTick()+latency_in_ticks, true);
-                    }
-                    else
-                    {
-                        std::cout<<"EXTRA TICKS: "<<(latency_in_ticks-remaining_ticks)<<std::endl;
-                        reschedule(dequeueEvent,curTick()+(latency_in_ticks-remaining_ticks), true);
-                        remaining_ticks = 0;
-                    }
-                    
-                    
-                }
-                
-                else if(drainState() == DrainState::Draining)
-                {
-                    DPRINTF(Drain, "Draining of SimpleMemory complete\n");
-                    signalDrainDone();
-                }
-            //}
-        
-
+                remaining_ticks = latency_in_ticks-(curTick()- post_bucket_demand_queues[curr_requestor].front().pkt_tick);
+                std::cout<<"RESCHEDULING CORE "<<curr_requestor<<" : Remaining ticks: "<<remaining_ticks<<" At tick: "<<curTick()<<"\n";
+                reschedule(dequeueEvent,curTick()+remaining_ticks, true);
             }
             else
             {
-                std::cout<<"RETRYING!\n";
-            }
-            remaining_ticks = 0;
-        
+                retryResp = !port.sendTimingResp(pkt);
+                if(!retryResp)
+                {
+                    std::cout<<"Core "<<curr_requestor<<" processed address: "<<post_bucket_demand_queues[curr_requestor].front().pkt->getAddr()<<" at tick: "<<curTick()<<std::endl;
+                    
+                    Tick last_processed = curTick();
+                    
+                    post_bucket_demand_queues[curr_requestor].pop_front();
+                    
+                    // Increment the latency counter of the requestor with the minimum between the slack and relative_deadline + old counter value
+                    std::cout<<"For Core "<<curr_requestor<<" Curr Latency counter: "<<requestor_latency_counters[curr_requestor]<<" curr+latency = "<<int64_t(requestor_latency_counters[curr_requestor]+ticksToCycles(latency_in_ticks))<<std::endl;
+                    //requestor_latency_counters[curr_requestor] = std::min(latency_slack, requestor_latency_counters[curr_requestor]+int64_t(request_delta)); 
+                    std::cout<<"LATENCY IS: "<<requestor_latency_counters[curr_requestor]<<std::endl; 
 
-        }
+                    if( post_bucket_demand_queues[curr_requestor].size() > 0)
+                    {
+                        std::cout<<"Core "<<curr_requestor<<" requested address: "<<post_bucket_demand_queues[curr_requestor].front().pkt->getAddr()<<" at tick: "<<curTick()<<" FCFS MODE: "<<is_fcfs<<std::endl;
+                        post_bucket_demand_queues[curr_requestor].front().pkt_tick = curTick();
+                        post_bucket_demand_queues[curr_requestor].front().fcfs_tick = curTick() + latency_in_ticks;
+                    }
+                    
+                    round_robin_queue.pop();
+                    round_robin_queue.push(curr_requestor);
+                    
+
+                    bool more_to_process = false;
+                    for(int i =0; i < num_requestors; i++)
+                    {
+                        if(post_bucket_demand_queues[i].size()>0)
+                            {
+                                //std::cout<<"Processing a demand request!\n";
+                                more_to_process = true;
+                                break;
+                            }
+                    }
+                    if(more_to_process == false && (curCycle()%60 == 0))
+                    {
+                        
+                        for(int i =0; i < num_requestors; i++)
+                        {
+                            
+                            if(post_bucket_prefetch_queues[i].size()>0)
+                                {
+                                    //std::cout<<"Processing a prefetch request!\n";
+                                    more_to_process = true;
+                                    break;
+                                }
+                        }
+                    }
+                    if(more_to_process)
+                    {
+                        std::cout<<"More to process!\n";
+                        std::cout<<"Last processed: "<<last_processed<<std::endl;
+                        
+
+                        if(remaining_ticks == 0)
+                        {
+                            reschedule(dequeueEvent,curTick()+latency_in_ticks, true);
+                        }
+                        else
+                        {
+                            std::cout<<"EXTRA TICKS: "<<(latency_in_ticks-remaining_ticks)<<std::endl;
+                            reschedule(dequeueEvent,curTick()+(latency_in_ticks-remaining_ticks), true);
+                            remaining_ticks = 0;
+                        }
+                        
+                        
+                    }
+                    
+                    else if(drainState() == DrainState::Draining)
+                    {
+                        DPRINTF(Drain, "Draining of SimpleMemory complete\n");
+                        signalDrainDone();
+                    }
+                //}
+            
+
+                }
+                else
+                {
+                    std::cout<<"RETRYING!\n";
+                }
+                remaining_ticks = 0;
+            
+
+            }
     
+        }
+        else
+        {
+            PacketPtr pkt = post_bucket_prefetch_queues[curr_requestor].front().pkt;
+            if(curTick() == post_bucket_prefetch_queues[curr_requestor].front().pkt_tick)
+            {
+                remaining_ticks = latency_in_ticks;
+                std::cout<<"RESCHEDULING CORE " <<curr_requestor<<" : Remaining ticks: "<<latency_in_ticks<<" at tick: "<<curTick()<<std::endl;
+                reschedule(dequeueEvent,curTick()+latency_in_ticks, true);
+            }
+            else if((curTick() - post_bucket_prefetch_queues[curr_requestor].front().pkt_tick < latency_in_ticks))
+            {
+
+                remaining_ticks = latency_in_ticks-(curTick()- post_bucket_prefetch_queues[curr_requestor].front().pkt_tick);
+                std::cout<<"RESCHEDULING CORE "<<curr_requestor<<" : Remaining ticks: "<<remaining_ticks<<" At tick: "<<curTick()<<"\n";
+                reschedule(dequeueEvent,curTick()+remaining_ticks, true);
+            }
+            else
+            {
+                retryResp = !port.sendTimingResp(pkt);
+                if(!retryResp)
+                {
+                    std::cout<<"Core "<<curr_requestor<<" processed address: "<<post_bucket_prefetch_queues[curr_requestor].front().pkt->getAddr()<<" at tick: "<<curTick()<<std::endl;
+                    
+                    Tick last_processed = curTick();
+                    
+                    post_bucket_prefetch_queues[curr_requestor].pop_front();
+                    
+                    // Increment the latency counter of the requestor with the minimum between the slack and relative_deadline + old counter value
+                    std::cout<<"For Core "<<curr_requestor<<" Curr Latency counter: "<<requestor_latency_counters[curr_requestor]<<" curr+latency = "<<int64_t(requestor_latency_counters[curr_requestor]+ticksToCycles(latency_in_ticks))<<std::endl;
+                    //requestor_latency_counters[curr_requestor] = std::min(latency_slack, requestor_latency_counters[curr_requestor]+int64_t(request_delta)); 
+                    std::cout<<"LATENCY IS: "<<requestor_latency_counters[curr_requestor]<<std::endl; 
+
+                    if( post_bucket_prefetch_queues[curr_requestor].size() > 0)
+                    {
+                        std::cout<<"Core "<<curr_requestor<<" requested address: "<<post_bucket_prefetch_queues[curr_requestor].front().pkt->getAddr()<<" at tick: "<<curTick()<<" FCFS MODE: "<<is_fcfs<<std::endl;
+                        post_bucket_prefetch_queues[curr_requestor].front().pkt_tick = curTick();
+                        post_bucket_prefetch_queues[curr_requestor].front().fcfs_tick = curTick() + latency_in_ticks;
+                    }
+                    
+                    round_robin_queue.pop();
+                    round_robin_queue.push(curr_requestor);
+                    
+
+                    bool more_to_process = false;
+                    for(int i =0; i < num_requestors; i++)
+                    {
+                        if(post_bucket_demand_queues[i].size()>0)
+                            {
+                                //std::cout<<"Processing a demand request!\n";
+                                more_to_process = true;
+                                break;
+                            }
+                    }
+                    if(more_to_process == false && (curCycle()%60 == 0))
+                    {
+                        
+                        for(int i =0; i < num_requestors; i++)
+                        {
+                            
+                            if(post_bucket_prefetch_queues[i].size()>0)
+                                {
+                                    //std::cout<<"Processing a prefetch request!\n";
+                                    more_to_process = true;
+                                    break;
+                                }
+                        }
+                    }
+                    if(more_to_process)
+                    {
+                        std::cout<<"More to process!\n";
+                        std::cout<<"Last processed: "<<last_processed<<std::endl;
+                        
+
+                        if(remaining_ticks == 0)
+                        {
+                            reschedule(dequeueEvent,curTick()+latency_in_ticks, true);
+                        }
+                        else
+                        {
+                            std::cout<<"EXTRA TICKS: "<<(latency_in_ticks-remaining_ticks)<<std::endl;
+                            reschedule(dequeueEvent,curTick()+(latency_in_ticks-remaining_ticks), true);
+                            remaining_ticks = 0;
+                        }
+                        
+                        
+                    }
+                    
+                    else if(drainState() == DrainState::Draining)
+                    {
+                        DPRINTF(Drain, "Draining of SimpleMemory complete\n");
+                        signalDrainDone();
+                    }
+                //}
+            
+
+                }
+                else
+                {
+                    std::cout<<"RETRYING!\n";
+                }
+                remaining_ticks = 0;
+            
+
+            }
+        }
+        
     }
 
 
 }
 
 Tick
-DuettoSimpleMem::getLatency() const
+RoundRobinWithPF::getLatency() const
 {
     return latency +
         (latency_var ? random_mt.random<Tick>(0, latency_var) : 0);
 }
 
 void
-DuettoSimpleMem::recvRespRetry()
+RoundRobinWithPF::recvRespRetry()
 {
     assert(retryResp);
 
@@ -705,7 +694,7 @@ DuettoSimpleMem::recvRespRetry()
 }
 
 Port &
-DuettoSimpleMem::getPort(const std::string &if_name, PortID idx)
+RoundRobinWithPF::getPort(const std::string &if_name, PortID idx)
 {
     if (if_name != "port") {
         return AbstractMemory::getPort(if_name, idx);
@@ -715,23 +704,23 @@ DuettoSimpleMem::getPort(const std::string &if_name, PortID idx)
 }
 
 DrainState
-DuettoSimpleMem::drain()
+RoundRobinWithPF::drain()
 {
     if (!packetQueue.empty()) {
-        DPRINTF(Drain, "DuettoSimpleMem Queue has requests, waiting to drain\n");
+        DPRINTF(Drain, "RoundRobinWithPF Queue has requests, waiting to drain\n");
         return DrainState::Draining;
     } else {
         return DrainState::Drained;
     }
 }
 
-DuettoSimpleMem::MemoryPort::MemoryPort(const std::string& _name,
-                                     DuettoSimpleMem& _memory)
+RoundRobinWithPF::MemoryPort::MemoryPort(const std::string& _name,
+                                     RoundRobinWithPF& _memory)
     : ResponsePort(_name), mem(_memory)
 { }
 
 AddrRangeList
-DuettoSimpleMem::MemoryPort::getAddrRanges() const
+RoundRobinWithPF::MemoryPort::getAddrRanges() const
 {
     AddrRangeList ranges;
     ranges.push_back(mem.getAddrRange());
@@ -739,39 +728,39 @@ DuettoSimpleMem::MemoryPort::getAddrRanges() const
 }
 
 Tick
-DuettoSimpleMem::MemoryPort::recvAtomic(PacketPtr pkt)
+RoundRobinWithPF::MemoryPort::recvAtomic(PacketPtr pkt)
 {
     return mem.recvAtomic(pkt);
 }
 
 Tick
-DuettoSimpleMem::MemoryPort::recvAtomicBackdoor(
+RoundRobinWithPF::MemoryPort::recvAtomicBackdoor(
         PacketPtr pkt, MemBackdoorPtr &_backdoor)
 {
     return mem.recvAtomicBackdoor(pkt, _backdoor);
 }
 
 void
-DuettoSimpleMem::MemoryPort::recvFunctional(PacketPtr pkt)
+RoundRobinWithPF::MemoryPort::recvFunctional(PacketPtr pkt)
 {
     mem.recvFunctional(pkt);
 }
 
 void
-DuettoSimpleMem::MemoryPort::recvMemBackdoorReq(const MemBackdoorReq &req,
+RoundRobinWithPF::MemoryPort::recvMemBackdoorReq(const MemBackdoorReq &req,
         MemBackdoorPtr &backdoor)
 {
     mem.recvMemBackdoorReq(req, backdoor);
 }
 
 bool
-DuettoSimpleMem::MemoryPort::recvTimingReq(PacketPtr pkt)
+RoundRobinWithPF::MemoryPort::recvTimingReq(PacketPtr pkt)
 {
     return mem.recvTimingReq(pkt);
 }
 
 void
-DuettoSimpleMem::MemoryPort::recvRespRetry()
+RoundRobinWithPF::MemoryPort::recvRespRetry()
 {
     mem.recvRespRetry();
 }
